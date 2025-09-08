@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Users {
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  name         String
+  password     String
+  jwtToken     String?
+  accessToken  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  dom_id  Int?
+  role_id Int?
+
+  dom  doms?  @relation(fields: [dom_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  role roles? @relation(fields: [role_id], references: [id], onDelete: SetNull, onUpdate: Cascade)
+}
+
+model roles {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  users Users[]
+}
+
+model doms {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  address   String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  users    Users[]
+  machines machines[]
+}
+
+model gameTypes {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deleted_at DateTime?
+
+  games games[]
+}
+
+model machineTypes {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  machines machines[]
+  games    games[]
+}
+
+model games {
+  id            Int    @id @default(autoincrement())
+  name          String
+  price         Float
+  playTime      Int
+  gameTypeId    Int?
+  machineTypeId Int?
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  deletedAt    DateTime?
+  machineTypes machineTypes? @relation(fields: [machineTypeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  gameTypes    gameTypes?    @relation(fields: [gameTypeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  experiences experiences[]
+}
+
+model machines {
+  id            Int       @id @default(autoincrement())
+  name          String
+  machineTypeId Int?
+  domeId        Int?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  machineTypes machineTypes? @relation(fields: [machineTypeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  doms         doms?         @relation(fields: [domeId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+
+  machineChairs machineChairs[]
+  experiences   experiences[]
+}
+
+model machineChairs {
+  id        Int       @id @default(autoincrement())
+  name      String
+  status    Int
+  machineId Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  machines machines @relation(fields: [machineId], references: [id], onDelete: SetDefault, onUpdate: Cascade)
+
+  tickets tickets[]
+}
+
+model experiences {
+  id        Int       @id @default(autoincrement())
+  machineId Int
+  gameId    Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  machines machines @relation(fields: [machineId], references: [id], onDelete: SetDefault, onUpdate: Cascade)
+  games    games    @relation(fields: [gameId], references: [id], onDelete: SetDefault, onUpdate: Cascade)
+}
+
+model tickets {
+  id           Int       @id @default(autoincrement())
+  userId       Int
+  experienceId Int
+  isPaid       Boolean   @default(false)
+  chairId      Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  chair machineChairs? @relation(fields: [chairId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+}
