@@ -32,11 +32,13 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { UserService } from "@/services/user.service"
 
+const { name, email } = UserService.getUser() || {};
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
+    name: name || "Admin",
+    email: email || "m@admin.com",
     avatar: "/avatars/shadcn.jpg",
   },
   navMain: [
