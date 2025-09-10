@@ -50,6 +50,8 @@ model doms {
 
   users    Users[]
   machines machines[]
+  tickets  tickets[]
+  experiences experiences[]
 }
 
 model gameTypes {
@@ -79,7 +81,7 @@ model games {
   price         Float
   playTime      Int
   gameTypeId    Int?
-  machineTypeId Int?
+  machineTypeId Int? // compatible machine type
 
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -124,12 +126,14 @@ model experiences {
   id        Int       @id @default(autoincrement())
   machineId Int
   gameId    Int
+  domeId   Int
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
   machines machines @relation(fields: [machineId], references: [id], onDelete: SetDefault, onUpdate: Cascade)
   games    games    @relation(fields: [gameId], references: [id], onDelete: SetDefault, onUpdate: Cascade)
+  doms     doms     @relation(fields: [domeId], references: [id], onDelete: SetDefault, onUpdate: Cascade)
 }
 
 model tickets {
@@ -138,9 +142,12 @@ model tickets {
   experienceId Int
   isPaid       Boolean   @default(false)
   chairId      Int?
+  domeId       Int
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
   chair machineChairs? @relation(fields: [chairId], references: [id], onDelete: SetNull, onUpdate: Cascade)
+  doms     doms     @relation(fields: [domeId], references: [id], onDelete: SetDefault, onUpdate: Cascade)
+
 }

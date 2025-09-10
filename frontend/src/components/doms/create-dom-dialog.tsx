@@ -80,7 +80,7 @@ export function CreateDomDialog({ onCreateDom }: CreateDomDialogProps) {
                 value={formData.address}
                 onChange={handleInputChange("address")}
                 className="col-span-3"
-                placeholder="192.168.1.1"
+                placeholder="5th avenue"
                 required
               />
             </div>

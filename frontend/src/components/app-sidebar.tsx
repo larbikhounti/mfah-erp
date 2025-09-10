@@ -2,7 +2,6 @@
 
 import type * as React from "react"
 import {
-  IconCamera,
   IconChartBar,
   IconDashboard,
   IconDatabase,
@@ -13,12 +12,15 @@ import {
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
-  IconReport,
   IconSearch,
   IconSettings,
   IconUsers,
   IconShield,
-  IconWorld
+  IconWorld,
+  IconDeviceGamepad2,
+  IconCpu,
+  IconDeviceDesktop,
+  IconPlayerPlay
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -38,7 +40,7 @@ import { useAuth } from "@/hooks/use-auth"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth()
-  
+
   const navMainData = [
     {
       title: "Dashboard",
@@ -65,7 +67,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/users",
       icon: IconUsers,
     },
-     {
+    {
       title: "Roles",
       url: "/dashboard/roles",
       icon: IconShield,
@@ -75,79 +77,104 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/doms",
       icon: IconWorld,
     },
-  ]
-
-  const navSecondaryData = [
     {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
+      title: "Game Types",
+      url: "/dashboard/game-types",
+      icon: IconDeviceGamepad2,
+    }, // Added game types navigation item
+    {
+      title: "Machine Types",
+      url: "/dashboard/machine-types",
+      icon: IconCpu,
     },
     {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
+      title: "Machines",
+      url: "/dashboard/machines",
+      icon: IconDeviceDesktop,
     },
     {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ]
-
-  const navDocumentsData = [
-    {
-      name: "Introduction",
-      url: "#",
-      icon: IconFileDescription,
+      title: "Games",
+      url: "/dashboard/games",
+      icon: IconPlayerPlay,
     },
     {
-      name: "Get Started",
-      url: "#",
-      icon: IconFileWord,
-    },
-    {
-      name: "Tutorials",
-      url: "#",
-      icon: IconFileAi,
-    },
-    {
-      name: "Changelog",
-      url: "#",
-      icon: IconDatabase,
+      title: "Experiences",
+      url: "/dashboard/experiences",
+      icon: IconListDetails,
     },
   ]
 
-  return (
-    <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Dom Manager</span>
-              </a>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={navMainData} />
-        <NavDocuments items={navDocumentsData} />
-        <NavSecondary items={navSecondaryData} className="mt-auto" />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={user ? {
-          name: user.name,
-          email: user.email,
-          avatar: "/avatars/default.jpg"
-        } : {
-          name: "User",
-          email: "user@example.com",
-          avatar: "/avatars/default.jpg"
-        }} />
-      </SidebarFooter>
-    </Sidebar>
-  )
+const navSecondaryData = [
+  {
+    title: "Settings",
+    url: "#",
+    icon: IconSettings,
+  },
+  {
+    title: "Get Help",
+    url: "#",
+    icon: IconHelp,
+  },
+  {
+    title: "Search",
+    url: "#",
+    icon: IconSearch,
+  },
+]
+
+const navDocumentsData = [
+  {
+    name: "Introduction",
+    url: "#",
+    icon: IconFileDescription,
+  },
+  {
+    name: "Get Started",
+    url: "#",
+    icon: IconFileWord,
+  },
+  {
+    name: "Tutorials",
+    url: "#",
+    icon: IconFileAi,
+  },
+  {
+    name: "Changelog",
+    url: "#",
+    icon: IconDatabase,
+  },
+]
+
+return (
+  <Sidebar collapsible="offcanvas" {...props}>
+    <SidebarHeader>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild className="data-[slot=sidebar-menu-button]:!p-1.5">
+            <a href="#">
+              <IconInnerShadowTop className="!size-5" />
+              <span className="text-base font-semibold">Dom Manager</span>
+            </a>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    </SidebarHeader>
+    <SidebarContent>
+      <NavMain items={navMainData} />
+      <NavDocuments items={navDocumentsData} />
+      <NavSecondary items={navSecondaryData} className="mt-auto" />
+    </SidebarContent>
+    <SidebarFooter>
+      <NavUser user={user ? {
+        name: user.name,
+        email: user.email,
+        avatar: "/avatars/default.jpg"
+      } : {
+        name: "User",
+        email: "user@example.com",
+        avatar: "/avatars/default.jpg"
+      }} />
+    </SidebarFooter>
+  </Sidebar>
+)
 }
