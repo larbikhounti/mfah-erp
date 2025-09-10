@@ -32,14 +32,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useAuth } from "@/hooks/use-auth"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
+export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth()
+  
+  const navMainData = [
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -56,65 +54,23 @@ const data = {
       icon: IconChartBar,
     },
     {
-      title: "Projects",
+      title: "Files",
       url: "#",
       icon: IconFolder,
     },
     {
-      title: "Team",
-      url: "#",
+      title: "Users",
+      url: "/dashboard/users",
       icon: IconUsers,
     },
-  ],
-  navClouds: [
     {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
+      title: "Settings",
       url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
+      icon: IconSettings,
     },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
+  ]
+
+  const navSecondaryData = [
     {
       title: "Settings",
       url: "#",
@@ -130,27 +86,31 @@ const data = {
       url: "#",
       icon: IconSearch,
     },
-  ],
-  // documents: [
-  //   {
-  //     name: "Data Library",
-  //     url: "#",
-  //     icon: IconDatabase,
-  //   },
-  //   {
-  //     name: "Reports",
-  //     url: "#",
-  //     icon: IconReport,
-  //   },
-  //   {
-  //     name: "Word Assistant",
-  //     url: "#",
-  //     icon: IconFileWord,
-  //   },
-  // ],
-}
+  ]
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const navDocumentsData = [
+    {
+      name: "Introduction",
+      url: "#",
+      icon: IconFileDescription,
+    },
+    {
+      name: "Get Started",
+      url: "#",
+      icon: IconFileWord,
+    },
+    {
+      name: "Tutorials",
+      url: "#",
+      icon: IconFileAi,
+    },
+    {
+      name: "Changelog",
+      url: "#",
+      icon: IconDatabase,
+    },
+  ]
+
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -166,12 +126,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/* <NavDocuments items={data.documents} /> */}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMainData} />
+        <NavDocuments items={navDocumentsData} />
+        <NavSecondary items={navSecondaryData} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user ? {
+          name: user.name,
+          email: user.email,
+          avatar: "/avatars/default.jpg"
+        } : {
+          name: "User",
+          email: "user@example.com",
+          avatar: "/avatars/default.jpg"
+        }} />
       </SidebarFooter>
     </Sidebar>
   )

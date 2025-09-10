@@ -29,6 +29,67 @@ export class UsersService {
     }
   }
 
+  async findAll(
+    limit: number = 10,
+    page: number = 1,
+    filter: string = '',
+  ): Promise<{ data: Users[]; total: number }> {
+    try {
+      const skip = (page - 1) * limit;
+      
+      const where = filter
+        ? {
+            OR: [
+              { email: { contains: filter, mode: 'insensitive' as const } },
+              { name: { contains: filter, mode: 'insensitive' as const } },
+            ],
+          }
+        : {};
+
+      const [users, total] = await Promise.all([
+        this.prisma.users.findMany({
+          where,
+          skip,
+          take: limit,
+          select: {
+            id: true,
+            email: true,
+            name: true,
+            createdAt: true,
+            updatedAt: true,
+            domId: true,
+            roleId: true,
+            dom: {
+              select: {
+                id: true,
+                name: true,
+                address: true,
+              },
+            },
+            role: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        }),
+        this.prisma.users.count({ where }),
+      ]);
+
+      return { data: users, total };
+    } catch (error) {
+      this.logger.error('Error finding users', error);
+      throw new HttpException(
+        'Error retrieving users',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   async findOne(email: string): Promise<Users | null> {
     try {
       return await this.prisma.users.findUnique({
