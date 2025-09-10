@@ -17,6 +17,8 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
+  IconShield,
+  IconWorld
 } from "@tabler/icons-react"
 
 import { NavDocuments } from "@/components/nav-documents"
@@ -63,10 +65,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/users",
       icon: IconUsers,
     },
+     {
+      title: "Roles",
+      url: "/dashboard/roles",
+      icon: IconShield,
+    }, // Added roles navigation item
     {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
+      title: "Doms", // Added domains navigation item
+      url: "/dashboard/doms",
+      icon: IconWorld,
     },
   ]
 

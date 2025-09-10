@@ -1,9 +1,10 @@
 "use client"
 
+import { CreateUserDialog } from "@/components/user/create-user-dialog"
+import { EditUserDialog } from "@/components/user/edit-user-dialog"
+import { User, UserTable } from "@/components/user/user-table"
 import { useState } from "react"
-import { User, UserTable } from "./components/user-table"
-import { CreateUserDialog } from "./components/create-user-dialog"
-import { EditUserDialog } from "./components/edit-user-dialog"
+
 
 
 export default function UsersPage() {
@@ -56,9 +57,8 @@ export default function UsersPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex  justify-between ">
-        <h2 className="text-3xl font-bold tracking-tight">Users</h2>
+    <div className="flex-1 space-y-2 p-2 md:p-4 pt-3">
+      <div className="flex justify-end ">
         <CreateUserDialog onCreateUser={handleCreateUser} />
       </div>
       <UserTable users={users} onDeleteUser={handleDeleteUser} onEditUser={handleEditUser} />
