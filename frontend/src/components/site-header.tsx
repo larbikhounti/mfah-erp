@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation"
 import { useMemo } from "react"
 
 
-export function SiteHeader() {
+export function SiteHeader() {  
   const pathname = usePathname()
   
   // Get the page title dynamically from the current pathname
