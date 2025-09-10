@@ -4,6 +4,7 @@ import { useState } from "react"
 import { DomTable } from "@/components/doms/dom-table"
 import { CreateDomDialog } from "@/components/doms/create-dom-dialog"
 import { EditDomDialog } from "@/components/doms/edit-dom-dialog"
+import { PageHeader } from "@/components/shared/page-header"
 import { Dom } from "@/app/lib/types"
 
 export default function DomsPage() {
@@ -59,11 +60,10 @@ export default function DomsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Doms</h2>
+    <div className="flex-1 space-y-4 p-4 pt-6">
+      <PageHeader title="Doms">
         <CreateDomDialog onCreateDom={handleCreateDom} />
-      </div>
+      </PageHeader>
       <DomTable doms={doms} onEditDom={handleEditDom} onDeleteDom={handleDeleteDom} />
       {editingDom && (
         <EditDomDialog dom={editingDom} onUpdateDom={handleUpdateDom} onClose={() => setEditingDom(null)} />

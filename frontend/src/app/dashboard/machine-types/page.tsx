@@ -2,8 +2,10 @@
 
 import { useState } from "react"
 
+import { CreateMachineTypeDialog } from "@/components/machine-types/create-machine-type-dialog"
 import { MachineTypeTable } from "@/components/machine-types/machine-type-table"
 import { EditMachineTypeDialog } from "@/components/machine-types/edit-machine-type-dialog"
+import { PageHeader } from "@/components/shared/page-header"
 import { MachineType } from "@/app/lib/types"
 
 export default function MachineTypesPage() {
@@ -71,12 +73,11 @@ export default function MachineTypesPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Machine Types</h2>
-      </div>
+      <PageHeader title="Machine Types">
+        <CreateMachineTypeDialog onCreateMachineType={handleCreateMachineType} />
+      </PageHeader>
       <MachineTypeTable
         machineTypes={machineTypes}
-        onCreateMachineType={handleCreateMachineType}
         onEditMachineType={handleEditMachineType}
         onDeleteMachineType={handleDeleteMachineType}
       />

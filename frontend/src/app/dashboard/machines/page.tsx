@@ -4,6 +4,7 @@ import { useState } from "react"
 import { MachineTable } from "@/components/machines/machine-table"
 import { CreateMachineDialog } from "@/components/machines/create-machine-dialog"
 import { EditMachineDialog } from "@/components/machines/edit-machine-dialog"
+import { PageHeader } from "@/components/shared/page-header"
 import { Dom, Machine, MachineType } from "@/app/lib/types"
 
 export default function MachinesPage() {
@@ -144,12 +145,9 @@ export default function MachinesPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Machines</h2>
-        <div className="flex items-center space-x-2">
-          <CreateMachineDialog onCreateMachine={handleCreateMachine} machineTypes={machineTypes} doms={doms} />
-        </div>
-      </div>
+      <PageHeader title="Machines">
+        <CreateMachineDialog onCreateMachine={handleCreateMachine} machineTypes={machineTypes} doms={doms} />
+      </PageHeader>
       <MachineTable machines={machines} onDeleteMachine={handleDeleteMachine} onEditMachine={handleOpenEdit} />
       {editingMachine && (
         <EditMachineDialog

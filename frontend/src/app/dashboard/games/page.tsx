@@ -132,7 +132,6 @@ export default function GamesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Games</h2>
-          <p className="text-muted-foreground">Manage your game library and pricing</p>
         </div>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />

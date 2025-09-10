@@ -1,9 +1,13 @@
 "use client"
 
 import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { IconPlus } from "@tabler/icons-react"
 import { GameTypeTable } from "@/components/game-types/game-type-table"
 import { EditGameTypeDialog } from "@/components/game-types/edit-game-type-dialog"
+import { PageHeader } from "@/components/shared/page-header"
 import { GameType } from "@/app/lib/types"
+import { CreateGameTypeDialog } from "@/components/game-types/create-game-type-dialog"
 export default function GameTypesPage() {
   const [gameTypes, setGameTypes] = useState<GameType[]>([
     {
@@ -39,6 +43,7 @@ export default function GameTypesPage() {
   ])
 
   const [editingGameType, setEditingGameType] = useState<GameType | null>(null)
+  const [showCreateDialog, setShowCreateDialog] = useState(false)
 
   const handleCreateGameType = (newGameType: Omit<GameType, "id" | "createdAt" | "updatedAt">) => {
     const gameType: GameType = {
@@ -48,6 +53,7 @@ export default function GameTypesPage() {
       updatedAt: new Date().toISOString(),
     }
     setGameTypes([...gameTypes, gameType])
+    setShowCreateDialog(false)
   }
 
   const handleEditGameType = (updatedGameType: GameType) => {
@@ -65,15 +71,23 @@ export default function GameTypesPage() {
 
   return (
     <div className="flex-1 space-y-4 p-4 pt-6">
-      <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight">Game Types</h2>
-      </div>
+      <PageHeader title="Game Types">
+        <Button onClick={() => setShowCreateDialog(true)}>
+          <IconPlus className="mr-2 h-4 w-4" />
+          Add Game Type
+        </Button>
+      </PageHeader>
+
+      <CreateGameTypeDialog
+        open={showCreateDialog}
+        onOpenChange={setShowCreateDialog}
+        onCreateGameType={handleCreateGameType}
+      />
 
       <GameTypeTable
         gameTypes={gameTypes}
         onEdit={setEditingGameType}
         onDelete={handleDeleteGameType}
-        onCreateGameType={handleCreateGameType}
       />
 
       {editingGameType && (

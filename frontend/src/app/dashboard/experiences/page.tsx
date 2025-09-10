@@ -4,6 +4,7 @@ import { useState } from "react"
 import { ExperienceTable } from "@/components/experiences/experience-table"
 import { ExperienceDrawer } from "@/components/experiences/experience-drawer"
 import { Experience } from "@/app/lib/types"
+import { PageHeader } from "@/components/shared/page-header"
 
 
 // Mock data for experiences
@@ -125,10 +126,8 @@ export default function ExperiencesPage() {
 
   return (
     <div className="flex h-full">
-      <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
-        <div className="flex items-center justify-between space-y-2">
-          <h2 className="text-3xl font-bold tracking-tight">Experiences</h2>
-        </div>
+      <div className="flex-1 space-y-4 p-4 pt-6">
+        <PageHeader title="Experiences" />
         <ExperienceTable experiences={mockExperiences} onExperienceClick={handleExperienceClick} />
       </div>
 
