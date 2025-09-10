@@ -15,6 +15,8 @@ export default function Page({
 }: {
   children: React.ReactNode
 }) {
+    // get the current route name
+    const routeName = "Dashboard"
   return (
     <SidebarProvider
       style={
