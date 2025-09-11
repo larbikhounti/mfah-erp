@@ -36,16 +36,20 @@ import { AdminRoleGuard } from '../../auth/guards/admin-role.guard';
 export class UserController {
   constructor(private usersService: UsersService) {}
 
-  // get all users
-  // @ApiBearerAuth("access-token")
-  @Public()
-  @Get('all')
-  @ApiOperation({ summary: 'Get all users with filtering' })
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Get('admin/list/all')
+  @ApiOperation({ summary: 'Get all users with admin privileges (Admin only)' })
   @ApiResponse({
     status: 200,
     description: 'List of users retrieved successfully',
   })
-  getAllUsers(@Query() filterParams: FilterParamsDto) {
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  getAllUsersAdmin(@Query() filterParams: FilterParamsDto) {
     return this.usersService.findAll(filterParams);
   }
 
@@ -113,19 +117,6 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found' })
   deleteUserByAdmin(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.deleteUserByAdmin(id);
-  }
-
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard, AdminRoleGuard)
-  @Get('admin/list/all')
-  @ApiOperation({ summary: 'Get all users with admin privileges (Admin only)' })
-  @ApiResponse({
-    status: 200,
-    description: 'List of users retrieved successfully',
-  })
-  @ApiResponse({ status: 403, description: 'Admin access required' })
-  getAllUsersAdmin(@Query() filterParams: FilterParamsDto) {
-    return this.usersService.findAll(filterParams);
   }
 
   @ApiBearerAuth('access-token')

@@ -11,7 +11,7 @@ export async function seedUsers(prisma: PrismaClient) {
     email: 'admin@example.com',
     name: 'Admin User',
     password: hashedPassword,
-    roleId: 1,
+    role_id: 1,
     createdAt: new Date(),
     updatedAt: new Date(),
     accessToken: null,

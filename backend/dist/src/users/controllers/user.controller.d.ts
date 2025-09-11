@@ -7,7 +7,7 @@ import { FilterParamsDto } from '../dtos/filter/filter-params.dto';
 export declare class UserController {
     private usersService;
     constructor(usersService: UsersService);
-    getAllUsers(filterParams: FilterParamsDto): Promise<{
+    getAllUsersAdmin(filterParams: FilterParamsDto): Promise<{
         data: any[];
         total: number;
     }>;
@@ -17,10 +17,6 @@ export declare class UserController {
     updateUserByAdmin(id: number, updateUserDto: UpdateUserDto): Promise<import("../types/user-response.type").UserResponse>;
     deleteUserByAdmin(id: number): Promise<{
         message: string;
-    }>;
-    getAllUsersAdmin(filterParams: FilterParamsDto): Promise<{
-        data: any[];
-        total: number;
     }>;
     bulkDeleteUsersByAdmin(bulkDeleteDto: BulkDeleteUsersDto): Promise<{
         message: string;

@@ -28,7 +28,7 @@ let UserController = class UserController {
     constructor(usersService) {
         this.usersService = usersService;
     }
-    getAllUsers(filterParams) {
+    getAllUsersAdmin(filterParams) {
         return this.usersService.findAll(filterParams);
     }
     registerUser(registerUserDto) {
@@ -46,27 +46,30 @@ let UserController = class UserController {
     deleteUserByAdmin(id) {
         return this.usersService.deleteUserByAdmin(id);
     }
-    getAllUsersAdmin(filterParams) {
-        return this.usersService.findAll(filterParams);
-    }
     bulkDeleteUsersByAdmin(bulkDeleteDto) {
         return this.usersService.bulkDeleteUsersByAdmin(bulkDeleteDto);
     }
 };
 exports.UserController = UserController;
 __decorate([
-    (0, public_decorator_1.Public)(),
-    (0, common_1.Get)('all'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all users with filtering' }),
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Get)('admin/list/all'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all users with admin privileges (Admin only)' }),
     (0, swagger_1.ApiResponse)({
         status: 200,
         description: 'List of users retrieved successfully',
     }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: 'Unauthorized - Invalid or missing JWT token',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [filter_params_dto_1.FilterParamsDto]),
     __metadata("design:returntype", void 0)
-], UserController.prototype, "getAllUsers", null);
+], UserController.prototype, "getAllUsersAdmin", null);
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)('register'),
@@ -138,21 +141,6 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "deleteUserByAdmin", null);
-__decorate([
-    (0, swagger_1.ApiBearerAuth)('access-token'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
-    (0, common_1.Get)('admin/list/all'),
-    (0, swagger_1.ApiOperation)({ summary: 'Get all users with admin privileges (Admin only)' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'List of users retrieved successfully',
-    }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
-    __param(0, (0, common_1.Query)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [filter_params_dto_1.FilterParamsDto]),
-    __metadata("design:returntype", void 0)
-], UserController.prototype, "getAllUsersAdmin", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),

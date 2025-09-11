@@ -21,6 +21,14 @@ async function bootstrap() {
         .setDescription('The Vr API description')
         .setVersion('1.0')
         .addTag('vr')
+        .addBearerAuth({
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+    }, 'access-token')
         .build();
     const documentFactory = () => swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
     const options = {

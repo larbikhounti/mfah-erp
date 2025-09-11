@@ -25,6 +25,17 @@ async function bootstrap() {
     .setDescription('The Vr API description')
     .setVersion('1.0')
     .addTag('vr')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'access-token', // This name here is important for matching the @ApiBearerAuth() decorator
+    )
     .build();
 
   const documentFactory = () =>
