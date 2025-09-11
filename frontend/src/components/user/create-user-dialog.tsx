@@ -22,41 +22,80 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus, User } from "lucide-react";
-import { CreateUser } from "@/app/lib/types";
+import { useUsersStore, type CreateUserPayload } from "@/stores/users-store";
+import { toast } from "sonner";
 
 interface CreateUserDialogProps {
-  onCreateUser: (user: CreateUser) => void;
+  trigger?: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+export function CreateUserDialog({
+  trigger,
+  isOpen: externalIsOpen,
+  onClose: externalOnClose,
+}: CreateUserDialogProps) {
+  const { createUser, loading } = useUsersStore();
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+
+  // Use external state if provided, otherwise use internal state
+  const isDialogOpen =
+    externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsDialogOpen =
+    externalOnClose !== undefined
+      ? (open: boolean) => {
+          if (!open) externalOnClose();
+        }
+      : setInternalIsOpen;
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [dom, setDom] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    onCreateUser({
-      name,
-      email,
-      role,
-      dom,
-      password,
-    });
-    setIsDialogOpen(false);
+    if (!name || !email || !password) {
+      toast.error("Please fill in all required fields");
+      return;
+    }
+
+    try {
+      const userData: CreateUserPayload = {
+        name,
+        email,
+        password,
+        role_id: role ? parseInt(role) : undefined,
+        dom_id: dom ? parseInt(dom) : undefined,
+      };
+
+      await createUser(userData);
+      toast.success("User created successfully");
+
+      // Reset form
+      setName("");
+      setEmail("");
+      setPassword("");
+      setRole("");
+      setDom("");
+      setIsDialogOpen(false);
+    } catch (error) {
+      // Error is handled in the store
+    }
   };
+
+  const defaultTrigger = (
+    <Button>
+      <User className="mr-2 h-4 w-4" />
+      Add User
+    </Button>
+  );
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <User className="mr-2 h-4 w-4" />
-          Add User
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New User</DialogTitle>
@@ -67,7 +106,7 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name">Name *</Label>
               <Input
                 id="name"
                 value={name}
@@ -77,7 +116,7 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
@@ -88,7 +127,7 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Password *</Label>
               <Input
                 id="password"
                 type="password"
@@ -98,48 +137,47 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
                 required
               />
             </div>
-            <div className="w-full  grid md:grid-cols-2 gap-4">
-              <div className="grid gap-2 w-full ">
+            <div className="w-full grid md:grid-cols-2 gap-4">
+              <div className="grid gap-2 w-full">
                 <Label htmlFor="role">Role</Label>
-                <Select
-                  value={role}
-                  onValueChange={(value: "backoffice" | "front office") =>
-                    setRole(value)
-                  }
-                >
+                <Select value={role} onValueChange={(value) => setRole(value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="backoffice">Backoffice</SelectItem>
-                    <SelectItem value="front office">Front Office</SelectItem>
+                    <SelectItem value="1">Admin</SelectItem>
+                    <SelectItem value="2">User</SelectItem>
+                    <SelectItem value="3">Manager</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid gap-2 w-full ">
-                <Label htmlFor="doms">doms</Label>
+              <div className="grid gap-2 w-full">
+                <Label htmlFor="doms">DOMs</Label>
                 <Select value={dom} onValueChange={(value) => setDom(value)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select doms" />
+                    <SelectValue placeholder="Select DOM" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dom1">Dom 1</SelectItem>
-                    <SelectItem value="dom2">Dom 2</SelectItem>
-                    <SelectItem value="dom3">Dom 3</SelectItem>
+                    <SelectItem value="1">VR Experience Center</SelectItem>
+                    <SelectItem value="2">Gaming Hub</SelectItem>
+                    <SelectItem value="3">Entertainment Complex</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           </div>
-          <DialogFooter className=" mt-8">
+          <DialogFooter className="mt-8">
             <Button
               type="button"
               variant="outline"
               onClick={() => setIsDialogOpen(false)}
+              disabled={loading}
             >
               Cancel
             </Button>
-            <Button type="submit">Create User</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create User"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
