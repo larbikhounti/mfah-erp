@@ -323,4 +323,31 @@ export class UsersService {
       );
     }
   }
+
+  async getAllRoles(): Promise<any[]> {
+    try {
+      const roles = await this.prisma.roles.findMany({
+        where: {
+          deletedAt: null,
+        },
+        select: {
+          id: true,
+          name: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        orderBy: {
+          id: 'asc',
+        },
+      });
+
+      return roles;
+    } catch (error) {
+      this.logger.error('Error fetching roles:', error);
+      throw new HttpException(
+        'Error fetching roles',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

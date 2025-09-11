@@ -23,4 +23,5 @@ export declare class UserController {
         deletedCount: number;
         notFound: number[];
     }>;
+    getAllRoles(): Promise<any[]>;
 }

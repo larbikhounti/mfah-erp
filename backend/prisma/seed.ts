@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { seedRoles } from './seeds/seedRoles';
+import { seedDoms } from './seeds/seedDoms';
 import { seedUsers } from './seeds/seedUsers';
 
 const prisma = new PrismaClient();
@@ -9,6 +10,9 @@ async function main() {
   try {
     // Seed roles first (users depend on roles)
     await seedRoles(prisma);
+
+    // Seed DOMs (users can be assigned to DOMs)
+    await seedDoms(prisma);
 
     // Then seed users
     await seedUsers(prisma);

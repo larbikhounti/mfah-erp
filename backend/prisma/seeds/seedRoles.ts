@@ -7,6 +7,12 @@ export async function seedRoles(prisma: PrismaClient) {
     {
       name: 'ADMIN',
     },
+    {
+      name: 'USER',
+    },
+    {
+      name: 'MANAGER',
+    },
   ];
 
   for (const role of roles) {

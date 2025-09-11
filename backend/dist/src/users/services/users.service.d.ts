@@ -27,4 +27,5 @@ export declare class UsersService {
         deletedCount: number;
         notFound: number[];
     }>;
+    getAllRoles(): Promise<any[]>;
 }

@@ -12,7 +12,10 @@ import { SignInRequestDto } from '../dtos/auth.dto';
 import { Public } from '../decorator/public.decorator';
 import { Response } from 'express';
 
-@Controller('auth')
+@Controller({
+  path: 'auth',
+  version: '1',
+})
 export class AuthController {
   constructor(private authService: AuthService) {}
 

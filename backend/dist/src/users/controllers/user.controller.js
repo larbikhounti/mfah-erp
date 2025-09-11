@@ -49,6 +49,9 @@ let UserController = class UserController {
     bulkDeleteUsersByAdmin(bulkDeleteDto) {
         return this.usersService.bulkDeleteUsersByAdmin(bulkDeleteDto);
     }
+    getAllRoles() {
+        return this.usersService.getAllRoles();
+    }
 };
 exports.UserController = UserController;
 __decorate([
@@ -166,6 +169,36 @@ __decorate([
     __metadata("design:paramtypes", [bulk_delete_users_dto_1.BulkDeleteUsersDto]),
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "bulkDeleteUsersByAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Get)('admin/roles'),
+    (0, swagger_1.ApiOperation)({ summary: 'Get all roles (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'List of roles retrieved successfully',
+        schema: {
+            type: 'array',
+            items: {
+                type: 'object',
+                properties: {
+                    id: { type: 'number' },
+                    name: { type: 'string' },
+                    createdAt: { type: 'string', format: 'date-time' },
+                    updatedAt: { type: 'string', format: 'date-time' },
+                },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: 'Unauthorized - Invalid or missing JWT token',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", []),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "getAllRoles", null);
 exports.UserController = UserController = __decorate([
     (0, swagger_1.ApiTags)('users'),
     (0, common_1.Controller)({

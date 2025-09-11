@@ -141,4 +141,33 @@ export class UserController {
   bulkDeleteUsersByAdmin(@Body() bulkDeleteDto: BulkDeleteUsersDto) {
     return this.usersService.bulkDeleteUsersByAdmin(bulkDeleteDto);
   }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Get('admin/roles')
+  @ApiOperation({ summary: 'Get all roles (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of roles retrieved successfully',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number' },
+          name: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  getAllRoles() {
+    return this.usersService.getAllRoles();
+  }
 }

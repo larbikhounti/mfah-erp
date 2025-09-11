@@ -7,6 +7,12 @@ async function seedRoles(prisma) {
         {
             name: 'ADMIN',
         },
+        {
+            name: 'USER',
+        },
+        {
+            name: 'MANAGER',
+        },
     ];
     for (const role of roles) {
         const createdRole = await prisma.roles.upsert({

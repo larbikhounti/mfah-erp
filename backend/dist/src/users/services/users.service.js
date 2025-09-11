@@ -255,6 +255,29 @@ let UsersService = UsersService_1 = class UsersService {
             throw new common_1.HttpException('Error bulk deleting users', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+    async getAllRoles() {
+        try {
+            const roles = await this.prisma.roles.findMany({
+                where: {
+                    deletedAt: null,
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    createdAt: true,
+                    updatedAt: true,
+                },
+                orderBy: {
+                    id: 'asc',
+                },
+            });
+            return roles;
+        }
+        catch (error) {
+            this.logger.error('Error fetching roles:', error);
+            throw new common_1.HttpException('Error fetching roles', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = UsersService_1 = __decorate([
