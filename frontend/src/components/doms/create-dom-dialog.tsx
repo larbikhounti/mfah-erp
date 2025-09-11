@@ -1,10 +1,11 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
-import { useState } from "react"
-import { Plus } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -13,83 +14,121 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Dom } from "@/app/lib/types"
-
+} from "@/components/ui/dialog";
+import { Plus, Building } from "lucide-react";
+import { useDomsStore, type CreateDomPayload } from "@/stores/doms-store";
+import { toast } from "sonner";
+import { Textarea } from "../ui/textarea";
 
 interface CreateDomDialogProps {
-  onCreateDom: (dom: Omit<Dom, "id" | "createdAt" | "updatedAt">) => void
+  trigger?: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function CreateDomDialog({ onCreateDom }: CreateDomDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    address: "",
-  })
+export function CreateDomDialog({
+  trigger,
+  isOpen: externalIsOpen,
+  onClose: externalOnClose,
+}: CreateDomDialogProps) {
+  const { createDom, loading } = useDomsStore();
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (formData.name && formData.address) {
-      onCreateDom(formData)
-      setFormData({ name: "", address: "" })
-      setOpen(false)
+  // Use external state if provided, otherwise use internal state
+  const isDialogOpen =
+    externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsDialogOpen =
+    externalOnClose !== undefined
+      ? (open: boolean) => {
+          if (!open) externalOnClose();
+        }
+      : setInternalIsOpen;
+  
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!name || !address) {
+      toast.error("Please fill in all required fields");
+      return;
     }
-  }
 
-  const handleInputChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
-  }
+    try {
+      const domData: CreateDomPayload = {
+        name,
+        address,
+      };
+
+      await createDom(domData);
+      toast.success("DOM created successfully");
+
+      // Reset form
+      setName("");
+      setAddress("");
+      setIsDialogOpen(false);
+    } catch (error) {
+      // Error is handled in the store
+    }
+  };
+
+  const defaultTrigger = (
+    <Button>
+      <Building className="mr-2 h-4 w-4" />
+      Add DOM
+    </Button>
+  );
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Dom
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Dom</DialogTitle>
-          <DialogDescription>Create a new dom entry. Fill in the name and address.</DialogDescription>
+          <DialogTitle>Add New DOM</DialogTitle>
+          <DialogDescription>
+            Create a new DOM (Digital Operations Management) location with the required information.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
+            <div className="grid gap-2">
+              <Label htmlFor="name">Name *</Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={handleInputChange("name")}
-                className="col-span-3"
-                placeholder="dom1"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter DOM name (e.g., VR Experience Center)"
                 required
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="address" className="text-right">
-                Address
-              </Label>
-              <Input
+            <div className="grid gap-2">
+              <Label htmlFor="address">Address *</Label>
+              <Textarea
                 id="address"
-                value={formData.address}
-                onChange={handleInputChange("address")}
-                className="col-span-3"
-                placeholder="5th avenue"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Enter complete address"
                 required
+                rows={3}
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button type="submit">Create Dom</Button>
+          <DialogFooter className="mt-8">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create DOM"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

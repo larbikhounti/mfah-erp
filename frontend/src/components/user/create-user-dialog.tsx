@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Plus, User } from "lucide-react";
 import { useUsersStore, type CreateUserPayload } from "@/stores/users-store";
+import { useRolesStore } from "@/stores/roles-store";
+import { useDomsStore } from "@/stores/doms-store";
 import { toast } from "sonner";
 
 interface CreateUserDialogProps {
@@ -37,6 +39,8 @@ export function CreateUserDialog({
   onClose: externalOnClose,
 }: CreateUserDialogProps) {
   const { createUser, loading } = useUsersStore();
+  const { roles, fetchRoles, loading: rolesLoading } = useRolesStore();
+  const { doms, fetchDoms, loading: domsLoading } = useDomsStore();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
 
   // Use external state if provided, otherwise use internal state
@@ -53,6 +57,14 @@ export function CreateUserDialog({
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
   const [dom, setDom] = useState("");
+
+  // Fetch roles and DOMs when dialog opens
+  useEffect(() => {
+    if (isDialogOpen) {
+      fetchRoles();
+      fetchDoms();
+    }
+  }, [isDialogOpen, fetchRoles, fetchDoms]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,9 +157,21 @@ export function CreateUserDialog({
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">Admin</SelectItem>
-                    <SelectItem value="2">User</SelectItem>
-                    <SelectItem value="3">Manager</SelectItem>
+                    {rolesLoading ? (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        Loading roles...
+                      </div>
+                    ) : roles.length > 0 ? (
+                      roles.map((roleItem) => (
+                        <SelectItem key={roleItem.id} value={roleItem.id.toString()}>
+                          {roleItem.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        No roles available
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -158,9 +182,21 @@ export function CreateUserDialog({
                     <SelectValue placeholder="Select DOM" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">VR Experience Center</SelectItem>
-                    <SelectItem value="2">Gaming Hub</SelectItem>
-                    <SelectItem value="3">Entertainment Complex</SelectItem>
+                    {domsLoading ? (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        Loading DOMs...
+                      </div>
+                    ) : doms.length > 0 ? (
+                      doms.map((domItem) => (
+                        <SelectItem key={domItem.id} value={domItem.id.toString()}>
+                          {domItem.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                        No DOMs available
+                      </div>
+                    )}
                   </SelectContent>
                 </Select>
               </div>

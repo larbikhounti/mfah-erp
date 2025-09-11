@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.FilterDomsDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 class FilterDomsDto {
     constructor() {
         this.offset = 0;
@@ -25,9 +26,9 @@ __decorate([
         example: 0,
         required: false,
     }),
+    (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(0),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], FilterDomsDto.prototype, "offset", void 0);
 __decorate([
@@ -36,9 +37,9 @@ __decorate([
         example: 10,
         required: false,
     }),
+    (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], FilterDomsDto.prototype, "limit", void 0);
 __decorate([
@@ -57,9 +58,9 @@ __decorate([
         example: 1,
         required: false,
     }),
+    (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], FilterDomsDto.prototype, "domId", void 0);
 //# sourceMappingURL=filter-doms.dto.js.map

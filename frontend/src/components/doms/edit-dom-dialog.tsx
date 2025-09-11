@@ -1,9 +1,12 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "../ui/textarea";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
@@ -11,88 +14,108 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Dom } from "@/app/lib/types"
-
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useDomsStore, type Dom } from "@/stores/doms-store";
+import { Edit } from "lucide-react";
+import { toast } from "sonner";
 
 interface EditDomDialogProps {
-  dom: Dom
-  onUpdateDom: (dom: Dom) => void
-  onClose: () => void
+  dom: Dom | null;
 }
 
-export function EditDomDialog({ dom, onUpdateDom, onClose }: EditDomDialogProps) {
-  const [formData, setFormData] = useState({
-    name: dom.name,
-    address: dom.address,
-  })
+export function EditDomDialog({ dom }: EditDomDialogProps) {
+  const { updateDom, loading } = useDomsStore();
+  const [name, setName] = useState("");
+  const [address, setAddress] = useState("");
 
   useEffect(() => {
-    setFormData({
-      name: dom.name,
-      address: dom.address,
-    })
-  }, [dom])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (formData.name && formData.address) {
-      onUpdateDom({
-        ...dom,
-        name: formData.name,
-        address: formData.address,
-      })
+    if (dom) {
+      setName(dom.name);
+      setAddress(dom.address);
     }
-  }
+  }, [dom]);
 
-  const handleInputChange = (field: keyof typeof formData) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dom || !name || !address) return;
+
+    try {
+      await updateDom(dom.id, {
+        name,
+        address,
+      });
+      toast.success("DOM updated successfully");
+    } catch (error) {
+      console.error("Failed to update DOM:", error);
+    }
+  };
+
+  const handleClose = () => {
+    setName("");
+    setAddress("");
+  };
 
   return (
-    <Dialog open={true} onOpenChange={onClose}>
+    <Dialog>
+      <DialogTrigger asChild>
+        <span className="relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden">
+          <Edit className="mr-2 h-4 w-4" />
+          Edit
+        </span>
+      </DialogTrigger>
+
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Dom</DialogTitle>
-          <DialogDescription>Update the dom information. Make changes and save.</DialogDescription>
+          <DialogTitle>Edit DOM</DialogTitle>
+          <DialogDescription>
+            Update DOM information.
+          </DialogDescription>
         </DialogHeader>
+
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-name" className="text-right">
-                Name
-              </Label>
+            {/* Name */}
+            <div className="grid gap-2">
+              <Label htmlFor="edit-name">Name *</Label>
               <Input
                 id="edit-name"
-                value={formData.name}
-                onChange={handleInputChange("name")}
-                className="col-span-3"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter DOM name"
                 required
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="edit-address" className="text-right">
-                Address
-              </Label>
-              <Input
+
+            {/* Address */}
+            <div className="grid gap-2">
+              <Label htmlFor="edit-address">Address *</Label>
+              <Textarea
                 id="edit-address"
-                value={formData.address}
-                onChange={handleInputChange("address")}
-                className="col-span-3"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Enter complete address"
                 required
+                rows={3}
               />
             </div>
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+
+          <DialogFooter className="mt-8">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Updating..." : "Update DOM"}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect } from "react";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ import { useUsersStore, type User } from "@/stores/users-store";
 import { toast } from "sonner";
 import { CreateUserDialog } from "@/components/user/create-user-dialog";
 import { EditUserDialog } from "@/components/user/edit-user-dialog";
+import PaginationTable from "@/components/pagination-table";
 
 interface EnhancedUserTableProps {
   // Remove the callback props since we'll handle them internally
@@ -37,12 +38,18 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
     loading,
     error,
     selectedUsers,
+    total,
+    currentPage,
+    pageSize,
+    totalPages,
     fetchUsers,
     deleteUser,
     bulkDeleteUsers,
     selectUser,
     clearSelection,
     clearError,
+    setPage,
+    setPageSize,
   } = useUsersStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -175,7 +182,7 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem>
+            <DropdownMenuItem asChild> 
               <EditUserDialog user={user} />
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -206,7 +213,6 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
         showCount={true}
         customHeader={
           <div className="flex items-center gap-2">
-            <CreateUserDialog />
             {selectedUsers.length > 0 && (
               <Button
                 variant="destructive"
@@ -217,6 +223,7 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
                 Delete Selected ({selectedUsers.length})
               </Button>
             )}
+            <CreateUserDialog />
           </div>
         }
       />
@@ -264,6 +271,18 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Pagination */}
+      {total > 0 && (
+        <PaginationTable
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={total}
+          onPageChange={setPage}
+          onPageSizeChange={setPageSize}
+        />
+      )}
     </div>
   );
 }

@@ -28,7 +28,10 @@ import { AuthGuard } from '../../auth/guards/auth.guard';
 import { AdminRoleGuard } from '../../auth/guards/admin-role.guard';
 
 @ApiTags('doms')
-@Controller('doms')
+@Controller({
+  path: 'doms',
+  version: '1',
+})
 export class DomsController {
   constructor(private domsService: DomsService) {}
 

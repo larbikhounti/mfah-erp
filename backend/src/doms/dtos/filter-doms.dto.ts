@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsNumber } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class FilterDomsDto {
   @ApiProperty({
@@ -7,9 +8,9 @@ export class FilterDomsDto {
     example: 0,
     required: false,
   })
+  @Type(() => Number)
   @IsOptional()
-  @IsInt()
-  @Min(0)
+  @IsNumber()
   offset?: number = 0;
 
   @ApiProperty({
@@ -17,9 +18,9 @@ export class FilterDomsDto {
     example: 10,
     required: false,
   })
+  @Type(() => Number)
   @IsOptional()
-  @IsInt()
-  @Min(1)
+  @IsNumber()
   limit?: number = 10;
 
   @ApiProperty({
@@ -36,8 +37,8 @@ export class FilterDomsDto {
     example: 1,
     required: false,
   })
+  @Type(() => Number)
   @IsOptional()
-  @IsInt()
-  @Min(1)
+  @IsNumber()
   domId?: number;
 }

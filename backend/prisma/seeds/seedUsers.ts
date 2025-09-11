@@ -24,50 +24,49 @@ export async function seedUsers(prisma: PrismaClient) {
   });
 
   const users = [
+    // Admin
     {
       email: 'admin@example.com',
       name: 'Admin User',
-      password: hashedPassword,
       role_id: adminRole?.id || 1,
       dom_id: vrCenter?.id || null,
     },
+
+    // Managers
     {
       email: 'manager1@example.com',
       name: 'VR Manager',
-      password: hashedPassword,
       role_id: managerRole?.id || 3,
       dom_id: vrCenter?.id || null,
     },
     {
       email: 'manager2@example.com',
       name: 'Gaming Manager',
-      password: hashedPassword,
       role_id: managerRole?.id || 3,
       dom_id: gamingHub?.id || null,
     },
     {
-      email: 'user1@example.com',
-      name: 'John Doe',
-      password: hashedPassword,
-      role_id: userRole?.id || 2,
-      dom_id: vrCenter?.id || null,
-    },
-    {
-      email: 'user2@example.com',
-      name: 'Jane Smith',
-      password: hashedPassword,
-      role_id: userRole?.id || 2,
-      dom_id: gamingHub?.id || null,
-    },
-    {
-      email: 'user3@example.com',
-      name: 'Bob Wilson',
-      password: hashedPassword,
-      role_id: userRole?.id || 2,
+      email: 'manager3@example.com',
+      name: 'Entertainment Manager',
+      role_id: managerRole?.id || 3,
       dom_id: entertainmentComplex?.id || null,
     },
   ];
 
+  // Generate 16 regular users across the 3 DOMs
+  for (let i = 1; i <= 16; i++) {
+    const doms = [vrCenter?.id, gamingHub?.id, entertainmentComplex?.id];
+    const dom_id = doms[i % doms.length] || null;
+
+    users.push({
+      email: `user${i}@example.com`,
+      name: `User ${i}`,
+      role_id: userRole?.id || 2,
+      dom_id,
+    });
+  }
+
+  // Upsert all users
   for (const user of users) {
     const createdUser = await prisma.users.upsert({
       where: { email: user.email },
@@ -75,7 +74,7 @@ export async function seedUsers(prisma: PrismaClient) {
       create: {
         email: user.email,
         name: user.name,
-        password: user.password,
+        password: hashedPassword,
         role_id: user.role_id,
         dom_id: user.dom_id,
         accessToken: null,

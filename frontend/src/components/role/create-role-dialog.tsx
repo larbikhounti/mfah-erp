@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -12,67 +13,145 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { IconPlus } from "@tabler/icons-react"
+} from "@/components/ui/dialog";
+import { Plus, Shield } from "lucide-react";
+import { useRolesStore, type CreateRolePayload } from "@/stores/roles-store";
+import { toast } from "sonner";
 
 interface CreateRoleDialogProps {
-  onCreateRole: (roleData: { name: string }) => void
+  trigger?: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export function CreateRoleDialog({ onCreateRole }: CreateRoleDialogProps) {
-  const [open, setOpen] = useState(false)
-  const [name, setName] = useState("")
+export function CreateRoleDialog({
+  trigger,
+  isOpen: externalIsOpen,
+  onClose: externalOnClose,
+}: CreateRoleDialogProps) {
+  const { createRole, loading } = useRolesStore();
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!name.trim()) return
+  // Use external state if provided, otherwise use internal state
+  const isDialogOpen =
+    externalIsOpen !== undefined ? externalIsOpen : internalIsOpen;
+  const setIsDialogOpen =
+    externalOnClose !== undefined
+      ? (open: boolean) => {
+          if (!open) externalOnClose();
+        }
+      : setInternalIsOpen;
 
-    onCreateRole({ name: name.trim() })
-    setName("")
-    setOpen(false)
-  }
+  // Form state
+  const [formData, setFormData] = useState<CreateRolePayload>({
+    name: "",
+  });
+
+  // Form errors
+  const [errors, setErrors] = useState<{
+    name?: string;
+  }>({});
+
+  // Validate form
+  const validateForm = (): boolean => {
+    const newErrors: typeof errors = {};
+
+    if (!formData.name?.trim()) {
+      newErrors.name = "Role name is required";
+    } else if (formData.name.length < 2) {
+      newErrors.name = "Role name must be at least 2 characters";
+    } else if (formData.name.length > 50) {
+      newErrors.name = "Role name must be less than 50 characters";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      await createRole(formData);
+      toast.success("Role created successfully");
+      handleClose();
+    } catch (error) {
+      console.error("Failed to create role:", error);
+      toast.error("Failed to create role");
+    }
+  };
+
+  // Handle dialog close
+  const handleClose = () => {
+    setFormData({ name: "" });
+    setErrors({});
+    setIsDialogOpen(false);
+  };
+
+  // Handle input changes
+  const handleInputChange = (field: keyof CreateRolePayload, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2">
-          <IconPlus className="h-4 w-4" />
-          Add Role
-        </Button>
+        {trigger || (
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Role
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Role</DialogTitle>
-          <DialogDescription>Add a new role to the system. Enter a unique role name.</DialogDescription>
+          <DialogTitle className="flex items-center gap-2">
+            <Shield className="h-5 w-5" />
+            Create New Role
+          </DialogTitle>
+          <DialogDescription>
+            Create a new role to assign to users. Roles help organize user permissions and access levels.
+          </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="col-span-3"
-                placeholder="Enter role name"
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Role Name</Label>
+            <Input
+              id="name"
+              placeholder="Enter role name (e.g., Manager, Operator)"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              className={errors.name ? "border-destructive" : ""}
+            />
+            {errors.name && (
+              <p className="text-sm text-destructive">{errors.name}</p>
+            )}
           </div>
+
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleClose}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={!name.trim()}>
-              Create Role
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create Role"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

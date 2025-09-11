@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { DomsModule } from './doms/doms.module';
+import { RolesModule } from './roles/roles.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 
@@ -13,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
     PrismaModule,
     UsersModule,
     DomsModule,
+    RolesModule,
     AuthModule,
   ],
   controllers: [AppController],

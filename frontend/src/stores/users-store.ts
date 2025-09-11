@@ -45,6 +45,11 @@ interface UsersStore {
   loading: boolean;
   error: string | null;
   selectedUsers: number[];
+  
+  // Pagination state
+  currentPage: number;
+  pageSize: number;
+  totalPages: number;
 
   // Actions
   fetchUsers: (params?: FilterParams) => Promise<void>;
@@ -53,6 +58,10 @@ interface UsersStore {
   deleteUser: (id: number) => Promise<void>;
   bulkDeleteUsers: (userIds: number[]) => Promise<void>;
   getUserById: (id: number) => Promise<User | null>;
+
+  // Pagination actions
+  setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
 
   // Selection actions
   selectUser: (id: number) => void;
@@ -71,27 +80,47 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
   loading: false,
   error: null,
   selectedUsers: [],
+  
+  // Pagination state
+  currentPage: 1,
+  pageSize: 10,
+  totalPages: 0,
 
   // Fetch users with filtering
   fetchUsers: async (params: FilterParams = {}) => {
     try {
       set({ loading: true, error: null });
 
-      const queryParams = new URLSearchParams();
-      if (params.offset !== undefined)
-        queryParams.append("offset", params.offset.toString());
-      if (params.limit !== undefined)
-        queryParams.append("limit", params.limit.toString());
-      if (params.search) queryParams.append("search", params.search);
-      if (params.userId) queryParams.append("userId", params.userId.toString());
+      const { currentPage, pageSize } = get();
+      const offset = Math.max(0, (currentPage - 1) * pageSize);
 
-      const response = await axiosInstance.get<UsersResponse>(
-        `/users/admin/list/all?${queryParams.toString()}`
-      );
+      // Always send default values to ensure integers
+      const finalOffset = Math.max(0, Math.floor(params.offset ?? offset));
+      const finalLimit = Math.max(1, Math.floor(params.limit ?? pageSize));
+      
+      // Use axios params instead of URLSearchParams for better type handling
+      const apiParams: any = {
+        offset: finalOffset,
+        limit: finalLimit,
+      };
+      
+      if (params.search && params.search.trim()) {
+        apiParams.search = params.search.trim();
+      }
+      if (params.userId && params.userId > 0) {
+        apiParams.userId = Math.floor(params.userId);
+      }
+
+      const response = await axiosInstance.get<UsersResponse>('/users/admin/list/all', {
+        params: apiParams
+      });
+
+      const totalPages = Math.ceil(response.data.total / pageSize);
 
       set({
         users: response.data.data,
         total: response.data.total,
+        totalPages,
         loading: false,
       });
     } catch (error: any) {
@@ -200,6 +229,19 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
       set({ error: error.response?.data?.message || "Failed to fetch user" });
       return null;
     }
+  },
+
+  // Pagination actions
+  setPage: (page: number) => {
+    const validPage = Math.max(1, Math.floor(page));
+    set({ currentPage: validPage });
+    get().fetchUsers();
+  },
+
+  setPageSize: (pageSize: number) => {
+    const validPageSize = Math.max(1, Math.floor(pageSize));
+    set({ pageSize: validPageSize, currentPage: 1 });
+    get().fetchUsers();
   },
 
   // Selection management

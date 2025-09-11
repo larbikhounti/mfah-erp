@@ -183,7 +183,10 @@ __decorate([
 ], DomsController.prototype, "getAllDomsAdmin", null);
 exports.DomsController = DomsController = __decorate([
     (0, swagger_1.ApiTags)('doms'),
-    (0, common_1.Controller)('doms'),
+    (0, common_1.Controller)({
+        path: 'doms',
+        version: '1',
+    }),
     __metadata("design:paramtypes", [doms_service_1.DomsService])
 ], DomsController);
 //# sourceMappingURL=doms.controller.js.map
