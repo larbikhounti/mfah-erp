@@ -8,18 +8,33 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UsersModule = void 0;
 const common_1 = require("@nestjs/common");
+const jwt_1 = require("@nestjs/jwt");
+const config_1 = require("@nestjs/config");
 const users_service_1 = require("./services/users.service");
 const user_controller_1 = require("./controllers/user.controller");
 const prisma_module_1 = require("../prisma/prisma.module");
+const admin_role_guard_1 = require("../auth/guards/admin-role.guard");
 let UsersModule = class UsersModule {
 };
 exports.UsersModule = UsersModule;
 exports.UsersModule = UsersModule = __decorate([
     (0, common_1.Module)({
-        providers: [users_service_1.UsersService],
+        imports: [
+            prisma_module_1.PrismaModule,
+            config_1.ConfigModule,
+            jwt_1.JwtModule.registerAsync({
+                inject: [config_1.ConfigService],
+                useFactory: (configService) => ({
+                    secret: configService.get('JWT_ACCESS_SECRET'),
+                    signOptions: {
+                        expiresIn: configService.get('JWT_EXPIRATION_TIME'),
+                    },
+                }),
+            }),
+        ],
+        providers: [users_service_1.UsersService, admin_role_guard_1.AdminRoleGuard],
         controllers: [user_controller_1.UserController],
         exports: [users_service_1.UsersService],
-        imports: [prisma_module_1.PrismaModule],
     })
 ], UsersModule);
 //# sourceMappingURL=users.module.js.map

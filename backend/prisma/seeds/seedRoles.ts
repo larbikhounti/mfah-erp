@@ -1,5 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
+import { PrismaClient } from '@prisma/client';
 
 export async function seedRoles(prisma: PrismaClient) {
   console.log('Seeding roles...');
@@ -14,7 +13,9 @@ export async function seedRoles(prisma: PrismaClient) {
     const createdRole = await prisma.roles.upsert({
       where: { name: role.name },
       update: {},
-      create: role,
+      create: {
+        name: role.name,
+      },
     });
     console.log(`Role created: ${JSON.stringify(createdRole)}`);
   }

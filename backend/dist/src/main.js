@@ -3,17 +3,31 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = require("@nestjs/core");
 const app_module_1 = require("./app.module");
 const swagger_1 = require("@nestjs/swagger");
+const common_1 = require("@nestjs/common");
 async function bootstrap() {
-    const config = new swagger_1.DocumentBuilder()
-        .setTitle('Your API')
-        .setDescription('API description')
-        .setVersion('1.0')
-        .build();
     const app = await core_1.NestFactory.create(app_module_1.AppModule);
-    app.enableCors();
     app.setGlobalPrefix('api');
-    const document = swagger_1.SwaggerModule.createDocument(app, config);
-    swagger_1.SwaggerModule.setup('api', app, document);
+    app.enableCors();
+    app.enableVersioning({
+        type: common_1.VersioningType.URI,
+    });
+    app.useGlobalPipes(new common_1.ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+    }));
+    const swaggerConfig = new swagger_1.DocumentBuilder()
+        .setTitle('Vr Api')
+        .setDescription('The Vr API description')
+        .setVersion('1.0')
+        .addTag('vr')
+        .build();
+    const documentFactory = () => swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
+    const options = {
+        explorer: true,
+        customSiteTitle: 'Vr Api ',
+    };
+    swagger_1.SwaggerModule.setup('api/docs', app, documentFactory, options);
     await app.listen(8081);
 }
 bootstrap();

@@ -12,7 +12,9 @@ async function seedRoles(prisma) {
         const createdRole = await prisma.roles.upsert({
             where: { name: role.name },
             update: {},
-            create: role,
+            create: {
+                name: role.name,
+            },
         });
         console.log(`Role created: ${JSON.stringify(createdRole)}`);
     }
