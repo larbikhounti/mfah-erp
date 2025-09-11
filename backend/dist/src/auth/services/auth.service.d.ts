@@ -4,7 +4,7 @@ import { SignInRequestDto, SignInResponseDto } from '../dtos/auth.dto';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Users } from 'generated/prisma';
+import { Users } from '@prisma/client';
 export declare class AuthService {
     private usersService;
     private jwtService;

@@ -1,43 +1,32 @@
 "use client"
 
+import { CreateUser, User } from "@/app/lib/types"
 import { CreateUserDialog } from "@/components/user/create-user-dialog"
 import { EditUserDialog } from "@/components/user/edit-user-dialog"
-import { User, UserTable } from "@/components/user/user-table"
+import {  UserTable } from "@/components/user/user-table"
+import { axiosInstance } from "@/lib/utils"
 import { useState } from "react"
 
-
+import useSWR from 'swr';
 
 export default function UsersPage() {
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@example.com",
-      role: "backoffice",
-      dom: "dom1",
-    },
-    {
-      id: "2",
-      name: "Jane Smith",
-      email: "jane@example.com",
-      role: "front office",
-      dom: "dom2",
-    },
-  ])
+  const { data : users, mutate } = useSWR<User[]>("/api", async()=>{
+    return  axiosInstance.get("/users/all").then(res => res.data.data)
+  })
+  console.log(users)
 
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
 
-  const handleCreateUser = (userData: Omit<User, "id">) => {
-    const newUser: User = {
-      id: Date.now().toString(),
+  const handleCreateUser = (userData: CreateUser) => {
+    const newUser: CreateUser = {
       ...userData,
     }
-    setUsers([...users, newUser])
+    //TODO : should mutate sung swr
   }
 
-  const handleDeleteUser = (id: string) => {
-    setUsers(users.filter((user) => user.id !== id))
+  const handleDeleteUser = (id: number) => {
+   // setUsers(data.filter((user) => user.id !== id))
   }
 
   const handleEditUser = (user: User) => {
@@ -46,7 +35,7 @@ export default function UsersPage() {
   }
 
   const handleUpdateUser = (updatedUser: User) => {
-    setUsers(users.map((user) => (user.id === updatedUser.id ? updatedUser : user)))
+    // setUsers(users.map((user) => (user.id === updatedUser.id ? updatedUser : user)))
     setEditingUser(null)
     setIsEditDialogOpen(false)
   }
@@ -61,7 +50,7 @@ export default function UsersPage() {
       <div className="flex justify-end ">
         <CreateUserDialog onCreateUser={handleCreateUser} />
       </div>
-      <UserTable users={users} onDeleteUser={handleDeleteUser} onEditUser={handleEditUser} />
+      <UserTable users={users || []} onDeleteUser={handleDeleteUser} onEditUser={handleEditUser} />
 
       <EditUserDialog
         user={editingUser}

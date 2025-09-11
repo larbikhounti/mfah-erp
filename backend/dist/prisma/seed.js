@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const prisma_1 = require("../generated/prisma");
+const client_1 = require("@prisma/client");
 const seedRoles_1 = require("./seeds/seedRoles");
 const seedUsers_1 = require("./seeds/seedUsers");
-const prisma = new prisma_1.PrismaClient();
+const prisma = new client_1.PrismaClient();
 async function main() {
     console.log('Starting database seeding...');
     try {

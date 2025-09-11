@@ -12,9 +12,9 @@ export interface User {
   name: string
   email: string
   role: string
-  domain: string
-  createdAt: string
-  updatedAt: string
+  dom: string
+  createdAt?: string
+  updatedAt?: string
   deletedAt?: string
 }
 
@@ -106,4 +106,35 @@ export interface MachineChair {
   deletedAt?: string
   // Optional populated relationships
   machine?: Machine
+}
+
+// user types
+
+
+export interface User {
+  id: number
+  name: string
+  email: string
+  role: string
+  dom: string
+  createdAt?: string
+  updatedAt?: string
+  deletedAt?: string
+}
+
+export interface CreateUser {
+  name: string
+  email: string
+  password: string
+  role: string
+  dom: string
+}
+
+export interface EditUser {
+  id: number
+  name: string
+  email: string
+  password: string
+  role: string
+  dom: string
 }

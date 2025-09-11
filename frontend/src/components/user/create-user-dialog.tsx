@@ -16,36 +16,34 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus } from "lucide-react"
-import type { User } from "./user-table"
+import { CreateUser, User } from "@/app/lib/types"
 
 interface CreateUserDialogProps {
-  onCreateUser: (user: Omit<User, "id">) => void
+  onCreateUser: (user: CreateUser) => void
 }
 
-export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
+export function CreateUserDialog({onCreateUser }: CreateUserDialogProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "" as "backoffice" | "front office" | "",
-    doms: "" as "dom1" | "dom2" | "dom3" | "",
-  })
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [role, setRole] = useState("")
+  const [dom, setDom] = useState("")
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name || !formData.email || !formData.password || !formData.role || !formData.doms) {
-      return
-    }
 
-    onCreateUser({
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-      dom: formData.doms,
-    })
 
-    setFormData({ name: "", email: "", password: "", role: "", doms: "" })
+    onCreateUser(
+      {
+        name,
+        email,
+        role,
+        dom,
+        password
+      }
+    )
     setIsDialogOpen(false)
   }
 
@@ -68,8 +66,8 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
               <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Enter full name"
                 required
               />
@@ -79,8 +77,8 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter email address"
                 required
               />
@@ -90,8 +88,8 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
               <Input
                 id="password"
                 type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter password"
                 required
               />
@@ -99,8 +97,8 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
             <div className="grid gap-2">
               <Label htmlFor="role">Role</Label>
               <Select
-                value={formData.role}
-                onValueChange={(value: "backoffice" | "front office") => setFormData({ ...formData, role: value })}
+                value={role}
+                onValueChange={(value: "backoffice" | "front office") => setRole(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
@@ -114,8 +112,8 @@ export function CreateUserDialog({ onCreateUser }: CreateUserDialogProps) {
             <div className="grid gap-2">
               <Label htmlFor="doms">doms</Label>
               <Select
-                value={formData.doms}
-                onValueChange={(value: "dom1" | "dom2" | "dom3") => setFormData({ ...formData, doms: value })}
+                value={dom}
+                onValueChange={(value) => setDom(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select doms" />

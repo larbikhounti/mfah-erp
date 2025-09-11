@@ -32,6 +32,71 @@ let UsersService = UsersService_1 = class UsersService {
             return new common_1.HttpException('Error creating user', 500);
         }
     }
+    async findAll(filterParams) {
+        try {
+            const { offset = 0, limit = 10, search, status, userId } = filterParams;
+            const where = {};
+            if (search) {
+                where.OR = [
+                    { name: { contains: search, mode: 'insensitive' } },
+                    { email: { contains: search, mode: 'insensitive' } }
+                ];
+            }
+            if (userId) {
+                where.id = userId;
+            }
+            const [users, total] = await Promise.all([
+                this.prisma.users.findMany({
+                    where,
+                    skip: offset,
+                    take: limit,
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        createdAt: true,
+                        updatedAt: true,
+                        domId: true,
+                        roleId: true,
+                        dom: {
+                            select: {
+                                id: true,
+                                name: true,
+                                address: true,
+                            },
+                        },
+                        role: {
+                            select: {
+                                id: true,
+                                name: true,
+                            },
+                        },
+                    },
+                    orderBy: {
+                        createdAt: 'desc',
+                    },
+                }),
+                this.prisma.users.count({ where }),
+            ]);
+            const formattedData = users.map(user => {
+                var _a, _b;
+                return ({
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    role: ((_a = user.role) === null || _a === void 0 ? void 0 : _a.name) || null,
+                    dom: ((_b = user.dom) === null || _b === void 0 ? void 0 : _b.name) || null,
+                    createdAt: user.createdAt.toISOString(),
+                    updatedAt: user.updatedAt.toISOString(),
+                });
+            });
+            return { data: formattedData, total };
+        }
+        catch (error) {
+            this.logger.error('Error finding users', error);
+            throw new common_1.HttpException('Error retrieving users', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
     async findOne(email) {
         try {
             return await this.prisma.users.findUnique({

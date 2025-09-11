@@ -15,54 +15,58 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { User } from "./user-table"
+import { EditUser } from "@/app/lib/types"
 
 interface EditUserDialogProps {
   user: User | null
   isOpen: boolean
   onClose: () => void
-  onEditUser: (user: User) => void
+  onEditUser: (user: EditUser) => void
 }
 
 export function EditUserDialog({ user, isOpen, onClose, onEditUser }: EditUserDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    role: "" as "backoffice" | "front office" | "",
-    dom: "" as "dom1" | "dom2" | "dom3" | "",
-  })
+  const [name, setName] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [role, setRole] = useState("")
+  const [dom, setDom] = useState("")
 
   useEffect(() => {
     if (user) {
-      setFormData({
-        name: user.name,
-        email: user.email,
-        password: "", // Don't populate password for security
-        role: user.role,
-        dom: user.dom,
-      })
+      setName(user.name)
+      setEmail(user.email)
+      setPassword("")
+      setRole(user.role)
+      setDom(user.dom)
     }
   }, [user])
 
+
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!user || !formData.name || !formData.email || !formData.role || !formData.dom) {
+    if (!user || !name || !email || !role || !dom) {
       return
     }
 
     onEditUser({
       id: user.id,
-      name: formData.name,
-      email: formData.email,
-      role: formData.role,
-      dom: formData.dom,
+      name,
+      email,
+      password,
+      role,
+      dom,
     })
 
     onClose()
   }
 
   const handleClose = () => {
-    setFormData({ name: "", email: "", password: "", role: "", dom: "" })
+    setName("")
+    setEmail("")
+    setPassword("")
+    setRole("")
+    setDom("")
     onClose()
   }
 
@@ -79,8 +83,8 @@ export function EditUserDialog({ user, isOpen, onClose, onEditUser }: EditUserDi
               <Label htmlFor="edit-name">Name</Label>
               <Input
                 id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 placeholder="Enter full name"
                 required
               />
@@ -90,8 +94,8 @@ export function EditUserDialog({ user, isOpen, onClose, onEditUser }: EditUserDi
               <Input
                 id="edit-email"
                 type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter email address"
                 required
               />
@@ -101,16 +105,16 @@ export function EditUserDialog({ user, isOpen, onClose, onEditUser }: EditUserDi
               <Input
                 id="edit-password"
                 type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Leave blank to keep current password"
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-role">Role</Label>
               <Select
-                value={formData.role}
-                onValueChange={(value: "backoffice" | "front office") => setFormData({ ...formData, role: value })}
+                value={role}
+                onValueChange={(value: "backoffice" | "front office") => setRole(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select role" />
@@ -124,8 +128,8 @@ export function EditUserDialog({ user, isOpen, onClose, onEditUser }: EditUserDi
             <div className="grid gap-2">
               <Label htmlFor="edit-dom">dom</Label>
               <Select
-                value={formData.dom}
-                onValueChange={(value: "dom1" | "dom2" | "dom3") => setFormData({ ...formData, dom: value })}
+                value={dom}
+                onValueChange={(value) => setDom(value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select dom" />

@@ -1,19 +1,12 @@
+import { User } from "@/app/lib/types"
 import { DataTableProps } from "@/components/shared/data-table"
 import { Button } from "@/components/ui/button"
 import { IconEdit, IconTrash } from "@tabler/icons-react"
 
-// User table configuration
-export interface User {
-  id: string
-  name: string
-  email: string
-  role: "backoffice" | "front office"
-  dom: "dom1" | "dom2" | "dom3"
-}
 
 export const getUserTableConfig = (
   onEditUser: (user: User) => void,
-  onDeleteUser: (id: string) => void
+  onDeleteUser: (id: number) => void
 ): Pick<DataTableProps<User>, 'columns' | 'searchKeys' | 'filters' | 'actions' | 'searchPlaceholder'> => ({
   columns: [
     { key: "name", label: "Name" },
@@ -74,7 +67,7 @@ export const getUserTableConfig = (
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onDeleteUser(user.id)}
+        onClick={() => onDeleteUser(user.id )}
         className="text-red-600 hover:text-red-700"
       >
         <IconTrash className="h-4 w-4" />

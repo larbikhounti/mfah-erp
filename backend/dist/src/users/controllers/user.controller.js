@@ -17,15 +17,27 @@ const common_1 = require("@nestjs/common");
 const register_dto_1 = require("../dtos/register.dto");
 const public_decorator_1 = require("../../decorator/public.decorator");
 const users_service_1 = require("../services/users.service");
+const filter_params_dto_1 = require("../dtos/filter/filter-params.dto");
 let UserController = class UserController {
     constructor(usersService) {
         this.usersService = usersService;
+    }
+    getAllUsers(filterParams) {
+        return this.usersService.findAll(filterParams);
     }
     registerUser(registerUserDto) {
         return this.usersService.create(registerUserDto);
     }
 };
 exports.UserController = UserController;
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Get)('all'),
+    __param(0, (0, common_1.Query)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [filter_params_dto_1.FilterParamsDto]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "getAllUsers", null);
 __decorate([
     (0, public_decorator_1.Public)(),
     (0, common_1.Post)('register'),

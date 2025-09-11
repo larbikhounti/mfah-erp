@@ -1,11 +1,12 @@
 "use client"
 
+import { User } from "@/app/lib/types"
 import { DataTable } from "@/components/shared/data-table"
-import { User, getUserTableConfig } from "@/components/shared/table-configs/user-table-config"
+import {  getUserTableConfig } from "@/components/shared/table-configs/user-table-config"
 
 interface UserTableProps {
   users: User[]
-  onDeleteUser: (id: string) => void
+  onDeleteUser: (id: number) => void
   onEditUser: (user: User) => void
 }
 

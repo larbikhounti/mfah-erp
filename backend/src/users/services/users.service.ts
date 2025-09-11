@@ -2,7 +2,8 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { RegisterUserDto } from '../dtos/register.dto';
 import { hashPassword } from 'src/helpers/helper.helpers';
-import { Users } from 'generated/prisma';
+import { FilterParamsDto } from '../dtos/filter/filter-params.dto';
+import { Users } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -29,66 +30,79 @@ export class UsersService {
     }
   }
 
-  async findAll(
-    limit: number = 10,
-    page: number = 1,
-    filter: string = '',
-  ): Promise<{ data: Users[]; total: number }> {
-    try {
-      const skip = (page - 1) * limit;
-      
-      const where = filter
-        ? {
-            OR: [
-              { email: { contains: filter, mode: 'insensitive' as const } },
-              { name: { contains: filter, mode: 'insensitive' as const } },
-            ],
-          }
-        : {};
-
-      const [users, total] = await Promise.all([
-        this.prisma.users.findMany({
-          where,
-          skip,
-          take: limit,
-          select: {
-            id: true,
-            email: true,
-            name: true,
-            createdAt: true,
-            updatedAt: true,
-            domId: true,
-            roleId: true,
-            dom: {
-              select: {
-                id: true,
-                name: true,
-                address: true,
-              },
-            },
-            role: {
-              select: {
-                id: true,
-                name: true,
-              },
-            },
-          },
-          orderBy: {
-            createdAt: 'desc',
-          },
-        }),
-        this.prisma.users.count({ where }),
-      ]);
-
-      return { data: users, total };
-    } catch (error) {
-      this.logger.error('Error finding users', error);
-      throw new HttpException(
-        'Error retrieving users',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+async findAll(filterParams: FilterParamsDto): Promise<{ data: any[]; total: number }> {
+  try {
+    const { offset = 0, limit = 10, search, status, userId } = filterParams;
+    
+    // Build the where clause based on filter parameters
+    const where: any = {};
+    
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { email: { contains: search, mode: 'insensitive' } }
+      ];
     }
+    
+    if (userId) {
+      where.id = userId;
+    }
+    
+    // Execute queries in parallel
+    const [users, total] = await Promise.all([
+      this.prisma.users.findMany({
+        where,
+        skip: offset,
+        take: limit,
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          createdAt: true,
+          updatedAt: true,
+          domId: true,
+          roleId: true,
+          dom: {
+            select: {
+              id: true,
+              name: true,
+              address: true,
+            },
+          },
+          role: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      this.prisma.users.count({ where }),
+    ]);
+
+    // Transform the data to match the required format
+    const formattedData = users.map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role?.name || null,
+      dom: user.dom?.name || null,
+      createdAt: user.createdAt.toISOString(),
+      updatedAt: user.updatedAt.toISOString(),
+    }));
+
+    return { data: formattedData, total };
+  } catch (error) {
+    this.logger.error('Error finding users', error);
+    throw new HttpException(
+      'Error retrieving users',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
   }
+}
 
   async findOne(email: string): Promise<Users | null> {
     try {

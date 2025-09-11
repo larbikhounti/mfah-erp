@@ -13,7 +13,8 @@ import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { comparePassword, hashPassword } from 'src/helpers/helper.helpers';
-import { Users } from 'generated/prisma';
+import { Users } from '@prisma/client';
+
 
 @Injectable()
 export class AuthService {
