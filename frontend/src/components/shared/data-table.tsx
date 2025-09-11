@@ -39,7 +39,7 @@ export interface DataTableProps<T> {
 }
 
 export function DataTable<T extends object>({
-  title,
+
   data,
   columns,
   searchKeys,
@@ -111,7 +111,6 @@ export function DataTable<T extends object>({
   const tableContent = (
     <Card className={className}>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="relative flex-1">
             <IconSearch className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -149,7 +148,7 @@ export function DataTable<T extends object>({
         </div>
         {showCount && (
           <div className="text-sm text-muted-foreground">
-            Showing {filteredData.length} of {data.length} {title.toLowerCase()}
+            Showing {filteredData.length} of {data.length} items
           </div>
         )}
       </CardHeader>
@@ -170,7 +169,7 @@ export function DataTable<T extends object>({
               {filteredData.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length + (actions ? 1 : 0)} className="h-24 text-center">
-                    {emptyMessage || (hasActiveFilters ? `No ${title.toLowerCase()} match your filters.` : `No ${title.toLowerCase()} found.`)}
+                    {emptyMessage || (hasActiveFilters ? `No items match your filters.` : `No items found.`)}
                   </TableCell>
                 </TableRow>
               ) : (
