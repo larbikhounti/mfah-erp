@@ -1,4 +1,4 @@
-# Medical Project - DOM Server Side
+# DOM Server Side
 
 ![NestJS](https://img.shields.io/badge/nestjs-%23E0234E.svg?style=for-the-badge&logo=nestjs&logoColor=white)
 ![Next.js](https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white)
@@ -9,7 +9,7 @@
 ![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
 ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 
-A full-stack medical project application with DOM (Document Object Model) server-side rendering capabilities. Built with modern technologies for scalability and performance.
+A full-stack DOM project application with DOM (Document Object Model) server-side rendering capabilities. Built with modern technologies for scalability and performance.
 
 ## 🚀 Tech Stack
 
