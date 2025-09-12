@@ -196,6 +196,8 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
   // Bulk delete users (admin only)
   bulkDeleteUsers: async (userIds: number[]) => {
     try {
+
+      console.log("Bulk deleting users:", userIds);
       set({ loading: true, error: null });
 
       const response = await axiosInstance.delete("/users/admin/bulk", {

@@ -102,22 +102,6 @@ export class DomsController {
 
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard, AdminRoleGuard)
-  @Delete('admin/:id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete DOM by ID (Admin only)' })
-  @ApiResponse({ status: 200, description: 'DOM deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Admin access required' })
-  @ApiResponse({ status: 404, description: 'DOM not found' })
-  @ApiResponse({
-    status: 400,
-    description: 'Cannot delete DOM with related records',
-  })
-  deleteDom(@Param('id', ParseIntPipe) id: number) {
-    return this.domsService.remove(id);
-  }
-
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard, AdminRoleGuard)
   @Delete('admin/bulk')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete DOMs by IDs (Admin only)' })
@@ -138,6 +122,22 @@ export class DomsController {
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   bulkDeleteDoms(@Body() bulkDeleteDto: BulkDeleteDomsDto) {
     return this.domsService.bulkDelete(bulkDeleteDto);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Delete('admin/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete DOM by ID (Admin only)' })
+  @ApiResponse({ status: 200, description: 'DOM deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'DOM not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot delete DOM with related records',
+  })
+  deleteDom(@Param('id', ParseIntPipe) id: number) {
+    return this.domsService.remove(id);
   }
 
   @ApiBearerAuth('access-token')

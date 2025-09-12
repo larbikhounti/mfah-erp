@@ -136,21 +136,6 @@ export class GameTypesController {
 
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard, AdminRoleGuard)
-  @Delete('admin/:id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete game type by ID (Admin only)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Game type deleted successfully',
-  })
-  @ApiResponse({ status: 403, description: 'Admin access required' })
-  @ApiResponse({ status: 404, description: 'Game type not found' })
-  deleteGameTypeByAdmin(@Param('id', ParseIntPipe) id: number) {
-    return this.gameTypesService.deleteGameTypeByAdmin(id);
-  }
-
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard, AdminRoleGuard)
   @Delete('admin/bulk')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete game types by IDs (Admin only)' })
@@ -170,5 +155,20 @@ export class GameTypesController {
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   bulkDeleteGameTypesByAdmin(@Body() bulkDeleteDto: BulkDeleteGameTypesDto) {
     return this.gameTypesService.bulkDeleteGameTypesByAdmin(bulkDeleteDto);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Delete('admin/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete game type by ID (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Game type deleted successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Game type not found' })
+  deleteGameTypeByAdmin(@Param('id', ParseIntPipe) id: number) {
+    return this.gameTypesService.deleteGameTypeByAdmin(id);
   }
 }

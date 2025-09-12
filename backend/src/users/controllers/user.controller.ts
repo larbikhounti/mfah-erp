@@ -109,18 +109,6 @@ export class UserController {
 
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard, AdminRoleGuard)
-  @Delete('admin/:id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete user by ID (Admin only)' })
-  @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Admin access required' })
-  @ApiResponse({ status: 404, description: 'User not found' })
-  deleteUserByAdmin(@Param('id', ParseIntPipe) id: number) {
-    return this.usersService.deleteUserByAdmin(id);
-  }
-
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard, AdminRoleGuard)
   @Delete('admin/bulk')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete users by IDs (Admin only)' })
@@ -139,7 +127,20 @@ export class UserController {
   @ApiResponse({ status: 403, description: 'Admin access required' })
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   bulkDeleteUsersByAdmin(@Body() bulkDeleteDto: BulkDeleteUsersDto) {
+    console.log('Bulk delete DTO received:', bulkDeleteDto);
     return this.usersService.bulkDeleteUsersByAdmin(bulkDeleteDto);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Delete('admin/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete user by ID (Admin only)' })
+  @ApiResponse({ status: 200, description: 'User deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  deleteUserByAdmin(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.deleteUserByAdmin(id);
   }
 
   @ApiBearerAuth('access-token')

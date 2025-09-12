@@ -226,7 +226,7 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      await axiosInstance.delete("/games", {
+      await axiosInstance.delete("/games/admin/bulk", {
         data: { ids: gameIds },
       });
 

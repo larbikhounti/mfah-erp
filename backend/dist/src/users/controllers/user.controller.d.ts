@@ -15,13 +15,13 @@ export declare class UserController {
     createUserByAdmin(createUserDto: CreateUserByAdminDto): Promise<import("../types/user-response.type").UserResponse>;
     getUserById(id: number): Promise<import("../types/user-response.type").UserResponse>;
     updateUserByAdmin(id: number, updateUserDto: UpdateUserDto): Promise<import("../types/user-response.type").UserResponse>;
-    deleteUserByAdmin(id: number): Promise<{
-        message: string;
-    }>;
     bulkDeleteUsersByAdmin(bulkDeleteDto: BulkDeleteUsersDto): Promise<{
         message: string;
         deletedCount: number;
         notFound: number[];
+    }>;
+    deleteUserByAdmin(id: number): Promise<{
+        message: string;
     }>;
     getAllRoles(): Promise<any[]>;
 }

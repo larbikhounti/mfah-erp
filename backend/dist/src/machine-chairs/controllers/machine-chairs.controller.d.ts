@@ -21,8 +21,8 @@ export declare class MachineChairsController {
     }>;
     create(createMachineChairDto: CreateMachineChairDto): Promise<string | Error>;
     update(id: number, updateMachineChairDto: UpdateMachineChairDto): Promise<string | Error>;
-    remove(id: number): Promise<string | Error>;
     bulkDelete(bulkDeleteMachineChairsDto: BulkDeleteMachineChairsDto): Promise<string | Error>;
+    remove(id: number): Promise<string | Error>;
     findByMachineId(machineId: number): Promise<{
         name: string;
         id: number;

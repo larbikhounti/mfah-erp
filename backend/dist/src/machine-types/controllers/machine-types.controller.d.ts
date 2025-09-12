@@ -18,12 +18,12 @@ export declare class MachineTypesController {
     createMachineTypeByAdmin(createMachineTypeDto: CreateMachineTypeDto): Promise<import("../types/machine-type-response.type").MachineTypeResponse>;
     getMachineTypeByIdAdmin(id: number): Promise<import("../types/machine-type-response.type").MachineTypeResponse>;
     updateMachineTypeByAdmin(id: number, updateMachineTypeDto: UpdateMachineTypeDto): Promise<import("../types/machine-type-response.type").MachineTypeResponse>;
-    deleteMachineTypeByAdmin(id: number): Promise<{
-        message: string;
-    }>;
     bulkDeleteMachineTypesByAdmin(bulkDeleteDto: BulkDeleteMachineTypesDto): Promise<{
         message: string;
         deletedCount: number;
         notFound: number[];
+    }>;
+    deleteMachineTypeByAdmin(id: number): Promise<{
+        message: string;
     }>;
 }

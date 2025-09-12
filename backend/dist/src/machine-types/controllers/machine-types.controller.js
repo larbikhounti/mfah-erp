@@ -45,11 +45,11 @@ let MachineTypesController = class MachineTypesController {
     updateMachineTypeByAdmin(id, updateMachineTypeDto) {
         return this.machineTypesService.updateMachineTypeByAdmin(id, updateMachineTypeDto);
     }
-    deleteMachineTypeByAdmin(id) {
-        return this.machineTypesService.deleteMachineTypeByAdmin(id);
-    }
     bulkDeleteMachineTypesByAdmin(bulkDeleteDto) {
         return this.machineTypesService.bulkDeleteMachineTypesByAdmin(bulkDeleteDto);
+    }
+    deleteMachineTypeByAdmin(id) {
+        return this.machineTypesService.deleteMachineTypeByAdmin(id);
     }
 };
 exports.MachineTypesController = MachineTypesController;
@@ -161,23 +161,6 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
-    (0, common_1.Delete)('admin/:id'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete machine type by ID (Admin only)' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Machine type deleted successfully',
-    }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Machine type not found' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
-], MachineTypesController.prototype, "deleteMachineTypeByAdmin", null);
-__decorate([
-    (0, swagger_1.ApiBearerAuth)('access-token'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
     (0, common_1.Delete)('admin/bulk'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Bulk delete machine types by IDs (Admin only)' }),
@@ -200,6 +183,23 @@ __decorate([
     __metadata("design:paramtypes", [bulk_delete_machine_types_dto_1.BulkDeleteMachineTypesDto]),
     __metadata("design:returntype", void 0)
 ], MachineTypesController.prototype, "bulkDeleteMachineTypesByAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Delete)('admin/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete machine type by ID (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Machine type deleted successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Machine type not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], MachineTypesController.prototype, "deleteMachineTypeByAdmin", null);
 exports.MachineTypesController = MachineTypesController = __decorate([
     (0, swagger_1.ApiTags)('machine-types'),
     (0, common_1.Controller)({

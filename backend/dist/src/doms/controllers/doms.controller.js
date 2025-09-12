@@ -42,11 +42,11 @@ let DomsController = class DomsController {
     updateDom(id, updateDomDto) {
         return this.domsService.update(id, updateDomDto);
     }
-    deleteDom(id) {
-        return this.domsService.remove(id);
-    }
     bulkDeleteDoms(bulkDeleteDto) {
         return this.domsService.bulkDelete(bulkDeleteDto);
+    }
+    deleteDom(id) {
+        return this.domsService.remove(id);
     }
     getAllDomsAdmin(filterParams) {
         return this.domsService.findAll(filterParams);
@@ -125,24 +125,6 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
-    (0, common_1.Delete)('admin/:id'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete DOM by ID (Admin only)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'DOM deleted successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'DOM not found' }),
-    (0, swagger_1.ApiResponse)({
-        status: 400,
-        description: 'Cannot delete DOM with related records',
-    }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
-], DomsController.prototype, "deleteDom", null);
-__decorate([
-    (0, swagger_1.ApiBearerAuth)('access-token'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
     (0, common_1.Delete)('admin/bulk'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Bulk delete DOMs by IDs (Admin only)' }),
@@ -166,6 +148,24 @@ __decorate([
     __metadata("design:paramtypes", [bulk_delete_doms_dto_1.BulkDeleteDomsDto]),
     __metadata("design:returntype", void 0)
 ], DomsController.prototype, "bulkDeleteDoms", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Delete)('admin/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete DOM by ID (Admin only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'DOM deleted successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'DOM not found' }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Cannot delete DOM with related records',
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], DomsController.prototype, "deleteDom", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),

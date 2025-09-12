@@ -192,8 +192,8 @@ export const useGameTypesStore = create<GameTypesStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      await axiosInstance.delete("/game-types/admin", {
-        data: { ids: gameTypeIds },
+      await axiosInstance.delete("/game-types/admin/bulk", {
+        data: { gameTypeIds: gameTypeIds },
       });
 
       // Clear selection and refresh

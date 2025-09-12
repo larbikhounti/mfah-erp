@@ -42,11 +42,11 @@ let RolesController = class RolesController {
     updateRole(id, updateRoleDto) {
         return this.rolesService.update(id, updateRoleDto);
     }
-    deleteRole(id) {
-        return this.rolesService.remove(id);
-    }
     bulkDeleteRoles(bulkDeleteDto) {
         return this.rolesService.bulkDelete(bulkDeleteDto);
+    }
+    deleteRole(id) {
+        return this.rolesService.remove(id);
     }
     getAllRolesAdmin(filterParams) {
         return this.rolesService.findAll(filterParams);
@@ -125,24 +125,6 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
-    (0, common_1.Delete)('admin/:id'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete role by ID (Admin only)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'Role deleted successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Role not found' }),
-    (0, swagger_1.ApiResponse)({
-        status: 400,
-        description: 'Cannot delete role with related records',
-    }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
-], RolesController.prototype, "deleteRole", null);
-__decorate([
-    (0, swagger_1.ApiBearerAuth)('access-token'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
     (0, common_1.Delete)('admin/bulk'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Bulk delete roles by IDs (Admin only)' }),
@@ -166,6 +148,24 @@ __decorate([
     __metadata("design:paramtypes", [bulk_delete_roles_dto_1.BulkDeleteRolesDto]),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "bulkDeleteRoles", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Delete)('admin/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete role by ID (Admin only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'Role deleted successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Role not found' }),
+    (0, swagger_1.ApiResponse)({
+        status: 400,
+        description: 'Cannot delete role with related records',
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], RolesController.prototype, "deleteRole", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),

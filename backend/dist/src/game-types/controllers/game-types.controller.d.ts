@@ -18,12 +18,12 @@ export declare class GameTypesController {
     createGameTypeByAdmin(createGameTypeDto: CreateGameTypeDto): Promise<import("../types/game-type-response.type").GameTypeResponse>;
     getGameTypeByIdAdmin(id: number): Promise<import("../types/game-type-response.type").GameTypeResponse>;
     updateGameTypeByAdmin(id: number, updateGameTypeDto: UpdateGameTypeDto): Promise<import("../types/game-type-response.type").GameTypeResponse>;
-    deleteGameTypeByAdmin(id: number): Promise<{
-        message: string;
-    }>;
     bulkDeleteGameTypesByAdmin(bulkDeleteDto: BulkDeleteGameTypesDto): Promise<{
         message: string;
         deletedCount: number;
         notFound: number[];
+    }>;
+    deleteGameTypeByAdmin(id: number): Promise<{
+        message: string;
     }>;
 }

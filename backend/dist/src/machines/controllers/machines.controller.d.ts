@@ -18,12 +18,12 @@ export declare class MachinesController {
     createMachineByAdmin(createMachineDto: CreateMachineDto): Promise<import("../types/machine-response.type").MachineResponse>;
     getMachineByIdAdmin(id: number): Promise<import("../types/machine-response.type").MachineResponse>;
     updateMachineByAdmin(id: number, updateMachineDto: UpdateMachineDto): Promise<import("../types/machine-response.type").MachineResponse>;
-    deleteMachineByAdmin(id: number): Promise<{
-        message: string;
-    }>;
     bulkDeleteMachinesByAdmin(bulkDeleteDto: BulkDeleteMachinesDto): Promise<{
         message: string;
         deletedCount: number;
         notFound: number[];
+    }>;
+    deleteMachineByAdmin(id: number): Promise<{
+        message: string;
     }>;
 }

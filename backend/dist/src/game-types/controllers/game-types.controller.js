@@ -45,11 +45,11 @@ let GameTypesController = class GameTypesController {
     updateGameTypeByAdmin(id, updateGameTypeDto) {
         return this.gameTypesService.updateGameTypeByAdmin(id, updateGameTypeDto);
     }
-    deleteGameTypeByAdmin(id) {
-        return this.gameTypesService.deleteGameTypeByAdmin(id);
-    }
     bulkDeleteGameTypesByAdmin(bulkDeleteDto) {
         return this.gameTypesService.bulkDeleteGameTypesByAdmin(bulkDeleteDto);
+    }
+    deleteGameTypeByAdmin(id) {
+        return this.gameTypesService.deleteGameTypeByAdmin(id);
     }
 };
 exports.GameTypesController = GameTypesController;
@@ -161,23 +161,6 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
-    (0, common_1.Delete)('admin/:id'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete game type by ID (Admin only)' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Game type deleted successfully',
-    }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'Game type not found' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
-], GameTypesController.prototype, "deleteGameTypeByAdmin", null);
-__decorate([
-    (0, swagger_1.ApiBearerAuth)('access-token'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
     (0, common_1.Delete)('admin/bulk'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Bulk delete game types by IDs (Admin only)' }),
@@ -200,6 +183,23 @@ __decorate([
     __metadata("design:paramtypes", [bulk_delete_game_types_dto_1.BulkDeleteGameTypesDto]),
     __metadata("design:returntype", void 0)
 ], GameTypesController.prototype, "bulkDeleteGameTypesByAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Delete)('admin/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete game type by ID (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Game type deleted successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Game type not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], GameTypesController.prototype, "deleteGameTypeByAdmin", null);
 exports.GameTypesController = GameTypesController = __decorate([
     (0, swagger_1.ApiTags)('game-types'),
     (0, common_1.Controller)({

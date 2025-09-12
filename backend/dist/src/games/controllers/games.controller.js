@@ -36,11 +36,11 @@ let GamesController = class GamesController {
     async update(id, updateGameDto) {
         return this.gamesService.update(id, updateGameDto);
     }
-    async remove(id) {
-        return this.gamesService.remove(id);
-    }
     async bulkDelete(bulkDeleteDto) {
         return this.gamesService.bulkDelete(bulkDeleteDto);
+    }
+    async remove(id) {
+        return this.gamesService.remove(id);
     }
 };
 exports.GamesController = GamesController;
@@ -159,6 +159,35 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "update", null);
 __decorate([
+    (0, common_1.Delete)('/admin/bulk'),
+    (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Bulk delete games (soft delete)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Games deleted successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string' },
+                deletedCount: { type: 'number' },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'One or more games not found',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 409,
+        description: 'One or more games have active experiences and cannot be deleted',
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [dtos_1.BulkDeleteGamesDto]),
+    __metadata("design:returntype", Promise)
+], GamesController.prototype, "bulkDelete", null);
+__decorate([
     (0, common_1.Delete)(':id'),
     (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
     (0, swagger_1.ApiBearerAuth)(),
@@ -187,35 +216,6 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "remove", null);
-__decorate([
-    (0, common_1.Delete)(),
-    (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
-    (0, swagger_1.ApiBearerAuth)(),
-    (0, swagger_1.ApiOperation)({ summary: 'Bulk delete games (soft delete)' }),
-    (0, swagger_1.ApiResponse)({
-        status: 200,
-        description: 'Games deleted successfully',
-        schema: {
-            type: 'object',
-            properties: {
-                message: { type: 'string' },
-                deletedCount: { type: 'number' },
-            },
-        },
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'One or more games not found',
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 409,
-        description: 'One or more games have active experiences and cannot be deleted',
-    }),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [dtos_1.BulkDeleteGamesDto]),
-    __metadata("design:returntype", Promise)
-], GamesController.prototype, "bulkDelete", null);
 exports.GamesController = GamesController = __decorate([
     (0, swagger_1.ApiTags)('games'),
     (0, common_1.Controller)({

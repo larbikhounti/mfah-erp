@@ -43,11 +43,12 @@ let UserController = class UserController {
     updateUserByAdmin(id, updateUserDto) {
         return this.usersService.updateUserByAdmin(id, updateUserDto);
     }
+    bulkDeleteUsersByAdmin(bulkDeleteDto) {
+        console.log('Bulk delete DTO received:', bulkDeleteDto);
+        return this.usersService.bulkDeleteUsersByAdmin(bulkDeleteDto);
+    }
     deleteUserByAdmin(id) {
         return this.usersService.deleteUserByAdmin(id);
-    }
-    bulkDeleteUsersByAdmin(bulkDeleteDto) {
-        return this.usersService.bulkDeleteUsersByAdmin(bulkDeleteDto);
     }
     getAllRoles() {
         return this.usersService.getAllRoles();
@@ -133,20 +134,6 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
-    (0, common_1.Delete)('admin/:id'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete user by ID (Admin only)' }),
-    (0, swagger_1.ApiResponse)({ status: 200, description: 'User deleted successfully' }),
-    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
-    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", void 0)
-], UserController.prototype, "deleteUserByAdmin", null);
-__decorate([
-    (0, swagger_1.ApiBearerAuth)('access-token'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
     (0, common_1.Delete)('admin/bulk'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),
     (0, swagger_1.ApiOperation)({ summary: 'Bulk delete users by IDs (Admin only)' }),
@@ -169,6 +156,20 @@ __decorate([
     __metadata("design:paramtypes", [bulk_delete_users_dto_1.BulkDeleteUsersDto]),
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "bulkDeleteUsersByAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Delete)('admin/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete user by ID (Admin only)' }),
+    (0, swagger_1.ApiResponse)({ status: 200, description: 'User deleted successfully' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], UserController.prototype, "deleteUserByAdmin", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),

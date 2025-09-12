@@ -38,11 +38,11 @@ let MachineChairsController = class MachineChairsController {
     async update(id, updateMachineChairDto) {
         return this.machineChairsService.update(id, updateMachineChairDto);
     }
-    async remove(id) {
-        return this.machineChairsService.remove(id);
-    }
     async bulkDelete(bulkDeleteMachineChairsDto) {
         return this.machineChairsService.bulkDelete(bulkDeleteMachineChairsDto);
+    }
+    async remove(id) {
+        return this.machineChairsService.remove(id);
     }
     async findByMachineId(machineId) {
         return this.machineChairsService.findByMachineId(machineId);
@@ -157,33 +157,6 @@ __decorate([
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
-    (0, common_1.Delete)('admin/delete/:id'),
-    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
-    (0, swagger_1.ApiOperation)({ summary: 'Delete machine chair by ID (Admin only)' }),
-    (0, swagger_1.ApiResponse)({
-        status: 204,
-        description: 'Machine chair deleted successfully',
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 401,
-        description: 'Unauthorized - Invalid or missing JWT token',
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 403,
-        description: 'Forbidden - Admin role required',
-    }),
-    (0, swagger_1.ApiResponse)({
-        status: 404,
-        description: 'Machine chair not found',
-    }),
-    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number]),
-    __metadata("design:returntype", Promise)
-], MachineChairsController.prototype, "remove", null);
-__decorate([
-    (0, swagger_1.ApiBearerAuth)('access-token'),
-    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
     (0, common_1.Delete)('admin/bulk-delete'),
     (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
     (0, swagger_1.ApiOperation)({ summary: 'Bulk delete machine chairs (Admin only)' }),
@@ -208,6 +181,33 @@ __decorate([
     __metadata("design:paramtypes", [bulk_delete_machine_chairs_dto_1.BulkDeleteMachineChairsDto]),
     __metadata("design:returntype", Promise)
 ], MachineChairsController.prototype, "bulkDelete", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Delete)('admin/delete/:id'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.NO_CONTENT),
+    (0, swagger_1.ApiOperation)({ summary: 'Delete machine chair by ID (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 204,
+        description: 'Machine chair deleted successfully',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 401,
+        description: 'Unauthorized - Invalid or missing JWT token',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 403,
+        description: 'Forbidden - Admin role required',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'Machine chair not found',
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], MachineChairsController.prototype, "remove", null);
 __decorate([
     (0, swagger_1.ApiBearerAuth)('access-token'),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),

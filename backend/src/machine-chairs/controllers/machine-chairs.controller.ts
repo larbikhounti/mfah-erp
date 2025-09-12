@@ -135,31 +135,6 @@ export class MachineChairsController {
 
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard, AdminRoleGuard)
-  @Delete('admin/delete/:id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete machine chair by ID (Admin only)' })
-  @ApiResponse({
-    status: 204,
-    description: 'Machine chair deleted successfully',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized - Invalid or missing JWT token',
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Admin role required',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Machine chair not found',
-  })
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.machineChairsService.remove(id);
-  }
-
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard, AdminRoleGuard)
   @Delete('admin/bulk-delete')
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Bulk delete machine chairs (Admin only)' })
@@ -183,6 +158,30 @@ export class MachineChairsController {
     @Body() bulkDeleteMachineChairsDto: BulkDeleteMachineChairsDto,
   ) {
     return this.machineChairsService.bulkDelete(bulkDeleteMachineChairsDto);
+  }
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Delete('admin/delete/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete machine chair by ID (Admin only)' })
+  @ApiResponse({
+    status: 204,
+    description: 'Machine chair deleted successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized - Invalid or missing JWT token',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Machine chair not found',
+  })
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    return this.machineChairsService.remove(id);
   }
 
   @ApiBearerAuth('access-token')

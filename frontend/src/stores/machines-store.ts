@@ -210,8 +210,8 @@ export const useMachinesStore = create<MachinesStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      await axiosInstance.delete("/machines/admin", {
-        data: { ids: machineIds },
+      await axiosInstance.delete("/machines/admin/bulk", {
+        data: { machineIds: machineIds },
       });
 
       // Clear selection and refresh

@@ -8,11 +8,11 @@ export declare class GamesController {
     findAll(filterDto: FilterGamesDto): Promise<PaginatedGamesResponse>;
     findOne(id: number): Promise<GameResponse>;
     update(id: number, updateGameDto: UpdateGameDto): Promise<GameResponse>;
-    remove(id: number): Promise<{
-        message: string;
-    }>;
     bulkDelete(bulkDeleteDto: BulkDeleteGamesDto): Promise<{
         message: string;
         deletedCount: number;
+    }>;
+    remove(id: number): Promise<{
+        message: string;
     }>;
 }

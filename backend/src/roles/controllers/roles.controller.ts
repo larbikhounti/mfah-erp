@@ -102,22 +102,6 @@ export class RolesController {
 
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard, AdminRoleGuard)
-  @Delete('admin/:id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete role by ID (Admin only)' })
-  @ApiResponse({ status: 200, description: 'Role deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Admin access required' })
-  @ApiResponse({ status: 404, description: 'Role not found' })
-  @ApiResponse({
-    status: 400,
-    description: 'Cannot delete role with related records',
-  })
-  deleteRole(@Param('id', ParseIntPipe) id: number) {
-    return this.rolesService.remove(id);
-  }
-
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard, AdminRoleGuard)
   @Delete('admin/bulk')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete roles by IDs (Admin only)' })
@@ -138,6 +122,22 @@ export class RolesController {
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   bulkDeleteRoles(@Body() bulkDeleteDto: BulkDeleteRolesDto) {
     return this.rolesService.bulkDelete(bulkDeleteDto);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Delete('admin/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete role by ID (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Role deleted successfully' })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot delete role with related records',
+  })
+  deleteRole(@Param('id', ParseIntPipe) id: number) {
+    return this.rolesService.remove(id);
   }
 
   @ApiBearerAuth('access-token')

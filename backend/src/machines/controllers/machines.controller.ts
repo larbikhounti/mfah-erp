@@ -144,21 +144,6 @@ export class MachinesController {
 
   @ApiBearerAuth('access-token')
   @UseGuards(AuthGuard, AdminRoleGuard)
-  @Delete('admin/:id')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Delete machine by ID (Admin only)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Machine deleted successfully',
-  })
-  @ApiResponse({ status: 403, description: 'Admin access required' })
-  @ApiResponse({ status: 404, description: 'Machine not found' })
-  deleteMachineByAdmin(@Param('id', ParseIntPipe) id: number) {
-    return this.machinesService.deleteMachineByAdmin(id);
-  }
-
-  @ApiBearerAuth('access-token')
-  @UseGuards(AuthGuard, AdminRoleGuard)
   @Delete('admin/bulk')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Bulk delete machines by IDs (Admin only)' })
@@ -178,5 +163,20 @@ export class MachinesController {
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   bulkDeleteMachinesByAdmin(@Body() bulkDeleteDto: BulkDeleteMachinesDto) {
     return this.machinesService.bulkDeleteMachinesByAdmin(bulkDeleteDto);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Delete('admin/:id')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete machine by ID (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Machine deleted successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Machine not found' })
+  deleteMachineByAdmin(@Param('id', ParseIntPipe) id: number) {
+    return this.machinesService.deleteMachineByAdmin(id);
   }
 }

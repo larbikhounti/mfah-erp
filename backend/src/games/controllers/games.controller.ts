@@ -148,37 +148,7 @@ export class GamesController {
   ): Promise<GameResponse> {
     return this.gamesService.update(id, updateGameDto);
   }
-
-  @Delete(':id')
-  @UseGuards(AdminRoleGuard)
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Delete a game (soft delete)' })
-  @ApiParam({ name: 'id', description: 'Game ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Game deleted successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Game not found',
-  })
-  @ApiResponse({
-    status: 409,
-    description: 'Game has active experiences and cannot be deleted',
-  })
-  async remove(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
-    return this.gamesService.remove(id);
-  }
-
-  @Delete()
+  @Delete('/admin/bulk')
   @UseGuards(AdminRoleGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Bulk delete games (soft delete)' })
@@ -206,5 +176,33 @@ export class GamesController {
     @Body() bulkDeleteDto: BulkDeleteGamesDto,
   ): Promise<{ message: string; deletedCount: number }> {
     return this.gamesService.bulkDelete(bulkDeleteDto);
+  }
+  @Delete(':id')
+  @UseGuards(AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a game (soft delete)' })
+  @ApiParam({ name: 'id', description: 'Game ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Game deleted successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Game not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Game has active experiences and cannot be deleted',
+  })
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ message: string }> {
+    return this.gamesService.remove(id);
   }
 }
