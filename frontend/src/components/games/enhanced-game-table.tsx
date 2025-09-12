@@ -163,7 +163,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
       key: "gameType",
       label: "Game Type",
       render: (game) => (
-        <Badge variant="outline">{game.gameType?.name || "No Type"}</Badge>
+        <Badge variant="secondary">{game.gameType?.name || "No Type"}</Badge>
       ),
     },
     {

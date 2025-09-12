@@ -139,7 +139,7 @@ export function EditMachineDialog({
           <DialogTitle>Edit Machine</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             <Label htmlFor="name">Name</Label>
             <Input
               id="name"
@@ -148,72 +148,75 @@ export function EditMachineDialog({
               value={formData.name || ""}
               onChange={(e) => handleInputChange("name", e.target.value)}
               required
+              className="w-full"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="machineType">Machine Type</Label>
-            <Select
-              value={formData.machineTypeId?.toString() || "none"}
-              onValueChange={(value) =>
-                handleInputChange(
-                  "machineTypeId",
-                  value === "none" ? undefined : parseInt(value)
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select machine type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No machine type</SelectItem>
-                {loadingData ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  machineTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
+          <div className="w-full grid md:grid-cols-2 gap-4">
+            <div className="grid gap-2 w-full">
+              <Label htmlFor="machineType">Machine Type</Label>
+              <Select
+                value={formData.machineTypeId?.toString() || "none"}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    "machineTypeId",
+                    value === "none" ? undefined : parseInt(value)
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select machine type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No machine type</SelectItem>
+                  {loadingData ? (
+                    <SelectItem value="loading" disabled>
+                      Loading...
                     </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                  ) : (
+                    machineTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2 w-full">
+              <Label htmlFor="dom">DOM</Label>
+              <Select
+                value={formData.domeId?.toString() || "none"}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    "domeId",
+                    value === "none" ? undefined : parseInt(value)
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select DOM" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No DOM</SelectItem>
+                  {loadingData ? (
+                    <SelectItem value="loading" disabled>
+                      Loading...
+                    </SelectItem>
+                  ) : (
+                    doms.map((dom) => (
+                      <SelectItem key={dom.id} value={dom.id.toString()}>
+                        {dom.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="dom">DOM</Label>
-            <Select
-              value={formData.domeId?.toString() || "none"}
-              onValueChange={(value) =>
-                handleInputChange(
-                  "domeId",
-                  value === "none" ? undefined : parseInt(value)
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select DOM" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No DOM</SelectItem>
-                {loadingData ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  doms.map((dom) => (
-                    <SelectItem key={dom.id} value={dom.id.toString()}>
-                      {dom.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 mt-8">
             <Button
               type="button"
               variant="outline"

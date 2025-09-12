@@ -166,70 +166,71 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
               required
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="gameType">Game Type</Label>
-            <Select
-              value={formData.gameTypeId?.toString() || "none"}
-              onValueChange={(value) =>
-                handleInputChange(
-                  "gameTypeId",
-                  value === "none" ? undefined : parseInt(value)
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select game type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No game type</SelectItem>
-                {gameTypesLoading ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  gameTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
+          <div className="w-full grid md:grid-cols-2 gap-4">
+            <div className="grid gap-2 w-full">
+              <Label htmlFor="gameType">Game Type</Label>
+              <Select
+                value={formData.gameTypeId?.toString() || "none"}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    "gameTypeId",
+                    value === "none" ? undefined : parseInt(value)
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select game type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No game type</SelectItem>
+                  {gameTypesLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Loading...
                     </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
+                  ) : (
+                    gameTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid gap-2 w-full">
+              <Label htmlFor="machineType">Machine Type</Label>
+              <Select
+                value={formData.machineTypeId?.toString() || "none"}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    "machineTypeId",
+                    value === "none" ? undefined : parseInt(value)
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select machine type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No machine type</SelectItem>
+                  {machineTypesLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Loading...
+                    </SelectItem>
+                  ) : (
+                    machineTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="machineType">Machine Type</Label>
-            <Select
-              value={formData.machineTypeId?.toString() || "none"}
-              onValueChange={(value) =>
-                handleInputChange(
-                  "machineTypeId",
-                  value === "none" ? undefined : parseInt(value)
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select machine type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="none">No machine type</SelectItem>
-                {machineTypesLoading ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  machineTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 mt-8">
             <Button
               type="button"
               variant="outline"

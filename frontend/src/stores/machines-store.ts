@@ -8,14 +8,8 @@ export interface Machine {
   domeId?: number | null;
   createdAt: string;
   updatedAt: string;
-  machineType?: {
-    id: number;
-    name: string;
-  } | null;
-  dome?: {
-    id: number;
-    name: string;
-  } | null;
+  machineType?: string | null;
+  dome?: string | null;
   chairsCount?: number;
   experiencesCount?: number;
 }

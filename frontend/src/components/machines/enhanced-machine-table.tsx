@@ -139,16 +139,14 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
       key: "machineType",
       label: "Machine Type",
       render: (machine) => (
-        <Badge variant="outline">
-          {machine.machineType?.name || "No Type"}
-        </Badge>
+        <Badge variant="secondary">{machine.machineType || "No Type"}</Badge>
       ),
     },
     {
       key: "dome",
       label: "DOM",
       render: (machine) => (
-        <Badge variant="secondary">{machine.dome?.name || "No DOM"}</Badge>
+        <Badge variant="secondary">{machine.dome || "No DOM"}</Badge>
       ),
     },
     {
