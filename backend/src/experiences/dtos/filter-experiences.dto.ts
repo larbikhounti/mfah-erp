@@ -1,4 +1,10 @@
-import { IsOptional, IsInt, IsString, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsInt,
+  IsString,
+  Min,
+  IsDateString,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -71,4 +77,24 @@ export class FilterExperiencesDto {
   @Transform(({ value }) => parseInt(value))
   @IsInt()
   domeId?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter experiences created from this date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ)',
+    type: String,
+    example: '2025-01-01',
+  })
+  @IsOptional()
+  @IsDateString()
+  startDate?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter experiences created up to this date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ)',
+    type: String,
+    example: '2025-12-31',
+  })
+  @IsOptional()
+  @IsDateString()
+  endDate?: string;
 }

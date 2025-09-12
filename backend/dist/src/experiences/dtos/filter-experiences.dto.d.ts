@@ -6,4 +6,6 @@ export declare class FilterExperiencesDto {
     machineId?: number;
     gameId?: number;
     domeId?: number;
+    startDate?: string;
+    endDate?: string;
 }

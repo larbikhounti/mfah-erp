@@ -22,6 +22,8 @@ export class ExperiencesService {
         machineId,
         gameId,
         domeId,
+        startDate,
+        endDate,
       } = filterParams;
 
       // Build where clause
@@ -43,6 +45,25 @@ export class ExperiencesService {
 
       if (domeId) {
         where.domeId = domeId;
+      }
+
+      // Date range filtering
+      if (startDate || endDate) {
+        where.createdAt = {};
+
+        if (startDate) {
+          where.createdAt.gte = new Date(startDate);
+        }
+
+        if (endDate) {
+          // If endDate is provided without time, set it to end of day
+          const endDateObj = new Date(endDate);
+          if (endDate.length === 10) {
+            // YYYY-MM-DD format
+            endDateObj.setHours(23, 59, 59, 999);
+          }
+          where.createdAt.lte = endDateObj;
+        }
       }
 
       if (search && search.trim()) {

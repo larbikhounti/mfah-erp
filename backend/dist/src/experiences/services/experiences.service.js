@@ -20,7 +20,7 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
     }
     async findAll(filterParams) {
         try {
-            const { offset = 0, limit = 25, search, experienceId, machineId, gameId, domeId, } = filterParams;
+            const { offset = 0, limit = 25, search, experienceId, machineId, gameId, domeId, startDate, endDate, } = filterParams;
             const where = {
                 deletedAt: null,
             };
@@ -35,6 +35,19 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
             }
             if (domeId) {
                 where.domeId = domeId;
+            }
+            if (startDate || endDate) {
+                where.createdAt = {};
+                if (startDate) {
+                    where.createdAt.gte = new Date(startDate);
+                }
+                if (endDate) {
+                    const endDateObj = new Date(endDate);
+                    if (endDate.length === 10) {
+                        endDateObj.setHours(23, 59, 59, 999);
+                    }
+                    where.createdAt.lte = endDateObj;
+                }
             }
             if (search && search.trim()) {
                 where.OR = [

@@ -27,6 +27,7 @@ import {
 import { toast } from "sonner";
 import PaginationTable from "@/components/pagination-table";
 import { Eye, Clock, MapPin, Gamepad, Monitor, Users } from "lucide-react";
+import RangeDate from "../range-date";
 
 interface EnhancedExperienceTableProps {
   // Remove the callback props since we'll handle them internally
@@ -416,6 +417,16 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
         showCount={true}
         emptyMessage={
           loading ? "Loading experiences..." : "No experiences found"
+        }
+        customHeader={
+          <div className=" relative flex items-center">
+            <RangeDate
+              onDateChange={(date) => {
+                // Handle date range change if needed
+                console.log("Selected date range:", date);
+              }}
+            />
+          </div>
         }
       />
 

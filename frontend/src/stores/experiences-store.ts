@@ -44,6 +44,8 @@ export interface FilterParams {
   machineId?: number;
   gameId?: number;
   domeId?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 export interface ExperiencesResponse {
@@ -119,6 +121,12 @@ export const useExperiencesStore = create<ExperiencesStore>((set, get) => ({
       }
       if (params.domeId && params.domeId > 0) {
         apiParams.domeId = Math.floor(params.domeId);
+      }
+      if (params.startDate) {
+        apiParams.startDate = params.startDate;
+      }
+      if (params.endDate) {
+        apiParams.endDate = params.endDate;
       }
 
       const response = await axiosInstance.get<ExperiencesResponse>(

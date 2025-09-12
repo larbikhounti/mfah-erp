@@ -96,4 +96,24 @@ __decorate([
     (0, class_validator_1.IsInt)(),
     __metadata("design:type", Number)
 ], FilterExperiencesDto.prototype, "domeId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Filter experiences created from this date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ)',
+        type: String,
+        example: '2025-01-01',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], FilterExperiencesDto.prototype, "startDate", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Filter experiences created up to this date (ISO format: YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss.sssZ)',
+        type: String,
+        example: '2025-12-31',
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], FilterExperiencesDto.prototype, "endDate", void 0);
 //# sourceMappingURL=filter-experiences.dto.js.map
