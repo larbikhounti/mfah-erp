@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import PaginationTable from "@/components/pagination-table";
 import { Eye, Clock, MapPin, Gamepad, Monitor, Users } from "lucide-react";
 import RangeDate from "../range-date";
+import { DateRange } from "react-day-picker";
 
 interface EnhancedExperienceTableProps {
   // Remove the callback props since we'll handle them internally
@@ -271,29 +272,47 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
   } = useExperiencesStore();
 
   const [searchTerm, setSearchTerm] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+
+  // Handle date range change
+  const handleDateRangeChange = (date: DateRange | undefined) => {
+    setDateRange(date);
+  };
 
   // Fetch experiences on component mount and when pagination changes
   useEffect(() => {
     fetchExperiences();
-  }, [fetchExperiences, currentPage, pageSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, pageSize]);
 
-  // Handle search with debouncing
+  // Handle search and date filtering with debouncing
   useEffect(() => {
     const delayedSearch = setTimeout(() => {
-      if (searchTerm.trim() || searchTerm === "") {
-        fetchExperiences({ search: searchTerm.trim() });
-      }
+      // Convert dates to ISO strings for the API
+      const startDate = dateRange?.from
+        ? dateRange.from.toISOString().split("T")[0]
+        : undefined;
+      const endDate = dateRange?.to
+        ? dateRange.to.toISOString().split("T")[0]
+        : undefined;
+
+      fetchExperiences({
+        search: searchTerm.trim() || undefined,
+        startDate,
+        endDate,
+      });
     }, 500);
 
     return () => clearTimeout(delayedSearch);
-  }, [searchTerm, fetchExperiences]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm, dateRange]);
 
   // Clear error when component unmounts
   useEffect(() => {
     return () => {
       clearError();
     };
-  }, [clearError]);
+  }, []);
 
   // Show error toast
   useEffect(() => {
@@ -301,7 +320,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
       toast.error(error);
       clearError();
     }
-  }, [error, clearError]);
+  }, [error]);
 
   const columns: TableColumn<Experience>[] = [
     {
@@ -346,7 +365,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
       key: "tickets",
       label: "Tickets",
       render: (experience) => (
-        <div className="text-center">
+        <div className="">
           <div className="font-bold text-lg">{experience.ticketCount}</div>
           <div className="text-xs text-muted-foreground">tickets</div>
         </div>
@@ -420,12 +439,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
         }
         customHeader={
           <div className=" relative flex items-center">
-            <RangeDate
-              onDateChange={(date) => {
-                // Handle date range change if needed
-                console.log("Selected date range:", date);
-              }}
-            />
+            <RangeDate onDateChange={handleDateRangeChange} />
           </div>
         }
       />

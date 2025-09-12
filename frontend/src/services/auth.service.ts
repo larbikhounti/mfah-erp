@@ -12,7 +12,24 @@ export interface LoginResponse {
 export class AuthService {
   static async login(credentials: LoginFormData): Promise<LoginResponse> {
     try {
-      const response = await axiosInstance.post<LoginResponse>("auth/login", credentials);
+      const response = await axiosInstance.post<LoginResponse>(
+        "auth/login",
+        credentials
+      );
+      return response.data;
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.data) {
+        throw error.response.data as AuthError;
+      }
+      throw new Error("An unexpected error occurred");
+    }
+  }
+
+  static async logout(): Promise<{ message: string }> {
+    try {
+      const response = await axiosInstance.get<{ message: string }>(
+        "auth/logout"
+      );
       return response.data;
     } catch (error) {
       if (error instanceof AxiosError && error.response?.data) {

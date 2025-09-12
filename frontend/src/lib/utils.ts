@@ -43,7 +43,7 @@ instance.interceptors.response.use(
       
       // Optionally redirect to login
       if (typeof window !== 'undefined') {
-        window.location.href = '/login';
+        window.location.href = '/';
       }
     }
     return Promise.reject(error);
