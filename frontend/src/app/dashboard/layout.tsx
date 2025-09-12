@@ -4,13 +4,11 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/use-auth";
 import { AppSidebar } from "@/components/app-sidebar";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { DataTable } from "@/components/data-table";
-import { SectionCards } from "@/components/section-cards";
 import { SiteHeader } from "@/components/site-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 
 import data from "./data.json";
+import { Loader } from "@/components/loader";
 
 export default function DashboardLayout({
   children,
@@ -31,9 +29,9 @@ export default function DashboardLayout({
   if (isLoading) {
     return (
       <div className="flex min-h-svh w-full items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading...</p>
+        <div className="text-center flex  items-center gap-2">
+          <Loader size={16} />
+                    <p className=" text-sm text-gray-600">Loading...</p>
         </div>
       </div>
     );

@@ -17,6 +17,7 @@ import {
 import { Edit, Shield } from "lucide-react";
 import { useRolesStore, type Role, type UpdateRolePayload } from "@/stores/roles-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface EditRoleDialogProps {
   role: Role;
@@ -174,7 +175,12 @@ export function EditRoleDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update Role"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">
+                                  Updating...
+                                </span>
+                            </span>: "Update Role"}
             </Button>
           </DialogFooter>
         </form>

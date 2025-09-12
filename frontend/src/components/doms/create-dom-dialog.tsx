@@ -19,6 +19,7 @@ import { Plus, Building } from "lucide-react";
 import { useDomsStore, type CreateDomPayload } from "@/stores/doms-store";
 import { toast } from "sonner";
 import { Textarea } from "../ui/textarea";
+import { Loader } from "../loader";
 
 interface CreateDomDialogProps {
   trigger?: React.ReactNode;
@@ -124,7 +125,10 @@ export function CreateDomDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create DOM"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">Creating...</span>
+                            </span>: "Create DOM"}
             </Button>
           </DialogFooter>
         </form>

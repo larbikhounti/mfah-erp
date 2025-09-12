@@ -23,6 +23,7 @@ import { useGamesStore, type CreateGamePayload } from "@/stores/games-store";
 import { useGameTypesStore } from "@/stores/game-types-store";
 import { useMachineTypesStore } from "@/stores/machine-types-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface CreateGameDialogProps {
   trigger?: React.ReactNode;
@@ -262,7 +263,10 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
               type="submit"
               disabled={loading || gameTypesLoading || machineTypesLoading}
             >
-              {loading ? "Creating..." : "Create Game"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">Creating...</span>
+                            </span>: "Create Game"}
             </Button>
           </div>
         </form>

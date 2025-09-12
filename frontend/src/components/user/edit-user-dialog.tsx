@@ -25,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Edit } from "lucide-react";
+import { Loader } from "../loader";
 
 interface EditUserDialogProps {
   user: User | null;
@@ -211,7 +212,12 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update User"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">
+                                  Updating...
+                                </span>
+                            </span>: "Update User"}
             </Button>
           </DialogFooter>
         </form>

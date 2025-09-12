@@ -25,6 +25,7 @@ import {
 } from "@/stores/machine-chairs-store";
 import { useMachinesStore } from "@/stores/machines-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface CreateMachineChairDialogProps {
   trigger?: React.ReactNode;
@@ -183,7 +184,10 @@ export function CreateMachineChairDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading || machinesLoading}>
-              {loading ? "Creating..." : "Create Chair"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">Creating...</span>
+                            </span>: "Create Chair"}
             </Button>
           </div>
         </form>

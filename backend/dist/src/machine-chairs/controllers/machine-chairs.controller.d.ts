@@ -11,25 +11,25 @@ export declare class MachineChairsController {
         total: number;
     }>;
     findOne(id: number): Promise<{
-        name: string;
         id: number;
-        status: number;
-        machineId: number;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        machineId: number;
+        status: number;
     }>;
     create(createMachineChairDto: CreateMachineChairDto): Promise<string | Error>;
     update(id: number, updateMachineChairDto: UpdateMachineChairDto): Promise<string | Error>;
     bulkDelete(bulkDeleteMachineChairsDto: BulkDeleteMachineChairsDto): Promise<string | Error>;
     remove(id: number): Promise<string | Error>;
     findByMachineId(machineId: number): Promise<{
-        name: string;
         id: number;
-        status: number;
-        machineId: number;
+        name: string;
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
+        machineId: number;
+        status: number;
     }[]>;
 }

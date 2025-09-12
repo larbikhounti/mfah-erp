@@ -24,6 +24,7 @@ import {
 } from "@/stores/machine-chairs-store";
 import { useMachinesStore } from "@/stores/machines-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface EditMachineChairDialogProps {
   machineChair: MachineChair;
@@ -173,7 +174,12 @@ export function EditMachineChairDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading || machinesLoading}>
-              {loading ? "Updating..." : "Update Chair"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">
+                                  Updating...
+                                </span>
+                            </span>: "Update Chair"}
             </Button>
           </div>
         </form>

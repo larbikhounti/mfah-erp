@@ -26,6 +26,7 @@ import {
 } from "@/stores/machines-store";
 import { axiosInstance } from "@/lib/utils";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface MachineType {
   id: number;
@@ -226,7 +227,14 @@ export function EditMachineDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading || loadingData}>
-              {loading ? "Updating..." : "Update Machine"}
+              {loading ? (
+                <span className="flex items-center">
+                  <Loader size={16} />
+                  <span className="ml-2">Updating...</span>
+                </span>
+              ) : (
+                "Update Machine"
+              )}
             </Button>
           </div>
         </form>

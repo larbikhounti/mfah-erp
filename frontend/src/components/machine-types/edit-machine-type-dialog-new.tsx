@@ -18,6 +18,7 @@ import {
   type UpdateMachineTypePayload,
 } from "@/stores/machine-types-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface EditMachineTypeDialogProps {
   machineType: MachineType;
@@ -106,7 +107,12 @@ export function EditMachineTypeDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update Machine Type"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">
+                                  Updating...
+                                </span>
+                            </span>: "Update Machine Type"}
             </Button>
           </div>
         </form>

@@ -18,6 +18,7 @@ import {
   type UpdateGameTypePayload,
 } from "@/stores/game-types-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface EditGameTypeDialogProps {
   gameType: GameType;
@@ -106,7 +107,12 @@ export function EditGameTypeDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update Game Type"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">
+                                  Updating...
+                                </span>
+                            </span>: "Update Game Type"}
             </Button>
           </div>
         </form>

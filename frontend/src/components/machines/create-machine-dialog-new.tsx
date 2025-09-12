@@ -26,6 +26,7 @@ import {
 import { useMachineTypesStore } from "@/stores/machine-types-store";
 import { useDomsStore } from "@/stores/doms-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface CreateMachineDialogProps {
   trigger?: React.ReactNode;
@@ -209,7 +210,10 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
               type="submit"
               disabled={loading || machineTypesLoading || domsLoading}
             >
-              {loading ? "Creating..." : "Create Machine"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">Creating...</span>
+                            </span>: "Create Machine"}
             </Button>
           </div>
         </form>

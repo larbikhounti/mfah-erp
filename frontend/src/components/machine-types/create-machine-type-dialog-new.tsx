@@ -17,6 +17,7 @@ import {
   type CreateMachineTypePayload,
 } from "@/stores/machine-types-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface CreateMachineTypeDialogProps {
   trigger?: React.ReactNode;
@@ -100,7 +101,10 @@ export function CreateMachineTypeDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Machine Type"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">Creating...</span>
+                            </span>: "Create Machine Type"}
             </Button>
           </div>
         </form>

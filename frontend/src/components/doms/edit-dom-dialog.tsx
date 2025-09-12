@@ -19,6 +19,7 @@ import {
 import { useDomsStore, type Dom } from "@/stores/doms-store";
 import { Edit } from "lucide-react";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface EditDomDialogProps {
   dom: Dom | null;
@@ -111,7 +112,12 @@ export function EditDomDialog({ dom }: EditDomDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update DOM"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">
+                                  Updating...
+                                </span>
+                            </span>: "Update DOM"}
             </Button>
           </DialogFooter>
         </form>

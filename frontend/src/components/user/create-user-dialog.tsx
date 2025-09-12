@@ -26,6 +26,7 @@ import { useUsersStore, type CreateUserPayload } from "@/stores/users-store";
 import { useRolesStore } from "@/stores/roles-store";
 import { useDomsStore } from "@/stores/doms-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface CreateUserDialogProps {
   trigger?: React.ReactNode;
@@ -212,7 +213,11 @@ export function CreateUserDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create User"}
+              {loading ? 
+              <span className="flex items-center">
+                 <Loader size={16} />
+                  <span className="ml-2">Creating...</span>
+              </span>: "Create User"}
             </Button>
           </DialogFooter>
         </form>

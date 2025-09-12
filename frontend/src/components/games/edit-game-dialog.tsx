@@ -27,6 +27,7 @@ import {
 import { useGameTypesStore } from "@/stores/game-types-store";
 import { useMachineTypesStore } from "@/stores/machine-types-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface EditGameDialogProps {
   game: Game;
@@ -268,7 +269,12 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update Game"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">
+                                  Updating...
+                                </span>
+                            </span>: "Update Game"}
             </Button>
           </div>
         </form>

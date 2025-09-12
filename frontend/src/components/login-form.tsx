@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthService } from "@/services/auth.service";
 import { useAuth } from "@/hooks/use-auth";
+import { Loader } from "./loader";
 
 interface LoginFormData {
   email: string;
@@ -51,7 +52,14 @@ FormField.displayName = "FormField";
 // Memoized submit button to prevent re-renders
 const SubmitButton = memo<{ isSubmitting: boolean }>(({ isSubmitting }) => (
   <Button type="submit" className="w-full" disabled={isSubmitting}>
-    {isSubmitting ? "Logging in..." : "Login"}
+    {isSubmitting ? (
+      <span className="flex items-center">
+        <Loader size={16} />
+        <span className="ml-2">Logging in...</span>
+      </span>
+    ) : (
+      "Login"
+    )}
   </Button>
 ));
 

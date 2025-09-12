@@ -17,6 +17,7 @@ import {
 import { Plus, Shield } from "lucide-react";
 import { useRolesStore, type CreateRolePayload } from "@/stores/roles-store";
 import { toast } from "sonner";
+import { Loader } from "../loader";
 
 interface CreateRoleDialogProps {
   trigger?: React.ReactNode;
@@ -147,7 +148,10 @@ export function CreateRoleDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Role"}
+              {loading ?   <span className="flex items-center">
+                               <Loader size={16} />
+                                <span className="ml-2">Creating...</span>
+                            </span>: "Create Role"}
             </Button>
           </DialogFooter>
         </form>
