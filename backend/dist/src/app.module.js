@@ -18,6 +18,7 @@ const machine_types_module_1 = require("./machine-types/machine-types.module");
 const machines_module_1 = require("./machines/machines.module");
 const game_types_module_1 = require("./game-types/game-types.module");
 const games_module_1 = require("./games/games.module");
+const experiences_module_1 = require("./experiences/experiences.module");
 const config_1 = require("@nestjs/config");
 const auth_module_1 = require("./auth/auth.module");
 let AppModule = class AppModule {
@@ -35,6 +36,7 @@ exports.AppModule = AppModule = __decorate([
             machines_module_1.MachinesModule,
             game_types_module_1.GameTypesModule,
             games_module_1.GamesModule,
+            experiences_module_1.ExperiencesModule,
             auth_module_1.AuthModule,
         ],
         controllers: [app_controller_1.AppController],

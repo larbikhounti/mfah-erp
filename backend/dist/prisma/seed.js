@@ -8,6 +8,8 @@ const seedGameTypes_1 = require("./seeds/seedGameTypes");
 const seedMachines_1 = require("./seeds/seedMachines");
 const seedGames_1 = require("./seeds/seedGames");
 const seedUsers_1 = require("./seeds/seedUsers");
+const seedExperiences_1 = require("./seeds/seedExperiences");
+const seedTickets_1 = require("./seeds/seedTickets");
 const prisma = new client_1.PrismaClient();
 async function main() {
     console.log('Starting database seeding...');
@@ -19,6 +21,8 @@ async function main() {
         await (0, seedMachines_1.seedMachines)(prisma);
         await (0, seedGames_1.seedGames)(prisma);
         await (0, seedUsers_1.seedUsers)(prisma);
+        await (0, seedExperiences_1.seedExperiences)(prisma);
+        await (0, seedTickets_1.seedTickets)(prisma);
         console.log('Database seeding completed successfully!');
     }
     catch (error) {

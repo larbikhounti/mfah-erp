@@ -9,6 +9,7 @@ import { MachineTypesModule } from './machine-types/machine-types.module';
 import { MachinesModule } from './machines/machines.module';
 import { GameTypesModule } from './game-types/game-types.module';
 import { GamesModule } from './games/games.module';
+import { ExperiencesModule } from './experiences/experiences.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 
@@ -23,6 +24,7 @@ import { AuthModule } from './auth/auth.module';
     MachinesModule,
     GameTypesModule,
     GamesModule,
+    ExperiencesModule,
     AuthModule,
   ],
   controllers: [AppController],

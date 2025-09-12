@@ -46,6 +46,7 @@ model experiences {
   doms      doms      @relation(fields: [domeId], references: [id], onDelete: SetDefault)
   games     games     @relation(fields: [gameId], references: [id], onDelete: SetDefault)
   machines  machines  @relation(fields: [machineId], references: [id], onDelete: SetDefault)
+  tickets   tickets[]
 }
 
 model gameTypes {
@@ -127,6 +128,7 @@ model tickets {
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?
   domeId        Int
+  experiences   experiences    @relation(fields: [experienceId], references: [id], onDelete: SetDefault)
   machineChairs machineChairs? @relation(fields: [chairId], references: [id])
   doms          doms           @relation(fields: [domeId], references: [id], onDelete: SetDefault)
 }

@@ -6,6 +6,8 @@ import { seedGameTypes } from './seeds/seedGameTypes';
 import { seedMachines } from './seeds/seedMachines';
 import { seedGames } from './seeds/seedGames';
 import { seedUsers } from './seeds/seedUsers';
+import { seedExperiences } from './seeds/seedExperiences';
+import { seedTickets } from './seeds/seedTickets';
 
 const prisma = new PrismaClient();
 async function main() {
@@ -32,6 +34,12 @@ async function main() {
 
     // Then seed users
     await seedUsers(prisma);
+
+    // Finally seed experiences (depends on machines, games, and doms)
+    await seedExperiences(prisma);
+
+    // Seed tickets (depends on users, experiences, machine chairs, and doms)
+    await seedTickets(prisma);
 
     console.log('Database seeding completed successfully!');
   } catch (error) {
