@@ -83,7 +83,7 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
   
   // Pagination state
   currentPage: 1,
-  pageSize: 10,
+  pageSize: 13,
   totalPages: 0,
 
   // Fetch users with filtering

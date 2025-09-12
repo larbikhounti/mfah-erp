@@ -1,6 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { seedRoles } from './seeds/seedRoles';
 import { seedDoms } from './seeds/seedDoms';
+import { seedMachineTypes } from './seeds/seedMachineTypes';
+import { seedGameTypes } from './seeds/seedGameTypes';
+import { seedMachines } from './seeds/seedMachines';
+import { seedGames } from './seeds/seedGames';
 import { seedUsers } from './seeds/seedUsers';
 
 const prisma = new PrismaClient();
@@ -13,6 +17,18 @@ async function main() {
 
     // Seed DOMs (users can be assigned to DOMs)
     await seedDoms(prisma);
+
+    // Seed machine types
+    await seedMachineTypes(prisma);
+
+    // Seed game types
+    await seedGameTypes(prisma);
+
+    // Seed machines (depends on machine types and DOMs)
+    await seedMachines(prisma);
+
+    // Seed games (depends on game types and machine types)
+    await seedGames(prisma);
 
     // Then seed users
     await seedUsers(prisma);

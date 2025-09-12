@@ -14,6 +14,10 @@ const prisma_module_1 = require("./prisma/prisma.module");
 const users_module_1 = require("./users/users.module");
 const doms_module_1 = require("./doms/doms.module");
 const roles_module_1 = require("./roles/roles.module");
+const machine_types_module_1 = require("./machine-types/machine-types.module");
+const machines_module_1 = require("./machines/machines.module");
+const game_types_module_1 = require("./game-types/game-types.module");
+const games_module_1 = require("./games/games.module");
 const config_1 = require("@nestjs/config");
 const auth_module_1 = require("./auth/auth.module");
 let AppModule = class AppModule {
@@ -27,6 +31,10 @@ exports.AppModule = AppModule = __decorate([
             users_module_1.UsersModule,
             doms_module_1.DomsModule,
             roles_module_1.RolesModule,
+            machine_types_module_1.MachineTypesModule,
+            machines_module_1.MachinesModule,
+            game_types_module_1.GameTypesModule,
+            games_module_1.GamesModule,
             auth_module_1.AuthModule,
         ],
         controllers: [app_controller_1.AppController],
