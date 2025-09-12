@@ -1,160 +1,280 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Game, GameType, MachineType } from "@/app/lib/types"
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Edit } from "lucide-react";
+import {
+  useGamesStore,
+  type Game,
+  type UpdateGamePayload,
+} from "@/stores/games-store";
+import { axiosInstance } from "@/lib/utils";
+import { toast } from "sonner";
 
-
-interface EditGameDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onSubmit: (game: Omit<Game, "id" | "createdAt" | "updatedAt">) => void
-  game: Game
-  gameTypes: GameType[]
-  machineTypes: MachineType[]
+interface GameType {
+  id: number;
+  name: string;
 }
 
-export function EditGameDialog({ open, onOpenChange, onSubmit, game, gameTypes, machineTypes }: EditGameDialogProps) {
-  const [formData, setFormData] = useState({
-    name: "",
-    price: "",
-    playTime: "",
-    gameTypeId: "0", // Updated default value to be a non-empty string
-    machineTypeId: "0", // Updated default value to be a non-empty string
-  })
+interface MachineType {
+  id: number;
+  name: string;
+}
 
+interface EditGameDialogProps {
+  game: Game;
+  trigger?: React.ReactNode;
+}
+
+export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
+  const { updateGame, loading } = useGamesStore();
+  const [open, setOpen] = useState(false);
+  const [gameTypes, setGameTypes] = useState<GameType[]>([]);
+  const [machineTypes, setMachineTypes] = useState<MachineType[]>([]);
+  const [loadingData, setLoadingData] = useState(false);
+  const [formData, setFormData] = useState<UpdateGamePayload>({
+    name: game.name,
+    price: game.price,
+    playTime: game.playTime,
+    gameTypeId: game.gameTypeId || undefined,
+    machineTypeId: game.machineTypeId || undefined,
+  });
+
+  // Update form data when game prop changes
   useEffect(() => {
-    if (game) {
-      setFormData({
-        name: game.name,
-        price: game.price.toString(),
-        playTime: game.playTime.toString(),
-        gameTypeId: game.gameTypeId?.toString() || "0", // Updated default value to be a non-empty string
-        machineTypeId: game.machineTypeId?.toString() || "0", // Updated default value to be a non-empty string
-      })
+    setFormData({
+      name: game.name,
+      price: game.price,
+      playTime: game.playTime,
+      gameTypeId: game.gameTypeId || undefined,
+      machineTypeId: game.machineTypeId || undefined,
+    });
+  }, [game]);
+
+  // Fetch game types and machine types when dialog opens
+  useEffect(() => {
+    if (open) {
+      fetchGameTypesAndMachineTypes();
     }
-  }, [game])
+  }, [open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const fetchGameTypesAndMachineTypes = async () => {
+    setLoadingData(true);
+    try {
+      // Fetch game types
+      const gameTypesResponse = await axiosInstance.get("/game-types");
+      if (gameTypesResponse.data.data) {
+        setGameTypes(gameTypesResponse.data.data);
+      }
 
-    if (!formData.name.trim() || !formData.price || !formData.playTime) {
-      return
+      // Fetch machine types
+      const machineTypesResponse = await axiosInstance.get("/machine-types");
+      if (machineTypesResponse.data.data) {
+        setMachineTypes(machineTypesResponse.data.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch game types and machine types:", error);
+      toast.error("Failed to load game types and machine types");
+    } finally {
+      setLoadingData(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Validate form data
+    if (!formData.name?.trim()) {
+      toast.error("Game name is required");
+      return;
     }
 
-    onSubmit({
-      name: formData.name.trim(),
-      price: Number.parseFloat(formData.price),
-      playTime: Number.parseInt(formData.playTime),
-      gameTypeId: formData.gameTypeId ? Number.parseInt(formData.gameTypeId) : undefined,
-      machineTypeId: formData.machineTypeId ? Number.parseInt(formData.machineTypeId) : undefined,
-    })
-  }
+    if (formData.price !== undefined && formData.price <= 0) {
+      toast.error("Price must be greater than 0");
+      return;
+    }
+
+    if (formData.playTime !== undefined && formData.playTime <= 0) {
+      toast.error("Play time must be greater than 0");
+      return;
+    }
+
+    try {
+      await updateGame(game.id, formData);
+      toast.success("Game updated successfully");
+      setOpen(false);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update game");
+    }
+  };
+
+  const handleInputChange = (
+    field: keyof UpdateGamePayload,
+    value: string | number | undefined
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button variant="ghost" className="flex items-center gap-2">
+            <Edit className="h-4 w-4" />
+            Edit
+          </Button>
+        )}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Game</DialogTitle>
-          <DialogDescription>Update the game information, pricing, and compatibility.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="edit-name">Game Name</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter game name"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-price">Price ($)</Label>
-              <Input
-                id="edit-price"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="0.00"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-playTime">Play Time (minutes)</Label>
-              <Input
-                id="edit-playTime"
-                type="number"
-                min="1"
-                value={formData.playTime}
-                onChange={(e) => setFormData({ ...formData, playTime: e.target.value })}
-                placeholder="Enter play time in minutes"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-gameType">Game Type</Label>
-              <Select
-                value={formData.gameTypeId}
-                onValueChange={(value) => setFormData({ ...formData, gameTypeId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select game type (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">No game type</SelectItem> {/* Updated value to be a non-empty string */}
-                  {gameTypes.map((gameType) => (
-                    <SelectItem key={gameType.id} value={gameType.id.toString()}>
-                      {gameType.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-machineType">Compatible Machine Type</Label>
-              <Select
-                value={formData.machineTypeId}
-                onValueChange={(value) => setFormData({ ...formData, machineTypeId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select machine type (optional)" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="0">No machine type</SelectItem> {/* Updated value to be a non-empty string */}
-                  {machineTypes.map((machineType) => (
-                    <SelectItem key={machineType.id} value={machineType.id.toString()}>
-                      {machineType.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Enter game name"
+              value={formData.name || ""}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              required
+            />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+
+          <div className="space-y-2">
+            <Label htmlFor="price">Price ($)</Label>
+            <Input
+              id="price"
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="Enter price"
+              value={formData.price || ""}
+              onChange={(e) =>
+                handleInputChange(
+                  "price",
+                  e.target.value ? parseFloat(e.target.value) : undefined
+                )
+              }
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="playTime">Play Time (minutes)</Label>
+            <Input
+              id="playTime"
+              type="number"
+              min="1"
+              placeholder="Enter play time in minutes"
+              value={formData.playTime || ""}
+              onChange={(e) =>
+                handleInputChange(
+                  "playTime",
+                  e.target.value ? parseInt(e.target.value) : undefined
+                )
+              }
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="gameType">Game Type</Label>
+            <Select
+              value={formData.gameTypeId?.toString() || ""}
+              onValueChange={(value) =>
+                handleInputChange(
+                  "gameTypeId",
+                  value ? parseInt(value) : undefined
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select game type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No game type</SelectItem>
+                {loadingData ? (
+                  <SelectItem value="loading" disabled>
+                    Loading...
+                  </SelectItem>
+                ) : (
+                  gameTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="machineType">Machine Type</Label>
+            <Select
+              value={formData.machineTypeId?.toString() || ""}
+              onValueChange={(value) =>
+                handleInputChange(
+                  "machineTypeId",
+                  value ? parseInt(value) : undefined
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select machine type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">No machine type</SelectItem>
+                {loadingData ? (
+                  <SelectItem value="loading" disabled>
+                    Loading...
+                  </SelectItem>
+                ) : (
+                  machineTypes.map((type) => (
+                    <SelectItem key={type.id} value={type.id.toString()}>
+                      {type.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button type="submit">Update Game</Button>
-          </DialogFooter>
+            <Button type="submit" disabled={loading || loadingData}>
+              {loading ? "Updating..." : "Update Game"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -13,54 +13,54 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Edit } from "lucide-react";
 import {
-  useGameTypesStore,
-  type GameType,
-  type UpdateGameTypePayload,
-} from "@/stores/game-types-store";
+  useMachineTypesStore,
+  type MachineType,
+  type UpdateMachineTypePayload,
+} from "@/stores/machine-types-store";
 import { toast } from "sonner";
 
-interface EditGameTypeDialogProps {
-  gameType: GameType;
+interface EditMachineTypeDialogProps {
+  machineType: MachineType;
   trigger?: React.ReactNode;
 }
 
-export function EditGameTypeDialog({
-  gameType,
+export function EditMachineTypeDialog({
+  machineType,
   trigger,
-}: EditGameTypeDialogProps) {
-  const { updateGameType, loading } = useGameTypesStore();
+}: EditMachineTypeDialogProps) {
+  const { updateMachineType, loading } = useMachineTypesStore();
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState<UpdateGameTypePayload>({
-    name: gameType.name,
+  const [formData, setFormData] = useState<UpdateMachineTypePayload>({
+    name: machineType.name,
   });
 
-  // Update form data when gameType prop changes
+  // Update form data when machineType prop changes
   useEffect(() => {
     setFormData({
-      name: gameType.name,
+      name: machineType.name,
     });
-  }, [gameType]);
+  }, [machineType]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate form data
     if (!formData.name?.trim()) {
-      toast.error("Game type name is required");
+      toast.error("Machine type name is required");
       return;
     }
 
     try {
-      await updateGameType(gameType.id, formData);
-      toast.success("Game type updated successfully");
+      await updateMachineType(machineType.id, formData);
+      toast.success("Machine type updated successfully");
       setOpen(false);
     } catch (error: any) {
-      toast.error(error.message || "Failed to update game type");
+      toast.error(error.message || "Failed to update machine type");
     }
   };
 
   const handleInputChange = (
-    field: keyof UpdateGameTypePayload,
+    field: keyof UpdateMachineTypePayload,
     value: string
   ) => {
     setFormData((prev) => ({
@@ -81,7 +81,7 @@ export function EditGameTypeDialog({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Game Type</DialogTitle>
+          <DialogTitle>Edit Machine Type</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -89,7 +89,7 @@ export function EditGameTypeDialog({
             <Input
               id="name"
               type="text"
-              placeholder="Enter game type name"
+              placeholder="Enter machine type name"
               value={formData.name || ""}
               onChange={(e) => handleInputChange("name", e.target.value)}
               required
@@ -106,7 +106,7 @@ export function EditGameTypeDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Updating..." : "Update Game Type"}
+              {loading ? "Updating..." : "Update Machine Type"}
             </Button>
           </div>
         </form>

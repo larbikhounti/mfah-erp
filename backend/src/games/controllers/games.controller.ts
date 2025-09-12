@@ -31,7 +31,10 @@ import { AdminRoleGuard } from '../../auth/guards/admin-role.guard';
 import { Public } from '../../auth/decorator/public.decorator';
 
 @ApiTags('games')
-@Controller('games')
+@Controller({
+  path: 'games',
+  version: '1',
+})
 @UseGuards(AuthGuard)
 export class GamesController {
   constructor(private readonly gamesService: GamesService) {}

@@ -1,94 +1,32 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-
-import { CreateMachineTypeDialog } from "@/components/machine-types/create-machine-type-dialog"
-import { MachineTypeTable } from "@/components/machine-types/machine-type-table"
-import { EditMachineTypeDialog } from "@/components/machine-types/edit-machine-type-dialog"
-import { PageHeader } from "@/components/shared/page-header"
-import { MachineType } from "@/app/lib/types"
+import { useEffect } from "react";
+import {
+  useMachineTypesStore,
+  type MachineType,
+} from "@/stores/machine-types-store";
+import { EnhancedMachineTypeTable } from "@/components/machine-types/enhanced-machine-type-table";
 
 export default function MachineTypesPage() {
-  const [machineTypes, setMachineTypes] = useState<MachineType[]>([
-    {
-      id: 1,
-      name: "Arcade Cabinet",
-      createdAt: "2024-01-15T10:30:00Z",
-      updatedAt: "2024-01-15T10:30:00Z",
-    },
-    {
-      id: 2,
-      name: "Pinball Machine",
-      createdAt: "2024-01-16T14:20:00Z",
-      updatedAt: "2024-01-16T14:20:00Z",
-    },
-    {
-      id: 3,
-      name: "Slot Machine",
-      createdAt: "2024-01-17T09:15:00Z",
-      updatedAt: "2024-01-17T09:15:00Z",
-    },
-    {
-      id: 4,
-      name: "Claw Machine",
-      createdAt: "2024-01-18T16:45:00Z",
-      updatedAt: "2024-01-18T16:45:00Z",
-    },
-    {
-      id: 5,
-      name: "Racing Simulator",
-      createdAt: "2024-01-19T11:30:00Z",
-      updatedAt: "2024-01-19T11:30:00Z",
-    },
-  ])
+  const { fetchMachineTypes } = useMachineTypesStore();
 
-  const [editingMachineType, setEditingMachineType] = useState<MachineType | null>(null)
-
-  const handleCreateMachineType = (machineTypeData: { name: string }) => {
-    const newMachineType: MachineType = {
-      id: Math.max(...machineTypes.map((mt) => mt.id)) + 1,
-      name: machineTypeData.name,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }
-    setMachineTypes([...machineTypes, newMachineType])
-  }
-
-  const handleEditMachineType = (machineType: MachineType) => {
-    setEditingMachineType(machineType)
-  }
-
-  const handleUpdateMachineType = (updatedMachineType: MachineType) => {
-    setMachineTypes(
-      machineTypes.map((mt) =>
-        mt.id === updatedMachineType.id ? { ...updatedMachineType, updatedAt: new Date().toISOString() } : mt,
-      ),
-    )
-    setEditingMachineType(null)
-  }
-
-  const handleDeleteMachineType = (id: number) => {
-    setMachineTypes(machineTypes.filter((mt) => mt.id !== id))
-  }
+  // Fetch machine types on component mount
+  useEffect(() => {
+    fetchMachineTypes();
+  }, [fetchMachineTypes]);
 
   return (
-    <div className="flex-1 space-y-4 p-4 pt-6">
-      <PageHeader title="Machine Types">
-        <CreateMachineTypeDialog onCreateMachineType={handleCreateMachineType} />
-      </PageHeader>
-      <MachineTypeTable
-        machineTypes={machineTypes}
-        onEditMachineType={handleEditMachineType}
-        onDeleteMachineType={handleDeleteMachineType}
-      />
-      {editingMachineType && (
-        <EditMachineTypeDialog
-          machineType={editingMachineType}
-          open={!!editingMachineType}
-          onOpenChange={(open) => !open && setEditingMachineType(null)}
-          onUpdateMachineType={handleUpdateMachineType}
-        />
-      )}
-    </div>
-  )
+    <section className="flex flex-col gap-4 w-full px-6 py-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-semibold">Machine Types Management</h1>
+          <p className="text-muted-foreground">
+            Manage your machine type categories and specifications
+          </p>
+        </div>
+      </div>
+
+      <EnhancedMachineTypeTable />
+    </section>
+  );
 }

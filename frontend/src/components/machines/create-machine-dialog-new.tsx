@@ -19,62 +19,65 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
-import { useGamesStore, type CreateGamePayload } from "@/stores/games-store";
+import {
+  useMachinesStore,
+  type CreateMachinePayload,
+} from "@/stores/machines-store";
 import { axiosInstance } from "@/lib/utils";
 import { toast } from "sonner";
-
-interface GameType {
-  id: number;
-  name: string;
-}
 
 interface MachineType {
   id: number;
   name: string;
 }
 
-interface CreateGameDialogProps {
+interface Dom {
+  id: number;
+  name: string;
+  address: string;
+}
+
+interface CreateMachineDialogProps {
   trigger?: React.ReactNode;
 }
 
-export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
-  const { createGame, loading } = useGamesStore();
+export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
+  const { createMachine, loading } = useMachinesStore();
   const [open, setOpen] = useState(false);
-  const [gameTypes, setGameTypes] = useState<GameType[]>([]);
   const [machineTypes, setMachineTypes] = useState<MachineType[]>([]);
+  const [doms, setDoms] = useState<Dom[]>([]);
   const [loadingData, setLoadingData] = useState(false);
-  const [formData, setFormData] = useState<CreateGamePayload>({
+  const [formData, setFormData] = useState<CreateMachinePayload>({
     name: "",
-    price: 0,
-    playTime: 0,
-    gameTypeId: undefined,
     machineTypeId: undefined,
+    domeId: undefined,
+    chairsNumber: undefined,
   });
 
-  // Fetch game types and machine types when dialog opens
+  // Fetch machine types and DOMs when component mounts or dialog opens
   useEffect(() => {
     if (open) {
-      fetchGameTypesAndMachineTypes();
+      fetchMachineTypesAndDoms();
     }
   }, [open]);
 
-  const fetchGameTypesAndMachineTypes = async () => {
+  const fetchMachineTypesAndDoms = async () => {
     setLoadingData(true);
     try {
-      // Fetch game types
-      const gameTypesResponse = await axiosInstance.get("/game-types");
-      if (gameTypesResponse.data.data) {
-        setGameTypes(gameTypesResponse.data.data);
-      }
-
       // Fetch machine types
-      const machineTypesResponse = await axiosInstance.get("/machine-types");
-      if (machineTypesResponse.data.data) {
-        setMachineTypes(machineTypesResponse.data.data);
-      }
+      const machineTypesResponse = await axiosInstance.get<{
+        data: MachineType[];
+      }>("/machine-types/all");
+      setMachineTypes(machineTypesResponse.data.data);
+
+      // Fetch DOMs
+      const domsResponse = await axiosInstance.get<{ data: Dom[] }>(
+        "/doms/all"
+      );
+      setDoms(domsResponse.data.data);
     } catch (error) {
-      console.error("Failed to fetch game types and machine types:", error);
-      toast.error("Failed to load game types and machine types");
+      console.error("Failed to fetch machine types and DOMs:", error);
+      toast.error("Failed to load machine types and DOMs");
     } finally {
       setLoadingData(false);
     }
@@ -85,39 +88,28 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
 
     // Validate form data
     if (!formData.name.trim()) {
-      toast.error("Game name is required");
-      return;
-    }
-
-    if (formData.price <= 0) {
-      toast.error("Price must be greater than 0");
-      return;
-    }
-
-    if (formData.playTime <= 0) {
-      toast.error("Play time must be greater than 0");
+      toast.error("Machine name is required");
       return;
     }
 
     try {
-      await createGame(formData);
-      toast.success("Game created successfully");
+      await createMachine(formData);
+      toast.success("Machine created successfully");
       setOpen(false);
       // Reset form
       setFormData({
         name: "",
-        price: 0,
-        playTime: 0,
-        gameTypeId: undefined,
         machineTypeId: undefined,
+        domeId: undefined,
+        chairsNumber: undefined,
       });
     } catch (error: any) {
-      toast.error(error.message || "Failed to create game");
+      toast.error(error.message || "Failed to create machine");
     }
   };
 
   const handleInputChange = (
-    field: keyof CreateGamePayload,
+    field: keyof CreateMachinePayload,
     value: string | number | undefined
   ) => {
     setFormData((prev) => ({
@@ -132,13 +124,13 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
         {trigger || (
           <Button className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Create Game
+            Create Machine
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Game</DialogTitle>
+          <DialogTitle>Create New Machine</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -146,79 +138,11 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
             <Input
               id="name"
               type="text"
-              placeholder="Enter game name"
+              placeholder="Enter machine name"
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
               required
             />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="price">Price ($)</Label>
-            <Input
-              id="price"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="Enter price"
-              value={formData.price || ""}
-              onChange={(e) =>
-                handleInputChange(
-                  "price",
-                  e.target.value ? parseFloat(e.target.value) : 0
-                )
-              }
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="playTime">Play Time (minutes)</Label>
-            <Input
-              id="playTime"
-              type="number"
-              min="1"
-              placeholder="Enter play time in minutes"
-              value={formData.playTime || ""}
-              onChange={(e) =>
-                handleInputChange(
-                  "playTime",
-                  e.target.value ? parseInt(e.target.value) : 0
-                )
-              }
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="gameType">Game Type</Label>
-            <Select
-              value={formData.gameTypeId?.toString() || ""}
-              onValueChange={(value) =>
-                handleInputChange(
-                  "gameTypeId",
-                  value ? parseInt(value) : undefined
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select game type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">No game type</SelectItem>
-                {loadingData ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  gameTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
           </div>
 
           <div className="space-y-2">
@@ -236,7 +160,6 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
                 <SelectValue placeholder="Select machine type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No machine type</SelectItem>
                 {loadingData ? (
                   <SelectItem value="loading" disabled>
                     Loading...
@@ -252,6 +175,50 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
             </Select>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="dom">DOM</Label>
+            <Select
+              value={formData.domeId?.toString() || ""}
+              onValueChange={(value) =>
+                handleInputChange("domeId", value ? parseInt(value) : undefined)
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select DOM" />
+              </SelectTrigger>
+              <SelectContent>
+                {loadingData ? (
+                  <SelectItem value="loading" disabled>
+                    Loading...
+                  </SelectItem>
+                ) : (
+                  doms.map((dom) => (
+                    <SelectItem key={dom.id} value={dom.id.toString()}>
+                      {dom.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="chairsNumber">Number of Chairs</Label>
+            <Input
+              id="chairsNumber"
+              type="number"
+              min="0"
+              placeholder="Enter number of chairs"
+              value={formData.chairsNumber || ""}
+              onChange={(e) =>
+                handleInputChange(
+                  "chairsNumber",
+                  e.target.value ? parseInt(e.target.value) : undefined
+                )
+              }
+            />
+          </div>
+
           <div className="flex justify-end space-x-2">
             <Button
               type="button"
@@ -262,7 +229,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
               Cancel
             </Button>
             <Button type="submit" disabled={loading || loadingData}>
-              {loading ? "Creating..." : "Create Game"}
+              {loading ? "Creating..." : "Create Machine"}
             </Button>
           </div>
         </form>

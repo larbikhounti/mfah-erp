@@ -218,7 +218,10 @@ __decorate([
 ], GamesController.prototype, "bulkDelete", null);
 exports.GamesController = GamesController = __decorate([
     (0, swagger_1.ApiTags)('games'),
-    (0, common_1.Controller)('games'),
+    (0, common_1.Controller)({
+        path: 'games',
+        version: '1',
+    }),
     (0, common_1.UseGuards)(auth_guard_1.AuthGuard),
     __metadata("design:paramtypes", [games_service_1.GamesService])
 ], GamesController);

@@ -1,79 +1,108 @@
-"use client"
+"use client";
 
-import type React from "react"
-
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { GameType } from "@/app/lib/types"
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react";
+import {
+  useGameTypesStore,
+  type CreateGameTypePayload,
+} from "@/stores/game-types-store";
+import { toast } from "sonner";
 
 interface CreateGameTypeDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  onCreateGameType: (gameType: Omit<GameType, "id" | "createdAt" | "updatedAt">) => void
+  trigger?: React.ReactNode;
 }
 
-export function CreateGameTypeDialog({ open, onOpenChange, onCreateGameType }: CreateGameTypeDialogProps) {
-  const [name, setName] = useState("")
+export function CreateGameTypeDialog({ trigger }: CreateGameTypeDialogProps) {
+  const { createGameType, loading } = useGameTypesStore();
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState<CreateGameTypePayload>({
+    name: "",
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (name.trim()) {
-      onCreateGameType({
-        name: name.trim(),
-      })
-      setName("")
-      onOpenChange(false)
-    }
-  }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen) {
-      setName("")
+    // Validate form data
+    if (!formData.name.trim()) {
+      toast.error("Game type name is required");
+      return;
     }
-    onOpenChange(newOpen)
-  }
+
+    try {
+      await createGameType(formData);
+      toast.success("Game type created successfully");
+      setOpen(false);
+      // Reset form
+      setFormData({
+        name: "",
+      });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create game type");
+    }
+  };
+
+  const handleInputChange = (
+    field: keyof CreateGameTypePayload,
+    value: string
+  ) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {trigger || (
+          <Button className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Create Game Type
+          </Button>
+        )}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create Game Type</DialogTitle>
-          <DialogDescription>Add a new game type to the system.</DialogDescription>
+          <DialogTitle>Create New Game Type</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="name" className="text-right">
-                Name
-              </Label>
-              <Input
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="col-span-3"
-                placeholder="e.g., Horror, Action, RPG"
-                required
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input
+              id="name"
+              type="text"
+              placeholder="Enter game type name"
+              value={formData.name}
+              onChange={(e) => handleInputChange("name", e.target.value)}
+              required
+            />
           </div>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+
+          <div className="flex justify-end space-x-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
               Cancel
             </Button>
-            <Button type="submit">Create Game Type</Button>
-          </DialogFooter>
+            <Button type="submit" disabled={loading}>
+              {loading ? "Creating..." : "Create Game Type"}
+            </Button>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
