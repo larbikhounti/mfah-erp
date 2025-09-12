@@ -26,15 +26,7 @@ import {
 } from "@/stores/experiences-store";
 import { toast } from "sonner";
 import PaginationTable from "@/components/pagination-table";
-import {
-  Eye,
-  Clock,
-  DollarSign,
-  MapPin,
-  Gamepad,
-  Monitor,
-  Users,
-} from "lucide-react";
+import { Eye, Clock, MapPin, Gamepad, Monitor, Users } from "lucide-react";
 
 interface EnhancedExperienceTableProps {
   // Remove the callback props since we'll handle them internally
@@ -121,8 +113,7 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
                 Price
               </label>
               <p className="font-medium flex items-center gap-1">
-                <DollarSign className="h-4 w-4" />$
-                {experience.gamePrice.toFixed(2)}
+                ${experience.gamePrice.toFixed(2)}
               </p>
             </div>
             <div>
@@ -134,11 +125,13 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
                 {formatPlayTime(experience.gamePlayTime)}
               </p>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-2 flex gap-1">
               <label className="text-sm font-medium text-muted-foreground">
                 Required Machine Type
               </label>
-              <Badge variant="outline">{experience.requiredMachineType}</Badge>
+              <Badge variant="secondary">
+                {experience.requiredMachineType}
+              </Badge>
             </div>
           </div>
         </CardContent>
@@ -182,11 +175,13 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
                       className="flex items-center justify-between p-2 border rounded"
                     >
                       <div className="flex items-center gap-2">
-                        <span className="font-medium">{chair.name}</span>
+                        <span className="font-medium text-xs">
+                          {chair.name}
+                        </span>
                         {getChairStatusBadge(chair.status)}
                       </div>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <Users className="h-4 w-4" />
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Users className="h-4  w-4" />
                         {chair.ticketCount} tickets
                       </div>
                     </div>
@@ -225,7 +220,7 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
       </Card>
 
       {/* Tickets Summary */}
-      <Card>
+      <Card className="mb-10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
@@ -233,9 +228,25 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center">
-            <p className="text-3xl font-bold">{experience.ticketCount}</p>
-            <p className="text-sm text-muted-foreground">Total Tickets</p>
+          <div className="grid grid-cols-4 gap-4 text-center">
+            <div>
+              <p className="text-lg ">{experience.ticketSummary.totalCount}</p>
+              <p className="text-sm text-muted-foreground">Total Tickets</p>
+            </div>
+            <div>
+              <p className="text-lg  ">{experience.ticketSummary.paidCount}</p>
+              <p className="text-sm text-muted-foreground">Paid</p>
+            </div>
+            <div>
+              <p className="text-lg ">{experience.ticketSummary.unpaidCount}</p>
+              <p className="text-sm text-muted-foreground">Unpaid</p>
+            </div>
+            <div>
+              <p className="text-lg ">
+                ${experience.ticketSummary.totalRevenue.toFixed(2)}
+              </p>
+              <p className="text-sm text-muted-foreground">Revenue</p>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -327,7 +338,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
       key: "dome",
       label: "DOM",
       render: (experience) => (
-        <Badge variant="default">{experience.dome}</Badge>
+        <Badge variant="secondary">{experience.dome}</Badge>
       ),
     },
     {

@@ -27,6 +27,13 @@ export interface Experience {
   requiredMachineType: string;
   domeAddress: string;
   ticketCount: number;
+  // Basic ticket summary
+  ticketSummary: {
+    totalCount: number;
+    paidCount: number;
+    unpaidCount: number;
+    totalRevenue: number;
+  };
 }
 
 export interface FilterParams {
