@@ -23,19 +23,9 @@ import {
   useMachinesStore,
   type CreateMachinePayload,
 } from "@/stores/machines-store";
-import { axiosInstance } from "@/lib/utils";
+import { useMachineTypesStore } from "@/stores/machine-types-store";
+import { useDomsStore } from "@/stores/doms-store";
 import { toast } from "sonner";
-
-interface MachineType {
-  id: number;
-  name: string;
-}
-
-interface Dom {
-  id: number;
-  name: string;
-  address: string;
-}
 
 interface CreateMachineDialogProps {
   trigger?: React.ReactNode;
@@ -43,10 +33,13 @@ interface CreateMachineDialogProps {
 
 export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
   const { createMachine, loading } = useMachinesStore();
+  const {
+    machineTypes,
+    fetchMachineTypes,
+    loading: machineTypesLoading,
+  } = useMachineTypesStore();
+  const { doms, fetchDoms, loading: domsLoading } = useDomsStore();
   const [open, setOpen] = useState(false);
-  const [machineTypes, setMachineTypes] = useState<MachineType[]>([]);
-  const [doms, setDoms] = useState<Dom[]>([]);
-  const [loadingData, setLoadingData] = useState(false);
   const [formData, setFormData] = useState<CreateMachinePayload>({
     name: "",
     machineTypeId: undefined,
@@ -54,34 +47,13 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
     chairsNumber: undefined,
   });
 
-  // Fetch machine types and DOMs when component mounts or dialog opens
+  // Fetch machine types and DOMs when dialog opens
   useEffect(() => {
     if (open) {
-      fetchMachineTypesAndDoms();
+      fetchMachineTypes();
+      fetchDoms();
     }
-  }, [open]);
-
-  const fetchMachineTypesAndDoms = async () => {
-    setLoadingData(true);
-    try {
-      // Fetch machine types
-      const machineTypesResponse = await axiosInstance.get<{
-        data: MachineType[];
-      }>("/machine-types/all");
-      setMachineTypes(machineTypesResponse.data.data);
-
-      // Fetch DOMs
-      const domsResponse = await axiosInstance.get<{ data: Dom[] }>(
-        "/doms/all"
-      );
-      setDoms(domsResponse.data.data);
-    } catch (error) {
-      console.error("Failed to fetch machine types and DOMs:", error);
-      toast.error("Failed to load machine types and DOMs");
-    } finally {
-      setLoadingData(false);
-    }
-  };
+  }, [open, fetchMachineTypes, fetchDoms]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,64 +116,6 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
               required
             />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="machineType">Machine Type</Label>
-            <Select
-              value={formData.machineTypeId?.toString() || ""}
-              onValueChange={(value) =>
-                handleInputChange(
-                  "machineTypeId",
-                  value ? parseInt(value) : undefined
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select machine type" />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingData ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  machineTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="dom">DOM</Label>
-            <Select
-              value={formData.domeId?.toString() || ""}
-              onValueChange={(value) =>
-                handleInputChange("domeId", value ? parseInt(value) : undefined)
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select DOM" />
-              </SelectTrigger>
-              <SelectContent>
-                {loadingData ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  doms.map((dom) => (
-                    <SelectItem key={dom.id} value={dom.id.toString()}>
-                      {dom.name}
-                    </SelectItem>
-                  ))
-                )}
-              </SelectContent>
-            </Select>
-          </div>
-
           <div className="space-y-2">
             <Label htmlFor="chairsNumber">Number of Chairs</Label>
             <Input
@@ -218,8 +132,71 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
               }
             />
           </div>
+          <div className="w-full grid md:grid-cols-2 gap-4">
+            <div className="grid gap-2 w-full">
+              <Label htmlFor="machineType">Machine Type</Label>
+              <Select
+                value={formData.machineTypeId?.toString() || "none"}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    "machineTypeId",
+                    value === "none" ? undefined : parseInt(value)
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select machine type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No machine type</SelectItem>
+                  {machineTypesLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Loading...
+                    </SelectItem>
+                  ) : (
+                    machineTypes.map((type) => (
+                      <SelectItem key={type.id} value={type.id.toString()}>
+                        {type.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="flex justify-end space-x-2">
+            <div className="grid gap-2 w-full">
+              <Label htmlFor="dom">DOM</Label>
+              <Select
+                value={formData.domeId?.toString() || "none"}
+                onValueChange={(value) =>
+                  handleInputChange(
+                    "domeId",
+                    value === "none" ? undefined : parseInt(value)
+                  )
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select DOM" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No DOM</SelectItem>
+                  {domsLoading ? (
+                    <SelectItem value="loading" disabled>
+                      Loading...
+                    </SelectItem>
+                  ) : (
+                    doms.map((dom) => (
+                      <SelectItem key={dom.id} value={dom.id.toString()}>
+                        {dom.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2 mt-8">
             <Button
               type="button"
               variant="outline"
@@ -228,7 +205,10 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || loadingData}>
+            <Button
+              type="submit"
+              disabled={loading || machineTypesLoading || domsLoading}
+            >
               {loading ? "Creating..." : "Create Machine"}
             </Button>
           </div>

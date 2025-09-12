@@ -154,11 +154,11 @@ export function EditMachineDialog({
           <div className="space-y-2">
             <Label htmlFor="machineType">Machine Type</Label>
             <Select
-              value={formData.machineTypeId?.toString() || ""}
+              value={formData.machineTypeId?.toString() || "none"}
               onValueChange={(value) =>
                 handleInputChange(
                   "machineTypeId",
-                  value ? parseInt(value) : undefined
+                  value === "none" ? undefined : parseInt(value)
                 )
               }
             >
@@ -166,7 +166,7 @@ export function EditMachineDialog({
                 <SelectValue placeholder="Select machine type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No machine type</SelectItem>
+                <SelectItem value="none">No machine type</SelectItem>
                 {loadingData ? (
                   <SelectItem value="loading" disabled>
                     Loading...
@@ -185,16 +185,19 @@ export function EditMachineDialog({
           <div className="space-y-2">
             <Label htmlFor="dom">DOM</Label>
             <Select
-              value={formData.domeId?.toString() || ""}
+              value={formData.domeId?.toString() || "none"}
               onValueChange={(value) =>
-                handleInputChange("domeId", value ? parseInt(value) : undefined)
+                handleInputChange(
+                  "domeId",
+                  value === "none" ? undefined : parseInt(value)
+                )
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select DOM" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No DOM</SelectItem>
+                <SelectItem value="none">No DOM</SelectItem>
                 {loadingData ? (
                   <SelectItem value="loading" disabled>
                     Loading...

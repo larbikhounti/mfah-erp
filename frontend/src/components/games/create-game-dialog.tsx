@@ -20,18 +20,9 @@ import {
 } from "@/components/ui/select";
 import { Plus } from "lucide-react";
 import { useGamesStore, type CreateGamePayload } from "@/stores/games-store";
-import { axiosInstance } from "@/lib/utils";
+import { useGameTypesStore } from "@/stores/game-types-store";
+import { useMachineTypesStore } from "@/stores/machine-types-store";
 import { toast } from "sonner";
-
-interface GameType {
-  id: number;
-  name: string;
-}
-
-interface MachineType {
-  id: number;
-  name: string;
-}
 
 interface CreateGameDialogProps {
   trigger?: React.ReactNode;
@@ -39,10 +30,17 @@ interface CreateGameDialogProps {
 
 export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
   const { createGame, loading } = useGamesStore();
+  const {
+    gameTypes,
+    fetchGameTypes,
+    loading: gameTypesLoading,
+  } = useGameTypesStore();
+  const {
+    machineTypes,
+    fetchMachineTypes,
+    loading: machineTypesLoading,
+  } = useMachineTypesStore();
   const [open, setOpen] = useState(false);
-  const [gameTypes, setGameTypes] = useState<GameType[]>([]);
-  const [machineTypes, setMachineTypes] = useState<MachineType[]>([]);
-  const [loadingData, setLoadingData] = useState(false);
   const [formData, setFormData] = useState<CreateGamePayload>({
     name: "",
     price: 0,
@@ -54,31 +52,10 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
   // Fetch game types and machine types when dialog opens
   useEffect(() => {
     if (open) {
-      fetchGameTypesAndMachineTypes();
+      fetchGameTypes();
+      fetchMachineTypes();
     }
-  }, [open]);
-
-  const fetchGameTypesAndMachineTypes = async () => {
-    setLoadingData(true);
-    try {
-      // Fetch game types
-      const gameTypesResponse = await axiosInstance.get("/game-types");
-      if (gameTypesResponse.data.data) {
-        setGameTypes(gameTypesResponse.data.data);
-      }
-
-      // Fetch machine types
-      const machineTypesResponse = await axiosInstance.get("/machine-types");
-      if (machineTypesResponse.data.data) {
-        setMachineTypes(machineTypesResponse.data.data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch game types and machine types:", error);
-      toast.error("Failed to load game types and machine types");
-    } finally {
-      setLoadingData(false);
-    }
-  };
+  }, [open, fetchGameTypes, fetchMachineTypes]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -193,11 +170,11 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
           <div className="space-y-2">
             <Label htmlFor="gameType">Game Type</Label>
             <Select
-              value={formData.gameTypeId?.toString() || ""}
+              value={formData.gameTypeId?.toString() || "none"}
               onValueChange={(value) =>
                 handleInputChange(
                   "gameTypeId",
-                  value ? parseInt(value) : undefined
+                  value === "none" ? undefined : parseInt(value)
                 )
               }
             >
@@ -205,8 +182,8 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
                 <SelectValue placeholder="Select game type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No game type</SelectItem>
-                {loadingData ? (
+                <SelectItem value="none">No game type</SelectItem>
+                {gameTypesLoading ? (
                   <SelectItem value="loading" disabled>
                     Loading...
                   </SelectItem>
@@ -224,11 +201,11 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
           <div className="space-y-2">
             <Label htmlFor="machineType">Machine Type</Label>
             <Select
-              value={formData.machineTypeId?.toString() || ""}
+              value={formData.machineTypeId?.toString() || "none"}
               onValueChange={(value) =>
                 handleInputChange(
                   "machineTypeId",
-                  value ? parseInt(value) : undefined
+                  value === "none" ? undefined : parseInt(value)
                 )
               }
             >
@@ -236,8 +213,8 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
                 <SelectValue placeholder="Select machine type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">No machine type</SelectItem>
-                {loadingData ? (
+                <SelectItem value="none">No machine type</SelectItem>
+                {machineTypesLoading ? (
                   <SelectItem value="loading" disabled>
                     Loading...
                   </SelectItem>
@@ -261,7 +238,10 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || loadingData}>
+            <Button
+              type="submit"
+              disabled={loading || gameTypesLoading || machineTypesLoading}
+            >
               {loading ? "Creating..." : "Create Game"}
             </Button>
           </div>
