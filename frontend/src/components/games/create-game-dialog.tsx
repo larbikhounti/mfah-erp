@@ -45,6 +45,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
     name: "",
     price: 0,
     playTime: 0,
+    age: undefined,
     gameTypeId: undefined,
     machineTypeId: undefined,
   });
@@ -85,6 +86,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
         name: "",
         price: 0,
         playTime: 0,
+        age: undefined,
         gameTypeId: undefined,
         machineTypeId: undefined,
       });
@@ -164,6 +166,23 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
                 )
               }
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="age">Age Requirement</Label>
+            <Input
+              id="age"
+              type="number"
+              min="0"
+              placeholder="Enter minimum age (optional)"
+              value={formData.age || ""}
+              onChange={(e) =>
+                handleInputChange(
+                  "age",
+                  e.target.value ? parseInt(e.target.value) : undefined
+                )
+              }
             />
           </div>
           <div className="w-full grid md:grid-cols-2 gap-4">

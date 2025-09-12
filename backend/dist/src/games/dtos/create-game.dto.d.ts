@@ -4,4 +4,5 @@ export declare class CreateGameDto {
     playTime: number;
     gameTypeId?: number;
     machineTypeId?: number;
+    age?: number;
 }

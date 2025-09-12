@@ -65,6 +65,7 @@ model games {
   playTime      Int
   gameTypeId    Int?
   machineTypeId Int?
+  age           Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   deletedAt     DateTime?

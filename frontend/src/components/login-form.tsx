@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AuthService } from "@/services/auth.service";
+import { useAuth } from "@/hooks/use-auth";
 
 interface LoginFormData {
   email: string;
@@ -28,7 +29,7 @@ interface LoginFormProps {
 
 // Memoized input field component to prevent unnecessary re-renders
 const FormField = memo<{
-  register: ReturnType<typeof useForm<LoginFormData>>['register'];
+  register: ReturnType<typeof useForm<LoginFormData>>["register"];
   name: keyof LoginFormData;
   label: string;
   type: string;
@@ -49,11 +50,7 @@ FormField.displayName = "FormField";
 
 // Memoized submit button to prevent re-renders
 const SubmitButton = memo<{ isSubmitting: boolean }>(({ isSubmitting }) => (
-  <Button 
-    type="submit" 
-    className="w-full" 
-    disabled={isSubmitting}
-  >
+  <Button type="submit" className="w-full" disabled={isSubmitting}>
     {isSubmitting ? "Logging in..." : "Login"}
   </Button>
 ));
@@ -75,34 +72,36 @@ export const LoginForm = memo<LoginFormProps>(({ className }) => {
   // Only subscribe to isSubmitting to minimize re-renders
   const isSubmitting = formState.isSubmitting;
 
-  const onSubmit = useCallback(async (data: LoginFormData) => {
-    if (isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
-    
-    try {
-      const response = await AuthService.login(data);
-      
-      // Store the access token
-      localStorage.setItem("access_token", response.access_token);
-      localStorage.setItem("user_email", response.email);
-      localStorage.setItem("user_name", response.name);
-      
-      // Show success message
-      toast.success("Login successful!", {
-        description: `Welcome back, ${response.name}!`,
-      });
-      
-      // Navigate to dashboard
-      router.push("/dashboard");
-      
-    } catch {
-      toast.error("Login failed", {
-        description: "Invalid email or password.",
-      });
-    } finally {
-      isSubmittingRef.current = false;
-    }
-  }, [router]);
+  const onSubmit = useCallback(
+    async (data: LoginFormData) => {
+      if (isSubmittingRef.current) return;
+      isSubmittingRef.current = true;
+
+      try {
+        const response = await AuthService.login(data);
+
+        // Store the access token
+        localStorage.setItem("access_token", response.access_token);
+        localStorage.setItem("user_email", response.email);
+        localStorage.setItem("user_name", response.name);
+
+        // Show success message
+        toast.success("Login successful!", {
+          description: `Welcome back, ${response.name}!`,
+        });
+
+        // Navigate to dashboard
+        router.push("/dashboard");
+      } catch {
+        toast.error("Login failed", {
+          description: "Invalid email or password.",
+        });
+      } finally {
+        isSubmittingRef.current = false;
+      }
+    },
+    [router]
+  );
 
   return (
     <div className={cn("flex flex-col gap-6", className)}>
@@ -123,14 +122,14 @@ export const LoginForm = memo<LoginFormProps>(({ className }) => {
                 type="email"
                 placeholder="m@example.com"
               />
-              
+
               <FormField
                 register={register}
                 name="password"
                 label="Password"
                 type="password"
               />
-              
+
               <div className="flex flex-col gap-3">
                 <SubmitButton isSubmitting={isSubmitting} />
               </div>

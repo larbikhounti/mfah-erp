@@ -54,4 +54,13 @@ export class CreateGameDto {
   @IsInt()
   @Min(1)
   machineTypeId?: number;
+  @ApiProperty({
+    description: 'The recommended age for the game',
+    example: 12,
+    required: false,
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  age?: number;
 }

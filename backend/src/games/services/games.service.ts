@@ -337,6 +337,7 @@ export class GamesService {
       name: game.name,
       price: game.price,
       playTime: game.playTime,
+      age: game.age,
       gameTypeId: game.gameTypeId,
       machineTypeId: game.machineTypeId,
       createdAt: game.createdAt,

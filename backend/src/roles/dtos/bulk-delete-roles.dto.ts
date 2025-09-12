@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsInt, Min, ArrayNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class BulkDeleteRolesDto {
   @ApiProperty({
@@ -9,6 +10,7 @@ export class BulkDeleteRolesDto {
   })
   @IsArray()
   @ArrayNotEmpty()
+  @Type(() => Number)
   @IsInt({ each: true })
   @Min(1, { each: true })
   roleIds: number[];

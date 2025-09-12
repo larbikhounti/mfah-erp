@@ -50,6 +50,7 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
     name: game.name,
     price: game.price,
     playTime: game.playTime,
+    age: game.age || undefined,
     gameTypeId: game.gameTypeId || undefined,
     machineTypeId: game.machineTypeId || undefined,
   });
@@ -60,6 +61,7 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
       name: game.name,
       price: game.price,
       playTime: game.playTime,
+      age: game.age || undefined,
       gameTypeId: game.gameTypeId || undefined,
       machineTypeId: game.machineTypeId || undefined,
     });
@@ -172,6 +174,23 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
                 )
               }
               required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="age">Age Requirement</Label>
+            <Input
+              id="age"
+              type="number"
+              min="0"
+              placeholder="Enter minimum age (optional)"
+              value={formData.age || ""}
+              onChange={(e) =>
+                handleInputChange(
+                  "age",
+                  e.target.value ? parseInt(e.target.value) : undefined
+                )
+              }
             />
           </div>
 

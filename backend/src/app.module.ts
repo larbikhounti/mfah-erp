@@ -7,6 +7,7 @@ import { DomsModule } from './doms/doms.module';
 import { RolesModule } from './roles/roles.module';
 import { MachineTypesModule } from './machine-types/machine-types.module';
 import { MachinesModule } from './machines/machines.module';
+import { MachineChairsModule } from './machine-chairs/machine-chairs.module';
 import { GameTypesModule } from './game-types/game-types.module';
 import { GamesModule } from './games/games.module';
 import { ExperiencesModule } from './experiences/experiences.module';
@@ -22,6 +23,7 @@ import { AuthModule } from './auth/auth.module';
     RolesModule,
     MachineTypesModule,
     MachinesModule,
+    MachineChairsModule,
     GameTypesModule,
     GamesModule,
     ExperiencesModule,

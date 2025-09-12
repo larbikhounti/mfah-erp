@@ -19,12 +19,14 @@ export interface Game {
     name: string;
   } | null;
   experiencesCount?: number;
+  age?: number;
 }
 
 export interface CreateGamePayload {
   name: string;
   price: number;
   playTime: number;
+  age?: number;
   gameTypeId?: number;
   machineTypeId?: number;
 }
@@ -33,6 +35,7 @@ export interface UpdateGamePayload {
   name?: string;
   price?: number;
   playTime?: number;
+  age?: number;
   gameTypeId?: number;
   machineTypeId?: number;
 }

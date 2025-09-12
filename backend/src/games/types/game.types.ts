@@ -29,6 +29,7 @@ export interface Game {
   _count?: {
     experiences?: number;
   };
+  age?: number | null;
 }
 
 export interface GameWithRelations extends Game {
@@ -54,6 +55,7 @@ export interface GameResponse {
     name: string;
   } | null;
   experiencesCount?: number;
+  age?: number | null;
 }
 
 export interface PaginatedGamesResponse {

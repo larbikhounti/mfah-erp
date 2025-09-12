@@ -16,6 +16,7 @@ const doms_module_1 = require("./doms/doms.module");
 const roles_module_1 = require("./roles/roles.module");
 const machine_types_module_1 = require("./machine-types/machine-types.module");
 const machines_module_1 = require("./machines/machines.module");
+const machine_chairs_module_1 = require("./machine-chairs/machine-chairs.module");
 const game_types_module_1 = require("./game-types/game-types.module");
 const games_module_1 = require("./games/games.module");
 const experiences_module_1 = require("./experiences/experiences.module");
@@ -34,6 +35,7 @@ exports.AppModule = AppModule = __decorate([
             roles_module_1.RolesModule,
             machine_types_module_1.MachineTypesModule,
             machines_module_1.MachinesModule,
+            machine_chairs_module_1.MachineChairsModule,
             game_types_module_1.GameTypesModule,
             games_module_1.GamesModule,
             experiences_module_1.ExperiencesModule,

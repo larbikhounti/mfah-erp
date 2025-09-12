@@ -66,4 +66,15 @@ __decorate([
     (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], CreateGameDto.prototype, "machineTypeId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'The recommended age for the game',
+        example: 12,
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.Min)(0),
+    __metadata("design:type", Number)
+], CreateGameDto.prototype, "age", void 0);
 //# sourceMappingURL=create-game.dto.js.map

@@ -160,6 +160,15 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
       ),
     },
     {
+      key: "age",
+      label: "Game Age",
+      render: (game) => (
+        <div className="flex items-center gap-1">
+          <span className="font-medium">{game.age || "N/A"}+</span>
+        </div>
+      ),
+    },
+    {
       key: "gameType",
       label: "Game Type",
       render: (game) => (

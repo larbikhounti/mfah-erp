@@ -20,7 +20,7 @@ export function useAuth() {
       setUser({ email, name });
       setIsAuthenticated(true);
     }
-    
+
     setIsLoading(false);
   }, []);
 
@@ -30,10 +30,24 @@ export function useAuth() {
     localStorage.removeItem("user_name");
     setUser(null);
     setIsAuthenticated(false);
-    
+
     toast.success("Logged out successfully", {
       description: "You have been logged out of your account.",
     });
+  };
+
+  const updateAuthState = () => {
+    const token = localStorage.getItem("access_token");
+    const email = localStorage.getItem("user_email");
+    const name = localStorage.getItem("user_name");
+
+    if (token && email && name) {
+      setUser({ email, name });
+      setIsAuthenticated(true);
+    } else {
+      setUser(null);
+      setIsAuthenticated(false);
+    }
   };
 
   const getToken = () => {
@@ -45,6 +59,7 @@ export function useAuth() {
     isAuthenticated,
     isLoading,
     logout,
+    updateAuthState,
     getToken,
   };
 }

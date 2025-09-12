@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.BulkDeleteGamesDto = void 0;
 const swagger_1 = require("@nestjs/swagger");
 const class_validator_1 = require("class-validator");
+const class_transformer_1 = require("class-transformer");
 class BulkDeleteGamesDto {
 }
 exports.BulkDeleteGamesDto = BulkDeleteGamesDto;
@@ -22,6 +23,8 @@ __decorate([
         type: [Number],
     }),
     (0, class_validator_1.IsArray)(),
+    (0, class_validator_1.ArrayNotEmpty)(),
+    (0, class_transformer_1.Type)(() => Number),
     (0, class_validator_1.IsInt)({ each: true }),
     (0, class_validator_1.Min)(1, { each: true }),
     __metadata("design:type", Array)
