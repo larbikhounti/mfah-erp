@@ -47,6 +47,8 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Generate Prisma client in production stage (needed for runtime)
 RUN npx prisma generate
+# seed
+RUN npx prisma db seed
 
 # Change ownership of the app directory to nestjs user
 RUN chown -R nestjs:nodejs /app
@@ -55,5 +57,6 @@ USER nestjs
 EXPOSE 3000
 
 ENV PORT=3000
+
 
 CMD ["node", "dist/src/main.js"]

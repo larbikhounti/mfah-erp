@@ -150,7 +150,7 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
             <div className="w-full grid md:grid-cols-2 gap-4">
               <div className="grid gap-2 w-full">
                 <Label htmlFor="edit-role">Role</Label>
-                <Select value={role} onValueChange={(value) => setRole(value)}>
+                <Select  value={role} onValueChange={(value) => setRole(value)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
