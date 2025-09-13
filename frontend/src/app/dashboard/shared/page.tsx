@@ -1,4 +1,5 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+"use client"
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'; // Add this import
 import {

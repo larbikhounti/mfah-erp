@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const instance = axios.create({
-  baseURL: process.env.API_URL || "",
+  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1",
   timeout: 10000,
 });
 

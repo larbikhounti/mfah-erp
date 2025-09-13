@@ -47,6 +47,8 @@ async function bootstrap() {
   };
 
   SwaggerModule.setup('api/docs', app, documentFactory, options);
-  await app.listen(8081);
+  const port = process.env.PORT || 3001;
+  await app.listen(port);
+  console.log(`Application is running on: http://localhost:${port}`);
 }
 bootstrap();

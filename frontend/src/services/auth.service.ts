@@ -13,7 +13,7 @@ export class AuthService {
   static async login(credentials: LoginFormData): Promise<LoginResponse> {
     try {
       const response = await axiosInstance.post<LoginResponse>(
-        "auth/login",
+        "/auth/login",
         credentials
       );
       return response.data;

@@ -36,7 +36,6 @@ services:
       - ./backend/prisma:/app/prisma
     networks:
       - app-network
-    command: sh -c "npx prisma migrate deploy && npm run start:prod"
 
   # Frontend
   frontend:
@@ -46,7 +45,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:3001
+      - NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
     ports:
       - "3000:3000"
     depends_on:

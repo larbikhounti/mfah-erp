@@ -100,7 +100,7 @@ export const useRolesStore = create<RolesStore>((set, get) => ({
       const finalLimit = Math.max(1, Math.floor(params.limit ?? pageSize));
       
       // Use axios params instead of URLSearchParams for better type handling
-      const apiParams: any = {
+      const apiParams: { offset: number; limit: number; search?: string; roleId?: number } = {
         offset: finalOffset,
         limit: finalLimit,
       };

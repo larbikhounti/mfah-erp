@@ -93,23 +93,6 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
     }
   };
 
-  const handleEditDom = (dom: Dom) => {
-    setEditingDom(dom);
-    setIsEditDialogOpen(true);
-  };
-
-  const handleCloseEditDialog = () => {
-    setEditingDom(null);
-    setIsEditDialogOpen(false);
-  };
-
-  const handleCreateDom = () => {
-    setIsCreateDialogOpen(true);
-  };
-
-  const handleCloseCreateDialog = () => {
-    setIsCreateDialogOpen(false);
-  };
 
   const columns: TableColumn<Dom>[] = [
     {
