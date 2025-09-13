@@ -43,10 +43,10 @@ model experiences {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
   domeId    Int
+  tickets   tickets[]
   doms      doms      @relation(fields: [domeId], references: [id], onDelete: SetDefault)
   games     games     @relation(fields: [gameId], references: [id], onDelete: SetDefault)
   machines  machines  @relation(fields: [machineId], references: [id], onDelete: SetDefault)
-  tickets   tickets[]
 }
 
 model gameTypes {
@@ -65,7 +65,6 @@ model games {
   playTime      Int
   gameTypeId    Int?
   machineTypeId Int?
-  age           Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   deletedAt     DateTime?

@@ -45,10 +45,12 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Generate Prisma client in production stage (needed for runtime)
 RUN npx prisma generate
-# seed
-RUN npx prisma db seed
 
 # Change ownership of the app directory to nestjs user
 RUN chown -R nestjs:nodejs /app
@@ -58,5 +60,5 @@ EXPOSE 3000
 
 ENV PORT=3000
 
-
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["node", "dist/src/main.js"]
