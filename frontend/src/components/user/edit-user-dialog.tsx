@@ -182,9 +182,9 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {domsLoading ? (
-                      <SelectItem value="" disabled>
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
                         Loading DOMs...
-                      </SelectItem>
+                      </div>
                     ) : doms.length > 0 ? (
                       doms.map((domItem) => (
                         <SelectItem key={domItem.id} value={domItem.id.toString()}>
@@ -192,9 +192,9 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
                         No DOMs available
-                      </SelectItem>
+                      </div>
                     )}
                   </SelectContent>
                 </Select>
