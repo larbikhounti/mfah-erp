@@ -4,7 +4,7 @@ import { SignInRequestDto, SignInResponseDto } from '../dtos/auth.dto';
 import { ConfigService } from '@nestjs/config';
 import { Response } from 'express';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { users } from '@prisma/client';
+import { Users } from '@prisma/client';
 export declare class AuthService {
     private usersService;
     private jwtService;
@@ -15,7 +15,7 @@ export declare class AuthService {
     logout(response: Response): Promise<{
         message: string;
     }>;
-    generateTokens(user: users): Promise<{
+    generateTokens(user: Users): Promise<{
         accessToken: string;
     }>;
 }

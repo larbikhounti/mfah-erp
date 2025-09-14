@@ -22,6 +22,7 @@ const games_module_1 = require("./games/games.module");
 const experiences_module_1 = require("./experiences/experiences.module");
 const config_1 = require("@nestjs/config");
 const auth_module_1 = require("./auth/auth.module");
+const sync_module_1 = require("./sync/sync.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -40,6 +41,7 @@ exports.AppModule = AppModule = __decorate([
             games_module_1.GamesModule,
             experiences_module_1.ExperiencesModule,
             auth_module_1.AuthModule,
+            sync_module_1.SyncModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

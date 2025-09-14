@@ -82,34 +82,15 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                     where,
                     skip: offset,
                     take: limit,
-                    select: {
-                        id: true,
-                        machineId: true,
-                        gameId: true,
-                        domeId: true,
-                        createdAt: true,
-                        updatedAt: true,
+                    include: {
                         machines: {
-                            select: {
-                                name: true,
-                                machineTypes: {
-                                    select: {
-                                        name: true,
-                                    },
-                                },
+                            include: {
+                                machineTypes: true,
                                 machineChairs: {
-                                    select: {
-                                        id: true,
-                                        name: true,
-                                        status: true,
+                                    include: {
                                         tickets: {
                                             where: {
                                                 deletedAt: null,
-                                            },
-                                            select: {
-                                                id: true,
-                                                isPaid: true,
-                                                createdAt: true,
                                             },
                                         },
                                     },
@@ -117,37 +98,15 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                             },
                         },
                         games: {
-                            select: {
-                                name: true,
-                                price: true,
-                                playTime: true,
-                                gameTypes: {
-                                    select: {
-                                        name: true,
-                                    },
-                                },
-                                machineTypes: {
-                                    select: {
-                                        name: true,
-                                    },
-                                },
+                            include: {
+                                gameTypes: true,
+                                machineTypes: true,
                             },
                         },
-                        doms: {
-                            select: {
-                                name: true,
-                                address: true,
-                            },
-                        },
+                        doms: true,
                         tickets: {
                             where: {
                                 deletedAt: null,
-                            },
-                            select: {
-                                id: true,
-                                isPaid: true,
-                                chairId: true,
-                                createdAt: true,
                             },
                         },
                     },
@@ -236,34 +195,15 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                     id,
                     deletedAt: null,
                 },
-                select: {
-                    id: true,
-                    machineId: true,
-                    gameId: true,
-                    domeId: true,
-                    createdAt: true,
-                    updatedAt: true,
+                include: {
                     machines: {
-                        select: {
-                            name: true,
-                            machineTypes: {
-                                select: {
-                                    name: true,
-                                },
-                            },
+                        include: {
+                            machineTypes: true,
                             machineChairs: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                    status: true,
+                                include: {
                                     tickets: {
                                         where: {
                                             deletedAt: null,
-                                        },
-                                        select: {
-                                            id: true,
-                                            isPaid: true,
-                                            createdAt: true,
                                         },
                                     },
                                 },
@@ -271,37 +211,15 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                         },
                     },
                     games: {
-                        select: {
-                            name: true,
-                            price: true,
-                            playTime: true,
-                            gameTypes: {
-                                select: {
-                                    name: true,
-                                },
-                            },
-                            machineTypes: {
-                                select: {
-                                    name: true,
-                                },
-                            },
+                        include: {
+                            gameTypes: true,
+                            machineTypes: true,
                         },
                     },
-                    doms: {
-                        select: {
-                            name: true,
-                            address: true,
-                        },
-                    },
+                    doms: true,
                     tickets: {
                         where: {
                             deletedAt: null,
-                        },
-                        select: {
-                            id: true,
-                            isPaid: true,
-                            chairId: true,
-                            createdAt: true,
                         },
                     },
                 },

@@ -13,6 +13,7 @@ import { GamesModule } from './games/games.module';
 import { ExperiencesModule } from './experiences/experiences.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
+import { SyncModule } from './sync/sync.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AuthModule } from './auth/auth.module';
     GamesModule,
     ExperiencesModule,
     AuthModule,
+    SyncModule,
   ],
   controllers: [AppController],
   providers: [AppService],

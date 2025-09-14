@@ -33,6 +33,7 @@ model doms {
   experiences experiences[]
   machines    machines[]
   tickets     tickets[]
+  DomeSyncLog DomeSyncLog[]
 }
 
 model experiences {
@@ -64,6 +65,7 @@ model games {
   price         Float
   playTime      Int
   gameTypeId    Int?
+  age           Int?
   machineTypeId Int?
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
@@ -131,4 +133,20 @@ model tickets {
   experiences   experiences    @relation(fields: [experienceId], references: [id], onDelete: SetDefault)
   machineChairs machineChairs? @relation(fields: [chairId], references: [id])
   doms          doms           @relation(fields: [domeId], references: [id], onDelete: SetDefault)
+}
+
+model DomeSyncLog {
+  id          Int      @id @default(autoincrement())
+  domeId      Int
+  lastSyncAt  DateTime // The lastSync time received from the dome
+  syncedAt    DateTime @default(now()) // When the sync completed
+  wasSuccess  Boolean  @default(true)
+  dataCount   Int?     // Number of records returned
+  error       String?  // Error message if failed
+
+  // Relation
+  dome        doms     @relation(fields: [domeId], references: [id], onDelete: Cascade)
+  
+  @@index([domeId])
+  @@index([syncedAt])
 }
