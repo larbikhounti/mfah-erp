@@ -20,6 +20,10 @@ export interface Game {
   } | null;
   experiencesCount?: number;
   age?: number;
+  domes?: {
+    id: number;
+    name: string;
+  }[];
 }
 
 export interface CreateGamePayload {
@@ -29,6 +33,7 @@ export interface CreateGamePayload {
   age?: number;
   gameTypeId?: number;
   machineTypeId?: number;
+  domeId: number[];
 }
 
 export interface UpdateGamePayload {
@@ -38,6 +43,7 @@ export interface UpdateGamePayload {
   age?: number;
   gameTypeId?: number;
   machineTypeId?: number;
+  domeId?: number[];
 }
 
 export interface FilterParams {

@@ -91,7 +91,7 @@ Copy `.env.example` to `.env` and configure:
 | Service  | Port | Description |
 |----------|------|-------------|
 | Frontend | 3000 | Next.js application |
-| Backend  | 3001 | NestJS API server |
+| Backend  | 8459 | NestJS API server |
 | Database | 5432 | PostgreSQL database |
 
 ---

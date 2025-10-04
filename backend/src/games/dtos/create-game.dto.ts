@@ -63,4 +63,12 @@ export class CreateGameDto {
   @IsInt()
   @Min(0)
   age?: number;
+
+  @ApiProperty({
+    description: 'The dome ID where the game is available',
+    example: 1,
+  })
+  @IsNotEmpty()
+  @IsInt({ each: true })
+  domeId: number[];
 }

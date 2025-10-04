@@ -51,7 +51,14 @@ let GamesService = class GamesService {
             }
         }
         const game = await this.prisma.games.create({
-            data: createGameDto,
+            data: {
+                gameTypeId: createGameDto.gameTypeId,
+                machineTypeId: createGameDto.machineTypeId,
+                name: createGameDto.name,
+                price: createGameDto.price,
+                playTime: createGameDto.playTime,
+                age: createGameDto.age,
+            },
             include: {
                 gameTypes: true,
                 machineTypes: true,
@@ -62,6 +69,15 @@ let GamesService = class GamesService {
                 },
             },
         });
+        if (createGameDto.domeId && createGameDto.domeId.length > 0) {
+            const domeGames = createGameDto.domeId.map((domeId) => ({
+                domeId,
+                gameId: game.id,
+            }));
+            await this.prisma.domeGames.createMany({
+                data: domeGames,
+            });
+        }
         return this.mapToGameResponse(game);
     }
     async findAll(filterDto = {}) {
@@ -109,6 +125,14 @@ let GamesService = class GamesService {
                 include: {
                     gameTypes: true,
                     machineTypes: true,
+                    domeGames: {
+                        where: {
+                            deletedAt: null,
+                        },
+                        include: {
+                            doms: true,
+                        },
+                    },
                     _count: {
                         select: {
                             experiences: true,
@@ -139,6 +163,14 @@ let GamesService = class GamesService {
             include: {
                 gameTypes: true,
                 machineTypes: true,
+                domeGames: {
+                    where: {
+                        deletedAt: null,
+                    },
+                    include: {
+                        doms: true,
+                    },
+                },
                 _count: {
                     select: {
                         experiences: true,
@@ -185,7 +217,14 @@ let GamesService = class GamesService {
         }
         const updatedGame = await this.prisma.games.update({
             where: { id },
-            data: updateGameDto,
+            data: {
+                gameTypeId: updateGameDto.gameTypeId,
+                machineTypeId: updateGameDto.machineTypeId,
+                name: updateGameDto.name,
+                price: updateGameDto.price,
+                playTime: updateGameDto.playTime,
+                age: updateGameDto.age,
+            },
             include: {
                 gameTypes: true,
                 machineTypes: true,
@@ -196,6 +235,18 @@ let GamesService = class GamesService {
                 },
             },
         });
+        await this.prisma.domeGames.deleteMany({
+            where: { gameId: id },
+        });
+        if (updateGameDto.domeId && updateGameDto.domeId.length > 0) {
+            const domeGames = updateGameDto.domeId.map((domeId) => ({
+                domeId,
+                gameId: updatedGame.id,
+            }));
+            await this.prisma.domeGames.createMany({
+                data: domeGames,
+            });
+        }
         return this.mapToGameResponse(updatedGame);
     }
     async remove(id) {
@@ -296,6 +347,12 @@ let GamesService = class GamesService {
                 }
                 : null,
             experiencesCount: ((_a = game._count) === null || _a === void 0 ? void 0 : _a.experiences) || 0,
+            domes: game.domeGames
+                ? game.domeGames.map((domeGame) => ({
+                    id: domeGame.doms.id,
+                    name: domeGame.doms.name,
+                }))
+                : [],
         };
     }
 };

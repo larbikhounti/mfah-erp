@@ -28,16 +28,16 @@ export class SyncController {
       );
     }
   }
-  @Public()
-  @Get('history')
-  async getSyncHistory(
-    @Query('domeId') domeId: number,
-    @Query('limit') limit: number = 10,
-  ) {
-    if (!domeId) {
-      throw new HttpException('domeId is required', HttpStatus.BAD_REQUEST);
-    }
+  // @Public()
+  // @Get('history')
+  // async getSyncHistory(
+  //   @Query('domeId') domeId: number,
+  //   @Query('limit') limit: number = 10,
+  // ) {
+  //   if (!domeId) {
+  //     throw new HttpException('domeId is required', HttpStatus.BAD_REQUEST);
+  //   }
 
-    return this.syncService.getSyncHistory(Number(domeId), Number(limit));
-  }
+  //   return this.syncService.getSyncHistory(Number(domeId), Number(limit));
+  // }
 }

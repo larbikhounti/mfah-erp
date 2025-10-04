@@ -151,13 +151,6 @@ let SyncService = SyncService_1 = class SyncService {
             throw error;
         }
     }
-    async getSyncHistory(domeId, limit = 10) {
-        return this.prisma.domeSyncLog.findMany({
-            where: { domeId },
-            orderBy: { syncedAt: 'desc' },
-            take: limit,
-        });
-    }
 };
 exports.SyncService = SyncService;
 exports.SyncService = SyncService = SyncService_1 = __decorate([

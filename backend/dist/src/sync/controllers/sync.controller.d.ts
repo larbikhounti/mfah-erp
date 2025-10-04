@@ -5,13 +5,4 @@ export declare class SyncController {
     private readonly syncService;
     constructor(syncService: SyncService);
     sync(syncRequest: SyncRequestDto): Promise<SyncResponseDto>;
-    getSyncHistory(domeId: number, limit?: number): Promise<{
-        error: string | null;
-        id: number;
-        domeId: number;
-        lastSyncAt: Date;
-        syncedAt: Date;
-        wasSuccess: boolean;
-        dataCount: number | null;
-    }[]>;
 }

@@ -29,12 +29,6 @@ let SyncController = class SyncController {
             throw new common_1.HttpException(`Sync failed: ${error.message}`, common_1.HttpStatus.BAD_REQUEST);
         }
     }
-    async getSyncHistory(domeId, limit = 10) {
-        if (!domeId) {
-            throw new common_1.HttpException('domeId is required', common_1.HttpStatus.BAD_REQUEST);
-        }
-        return this.syncService.getSyncHistory(Number(domeId), Number(limit));
-    }
 };
 exports.SyncController = SyncController;
 __decorate([
@@ -45,15 +39,6 @@ __decorate([
     __metadata("design:paramtypes", [SyncRequest_dto_1.SyncRequestDto]),
     __metadata("design:returntype", Promise)
 ], SyncController.prototype, "sync", null);
-__decorate([
-    (0, public_decorator_1.Public)(),
-    (0, common_1.Get)('history'),
-    __param(0, (0, common_1.Query)('domeId')),
-    __param(1, (0, common_1.Query)('limit')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Number, Number]),
-    __metadata("design:returntype", Promise)
-], SyncController.prototype, "getSyncHistory", null);
 exports.SyncController = SyncController = __decorate([
     (0, common_1.Controller)('sync'),
     __metadata("design:paramtypes", [sync_service_1.SyncService])

@@ -174,12 +174,12 @@ export class SyncService {
     }
   }
 
-  // Optional: Get sync history for a dome
-  async getSyncHistory(domeId: number, limit: number = 10) {
-    return this.prisma.domeSyncLog.findMany({
-      where: { domeId },
-      orderBy: { syncedAt: 'desc' },
-      take: limit,
-    });
-  }
+  // // Optional: Get sync history for a dome
+  // async getSyncHistory(domeId: number, limit: number = 10) {
+  //   return this.prisma.domeSyncLog.findMany({
+  //     where: { domeId },
+  //     orderBy: { syncedAt: 'desc' },
+  //     take: limit,
+  //   });
+  // }
 }

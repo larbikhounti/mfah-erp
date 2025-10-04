@@ -52,6 +52,10 @@ export interface GameResponse {
     } | null;
     experiencesCount?: number;
     age?: number | null;
+    domes?: {
+        id: number;
+        name: string;
+    }[];
 }
 export interface PaginatedGamesResponse {
     games: GameResponse[];

@@ -26,8 +26,10 @@ import {
 } from "@/stores/games-store";
 import { useGameTypesStore } from "@/stores/game-types-store";
 import { useMachineTypesStore } from "@/stores/machine-types-store";
+import { useDomsStore } from "@/stores/doms-store";
 import { toast } from "sonner";
 import { Loader } from "../loader";
+import { MultiSelect, type Option } from "@/components/ui/multi-select";
 
 interface EditGameDialogProps {
   game: Game;
@@ -46,7 +48,18 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
     fetchMachineTypes,
     loading: machineTypesLoading,
   } = useMachineTypesStore();
+  const {
+    doms,
+    fetchDoms,
+    loading: domsLoading,
+  } = useDomsStore();
   const [open, setOpen] = useState(false);
+  const [selectedDomes, setSelectedDomes] = useState<Option[]>(
+    game.domes?.map((dome) => ({
+      label: dome.name,
+      value: dome.id.toString(),
+    })) || []
+  );
   const [formData, setFormData] = useState<UpdateGamePayload>({
     name: game.name,
     price: game.price,
@@ -54,6 +67,7 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
     age: game.age || undefined,
     gameTypeId: game.gameTypeId || undefined,
     machineTypeId: game.machineTypeId || undefined,
+    domeId: game.domes?.map((dome) => dome.id) || [],
   });
 
   // Update form data when game prop changes
@@ -65,16 +79,24 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
       age: game.age || undefined,
       gameTypeId: game.gameTypeId || undefined,
       machineTypeId: game.machineTypeId || undefined,
+      domeId: game.domes?.map((dome) => dome.id) || [],
     });
+    setSelectedDomes(
+      game.domes?.map((dome) => ({
+        label: dome.name,
+        value: dome.id.toString(),
+      })) || []
+    );
   }, [game]);
 
-  // Fetch game types and machine types when dialog opens
+  // Fetch game types, machine types, and domes when dialog opens
   useEffect(() => {
     if (open) {
       fetchGameTypes();
       fetchMachineTypes();
+      fetchDoms();
     }
-  }, [open, fetchGameTypes, fetchMachineTypes]);
+  }, [open, fetchGameTypes, fetchMachineTypes, fetchDoms]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,8 +117,16 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
       return;
     }
 
+    if (selectedDomes.length === 0) {
+      toast.error("Please select at least one dome");
+      return;
+    }
+
     try {
-      await updateGame(game.id, formData);
+      await updateGame(game.id, {
+        ...formData,
+        domeId: selectedDomes.map((dome) => parseInt(dome.value)),
+      });
       toast.success("Game updated successfully");
       setOpen(false);
     } catch (error: any) {
@@ -195,6 +225,19 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="domes">Domes *</Label>
+            <MultiSelect
+              options={doms.map((dom) => ({
+                label: dom.name,
+                value: dom.id.toString(),
+              }))}
+              selected={selectedDomes}
+              onChange={setSelectedDomes}
+              placeholder={domsLoading ? "Loading domes..." : "Select domes"}
+            />
+          </div>
+
           <div className="w-full grid md:grid-cols-2 gap-4">
             <div className="grid gap-2 w-full">
               <Label htmlFor="gameType">Game Type</Label>
@@ -268,7 +311,7 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading || gameTypesLoading || machineTypesLoading || domsLoading}>
               {loading ?   <span className="flex items-center">
                                <Loader size={16} />
                                 <span className="ml-2">

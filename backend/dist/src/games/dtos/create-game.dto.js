@@ -77,4 +77,13 @@ __decorate([
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateGameDto.prototype, "age", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'The dome ID where the game is available',
+        example: 1,
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsInt)({ each: true }),
+    __metadata("design:type", Array)
+], CreateGameDto.prototype, "domeId", void 0);
 //# sourceMappingURL=create-game.dto.js.map

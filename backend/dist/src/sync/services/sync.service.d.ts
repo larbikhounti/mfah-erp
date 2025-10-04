@@ -113,13 +113,4 @@ export declare class SyncService {
         };
         serverTime: Date;
     }>;
-    getSyncHistory(domeId: number, limit?: number): Promise<{
-        error: string | null;
-        id: number;
-        domeId: number;
-        lastSyncAt: Date;
-        syncedAt: Date;
-        wasSuccess: boolean;
-        dataCount: number | null;
-    }[]>;
 }

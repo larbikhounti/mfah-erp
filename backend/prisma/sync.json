@@ -1,0 +1,792 @@
+{
+  "globalData": {
+    "gameTypes": [
+      {
+        "id": 1,
+        "name": "Action",
+        "createdAt": "2025-10-04T12:50:40.427Z",
+        "updatedAt": "2025-10-04T12:50:40.427Z",
+        "deletedAt": null
+      },
+      {
+        "id": 2,
+        "name": "Adventure",
+        "createdAt": "2025-10-04T12:50:40.454Z",
+        "updatedAt": "2025-10-04T12:50:40.454Z",
+        "deletedAt": null
+      },
+      {
+        "id": 3,
+        "name": "Racing",
+        "createdAt": "2025-10-04T12:50:40.471Z",
+        "updatedAt": "2025-10-04T12:50:40.471Z",
+        "deletedAt": null
+      },
+      {
+        "id": 4,
+        "name": "Simulation",
+        "createdAt": "2025-10-04T12:50:40.489Z",
+        "updatedAt": "2025-10-04T12:50:40.489Z",
+        "deletedAt": null
+      },
+      {
+        "id": 5,
+        "name": "VR Experience",
+        "createdAt": "2025-10-04T12:50:40.505Z",
+        "updatedAt": "2025-10-04T12:50:40.505Z",
+        "deletedAt": null
+      },
+      {
+        "id": 6,
+        "name": "Puzzle",
+        "createdAt": "2025-10-04T12:50:40.522Z",
+        "updatedAt": "2025-10-04T12:50:40.522Z",
+        "deletedAt": null
+      },
+      {
+        "id": 7,
+        "name": "Strategy",
+        "createdAt": "2025-10-04T12:50:40.538Z",
+        "updatedAt": "2025-10-04T12:50:40.538Z",
+        "deletedAt": null
+      },
+      {
+        "id": 8,
+        "name": "Sport",
+        "createdAt": "2025-10-04T12:50:40.554Z",
+        "updatedAt": "2025-10-04T12:50:40.554Z",
+        "deletedAt": null
+      },
+      {
+        "id": 9,
+        "name": "Horror",
+        "createdAt": "2025-10-04T12:50:40.569Z",
+        "updatedAt": "2025-10-04T12:50:40.569Z",
+        "deletedAt": null
+      },
+      {
+        "id": 10,
+        "name": "Educational",
+        "createdAt": "2025-10-04T12:50:40.585Z",
+        "updatedAt": "2025-10-04T12:50:40.585Z",
+        "deletedAt": null
+      }
+    ],
+    "machineTypes": [
+      {
+        "id": 1,
+        "name": "VR Headset",
+        "createdAt": "2025-10-04T12:50:40.337Z",
+        "updatedAt": "2025-10-04T12:50:40.337Z",
+        "deletedAt": null
+      },
+      {
+        "id": 2,
+        "name": "Gaming Console",
+        "createdAt": "2025-10-04T12:50:40.361Z",
+        "updatedAt": "2025-10-04T12:50:40.361Z",
+        "deletedAt": null
+      },
+      {
+        "id": 3,
+        "name": "Racing Simulator",
+        "createdAt": "2025-10-04T12:50:40.378Z",
+        "updatedAt": "2025-10-04T12:50:40.378Z",
+        "deletedAt": null
+      },
+      {
+        "id": 4,
+        "name": "Motion Platform",
+        "createdAt": "2025-10-04T12:50:40.395Z",
+        "updatedAt": "2025-10-04T12:50:40.395Z",
+        "deletedAt": null
+      },
+      {
+        "id": 5,
+        "name": "Arcade Cabinet",
+        "createdAt": "2025-10-04T12:50:40.412Z",
+        "updatedAt": "2025-10-04T12:50:40.412Z",
+        "deletedAt": null
+      }
+    ],
+    "games": [
+      {
+        "id": 1,
+        "name": "Virtual Racing Championship",
+        "price": 25.99,
+        "playTime": 30,
+        "gameTypeId": 1,
+        "age": 10,
+        "machineTypeId": 1,
+        "createdAt": "2025-10-04T12:50:40.901Z",
+        "updatedAt": "2025-10-04T12:50:40.901Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 1,
+          "name": "Action",
+          "createdAt": "2025-10-04T12:50:40.427Z",
+          "updatedAt": "2025-10-04T12:50:40.427Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 1,
+          "name": "VR Headset",
+          "createdAt": "2025-10-04T12:50:40.337Z",
+          "updatedAt": "2025-10-04T12:50:40.337Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 2,
+        "name": "Space Exploration VR",
+        "price": 29.99,
+        "playTime": 45,
+        "gameTypeId": 2,
+        "age": 7,
+        "machineTypeId": 2,
+        "createdAt": "2025-10-04T12:50:40.910Z",
+        "updatedAt": "2025-10-04T12:50:40.910Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 2,
+          "name": "Adventure",
+          "createdAt": "2025-10-04T12:50:40.454Z",
+          "updatedAt": "2025-10-04T12:50:40.454Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 2,
+          "name": "Gaming Console",
+          "createdAt": "2025-10-04T12:50:40.361Z",
+          "updatedAt": "2025-10-04T12:50:40.361Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 3,
+        "name": "Combat Arena",
+        "price": 19.99,
+        "playTime": 20,
+        "gameTypeId": 1,
+        "age": 16,
+        "machineTypeId": 3,
+        "createdAt": "2025-10-04T12:50:40.915Z",
+        "updatedAt": "2025-10-04T12:50:40.915Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 1,
+          "name": "Action",
+          "createdAt": "2025-10-04T12:50:40.427Z",
+          "updatedAt": "2025-10-04T12:50:40.427Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 3,
+          "name": "Racing Simulator",
+          "createdAt": "2025-10-04T12:50:40.378Z",
+          "updatedAt": "2025-10-04T12:50:40.378Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 4,
+        "name": "Mystery Island Detective",
+        "price": 22.5,
+        "playTime": 35,
+        "gameTypeId": 3,
+        "age": 10,
+        "machineTypeId": 2,
+        "createdAt": "2025-10-04T12:50:40.920Z",
+        "updatedAt": "2025-10-04T12:50:40.920Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 3,
+          "name": "Racing",
+          "createdAt": "2025-10-04T12:50:40.471Z",
+          "updatedAt": "2025-10-04T12:50:40.471Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 2,
+          "name": "Gaming Console",
+          "createdAt": "2025-10-04T12:50:40.361Z",
+          "updatedAt": "2025-10-04T12:50:40.361Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 5,
+        "name": "Formula One Simulator",
+        "price": 35,
+        "playTime": 25,
+        "gameTypeId": 4,
+        "age": 12,
+        "machineTypeId": 1,
+        "createdAt": "2025-10-04T12:50:40.926Z",
+        "updatedAt": "2025-10-04T12:50:40.926Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 4,
+          "name": "Simulation",
+          "createdAt": "2025-10-04T12:50:40.489Z",
+          "updatedAt": "2025-10-04T12:50:40.489Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 1,
+          "name": "VR Headset",
+          "createdAt": "2025-10-04T12:50:40.337Z",
+          "updatedAt": "2025-10-04T12:50:40.337Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 6,
+        "name": "Zombie Apocalypse Survival",
+        "price": 27.99,
+        "playTime": 40,
+        "gameTypeId": 1,
+        "age": 18,
+        "machineTypeId": 3,
+        "createdAt": "2025-10-04T12:50:40.931Z",
+        "updatedAt": "2025-10-04T12:50:40.931Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 1,
+          "name": "Action",
+          "createdAt": "2025-10-04T12:50:40.427Z",
+          "updatedAt": "2025-10-04T12:50:40.427Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 3,
+          "name": "Racing Simulator",
+          "createdAt": "2025-10-04T12:50:40.378Z",
+          "updatedAt": "2025-10-04T12:50:40.378Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 7,
+        "name": "Ancient Temple Explorer",
+        "price": 24.99,
+        "playTime": 50,
+        "gameTypeId": 2,
+        "age": 8,
+        "machineTypeId": 2,
+        "createdAt": "2025-10-04T12:50:40.935Z",
+        "updatedAt": "2025-10-04T12:50:40.935Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 2,
+          "name": "Adventure",
+          "createdAt": "2025-10-04T12:50:40.454Z",
+          "updatedAt": "2025-10-04T12:50:40.454Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 2,
+          "name": "Gaming Console",
+          "createdAt": "2025-10-04T12:50:40.361Z",
+          "updatedAt": "2025-10-04T12:50:40.361Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 8,
+        "name": "Mind Bender Puzzles",
+        "price": 18.99,
+        "playTime": 30,
+        "gameTypeId": 3,
+        "age": 6,
+        "machineTypeId": 4,
+        "createdAt": "2025-10-04T12:50:40.940Z",
+        "updatedAt": "2025-10-04T12:50:40.940Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 3,
+          "name": "Racing",
+          "createdAt": "2025-10-04T12:50:40.471Z",
+          "updatedAt": "2025-10-04T12:50:40.471Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 4,
+          "name": "Motion Platform",
+          "createdAt": "2025-10-04T12:50:40.395Z",
+          "updatedAt": "2025-10-04T12:50:40.395Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 9,
+        "name": "Flight Simulator Pro",
+        "price": 32.5,
+        "playTime": 35,
+        "gameTypeId": 4,
+        "age": 12,
+        "machineTypeId": 5,
+        "createdAt": "2025-10-04T12:50:40.945Z",
+        "updatedAt": "2025-10-04T12:50:40.945Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 4,
+          "name": "Simulation",
+          "createdAt": "2025-10-04T12:50:40.489Z",
+          "updatedAt": "2025-10-04T12:50:40.489Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 5,
+          "name": "Arcade Cabinet",
+          "createdAt": "2025-10-04T12:50:40.412Z",
+          "updatedAt": "2025-10-04T12:50:40.412Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 10,
+        "name": "Underwater Adventure",
+        "price": 26.99,
+        "playTime": 45,
+        "gameTypeId": 2,
+        "age": 7,
+        "machineTypeId": 2,
+        "createdAt": "2025-10-04T12:50:40.949Z",
+        "updatedAt": "2025-10-04T12:50:40.949Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 2,
+          "name": "Adventure",
+          "createdAt": "2025-10-04T12:50:40.454Z",
+          "updatedAt": "2025-10-04T12:50:40.454Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 2,
+          "name": "Gaming Console",
+          "createdAt": "2025-10-04T12:50:40.361Z",
+          "updatedAt": "2025-10-04T12:50:40.361Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 11,
+        "name": "Medieval Knight Tournament",
+        "price": 21.99,
+        "playTime": 25,
+        "gameTypeId": 1,
+        "age": 13,
+        "machineTypeId": 3,
+        "createdAt": "2025-10-04T12:50:40.953Z",
+        "updatedAt": "2025-10-04T12:50:40.953Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 1,
+          "name": "Action",
+          "createdAt": "2025-10-04T12:50:40.427Z",
+          "updatedAt": "2025-10-04T12:50:40.427Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 3,
+          "name": "Racing Simulator",
+          "createdAt": "2025-10-04T12:50:40.378Z",
+          "updatedAt": "2025-10-04T12:50:40.378Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 12,
+        "name": "Escape Room Challenge",
+        "price": 23.99,
+        "playTime": 60,
+        "gameTypeId": 3,
+        "age": 10,
+        "machineTypeId": 4,
+        "createdAt": "2025-10-04T12:50:40.957Z",
+        "updatedAt": "2025-10-04T12:50:40.957Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 3,
+          "name": "Racing",
+          "createdAt": "2025-10-04T12:50:40.471Z",
+          "updatedAt": "2025-10-04T12:50:40.471Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 4,
+          "name": "Motion Platform",
+          "createdAt": "2025-10-04T12:50:40.395Z",
+          "updatedAt": "2025-10-04T12:50:40.395Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 13,
+        "name": "Mountain Climbing Adventure",
+        "price": 25.5,
+        "playTime": 35,
+        "gameTypeId": 2,
+        "age": 8,
+        "machineTypeId": 2,
+        "createdAt": "2025-10-04T12:50:40.961Z",
+        "updatedAt": "2025-10-04T12:50:40.961Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 2,
+          "name": "Adventure",
+          "createdAt": "2025-10-04T12:50:40.454Z",
+          "updatedAt": "2025-10-04T12:50:40.454Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 2,
+          "name": "Gaming Console",
+          "createdAt": "2025-10-04T12:50:40.361Z",
+          "updatedAt": "2025-10-04T12:50:40.361Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 14,
+        "name": "Pirate Ship Adventure",
+        "price": 27.5,
+        "playTime": 45,
+        "gameTypeId": 2,
+        "age": 10,
+        "machineTypeId": 2,
+        "createdAt": "2025-10-04T12:50:40.965Z",
+        "updatedAt": "2025-10-04T12:50:40.965Z",
+        "deletedAt": null,
+        "gameTypes": {
+          "id": 2,
+          "name": "Adventure",
+          "createdAt": "2025-10-04T12:50:40.454Z",
+          "updatedAt": "2025-10-04T12:50:40.454Z",
+          "deletedAt": null
+        },
+        "machineTypes": {
+          "id": 2,
+          "name": "Gaming Console",
+          "createdAt": "2025-10-04T12:50:40.361Z",
+          "updatedAt": "2025-10-04T12:50:40.361Z",
+          "deletedAt": null
+        }
+      }
+    ],
+    "roles": [
+      {
+        "id": 1,
+        "name": "ADMIN",
+        "createdAt": "2025-10-04T12:50:40.214Z",
+        "updatedAt": "2025-10-04T12:50:40.214Z",
+        "deletedAt": null
+      },
+      {
+        "id": 2,
+        "name": "USER",
+        "createdAt": "2025-10-04T12:50:40.243Z",
+        "updatedAt": "2025-10-04T12:50:40.243Z",
+        "deletedAt": null
+      },
+      {
+        "id": 3,
+        "name": "MANAGER",
+        "createdAt": "2025-10-04T12:50:40.259Z",
+        "updatedAt": "2025-10-04T12:50:40.259Z",
+        "deletedAt": null
+      }
+    ]
+  },
+  "domeSpecificData": {
+    "doms": [
+      {
+        "id": 2,
+        "name": "Gaming Hub",
+        "address": "456 Entertainment Ave, Midtown, City 54321",
+        "createdAt": "2025-10-04T12:50:40.302Z",
+        "updatedAt": "2025-10-04T12:50:40.302Z",
+        "deletedAt": null
+      }
+    ],
+    "machines": [
+      {
+        "id": 3,
+        "name": "Gaming Console Pro 1",
+        "machineTypeId": 2,
+        "domeId": 2,
+        "createdAt": "2025-10-04T12:50:40.703Z",
+        "updatedAt": "2025-10-04T12:50:40.703Z",
+        "deletedAt": null,
+        "machineTypes": {
+          "id": 2,
+          "name": "Gaming Console",
+          "createdAt": "2025-10-04T12:50:40.361Z",
+          "updatedAt": "2025-10-04T12:50:40.361Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 4,
+        "name": "Gaming Console Pro 2",
+        "machineTypeId": 2,
+        "domeId": 2,
+        "createdAt": "2025-10-04T12:50:40.728Z",
+        "updatedAt": "2025-10-04T12:50:40.728Z",
+        "deletedAt": null,
+        "machineTypes": {
+          "id": 2,
+          "name": "Gaming Console",
+          "createdAt": "2025-10-04T12:50:40.361Z",
+          "updatedAt": "2025-10-04T12:50:40.361Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 5,
+        "name": "Racing Simulator Elite",
+        "machineTypeId": 3,
+        "domeId": 2,
+        "createdAt": "2025-10-04T12:50:40.750Z",
+        "updatedAt": "2025-10-04T12:50:40.750Z",
+        "deletedAt": null,
+        "machineTypes": {
+          "id": 3,
+          "name": "Racing Simulator",
+          "createdAt": "2025-10-04T12:50:40.378Z",
+          "updatedAt": "2025-10-04T12:50:40.378Z",
+          "deletedAt": null
+        }
+      }
+    ],
+    "machineChairs": [
+      {
+        "id": 3,
+        "name": "Gaming Console Pro 1 - Chair 1",
+        "status": 0,
+        "machineId": 3,
+        "createdAt": "2025-10-04T12:50:40.709Z",
+        "updatedAt": "2025-10-04T12:50:40.709Z",
+        "deletedAt": null
+      },
+      {
+        "id": 4,
+        "name": "Gaming Console Pro 1 - Chair 2",
+        "status": 0,
+        "machineId": 3,
+        "createdAt": "2025-10-04T12:50:40.709Z",
+        "updatedAt": "2025-10-04T12:50:40.709Z",
+        "deletedAt": null
+      },
+      {
+        "id": 5,
+        "name": "Gaming Console Pro 1 - Chair 3",
+        "status": 0,
+        "machineId": 3,
+        "createdAt": "2025-10-04T12:50:40.709Z",
+        "updatedAt": "2025-10-04T12:50:40.709Z",
+        "deletedAt": null
+      },
+      {
+        "id": 6,
+        "name": "Gaming Console Pro 1 - Chair 4",
+        "status": 0,
+        "machineId": 3,
+        "createdAt": "2025-10-04T12:50:40.709Z",
+        "updatedAt": "2025-10-04T12:50:40.709Z",
+        "deletedAt": null
+      },
+      {
+        "id": 7,
+        "name": "Gaming Console Pro 2 - Chair 1",
+        "status": 0,
+        "machineId": 4,
+        "createdAt": "2025-10-04T12:50:40.736Z",
+        "updatedAt": "2025-10-04T12:50:40.736Z",
+        "deletedAt": null
+      },
+      {
+        "id": 8,
+        "name": "Gaming Console Pro 2 - Chair 2",
+        "status": 0,
+        "machineId": 4,
+        "createdAt": "2025-10-04T12:50:40.736Z",
+        "updatedAt": "2025-10-04T12:50:40.736Z",
+        "deletedAt": null
+      },
+      {
+        "id": 9,
+        "name": "Gaming Console Pro 2 - Chair 3",
+        "status": 0,
+        "machineId": 4,
+        "createdAt": "2025-10-04T12:50:40.736Z",
+        "updatedAt": "2025-10-04T12:50:40.736Z",
+        "deletedAt": null
+      },
+      {
+        "id": 10,
+        "name": "Gaming Console Pro 2 - Chair 4",
+        "status": 0,
+        "machineId": 4,
+        "createdAt": "2025-10-04T12:50:40.736Z",
+        "updatedAt": "2025-10-04T12:50:40.736Z",
+        "deletedAt": null
+      },
+      {
+        "id": 11,
+        "name": "Racing Simulator Elite - Chair 1",
+        "status": 0,
+        "machineId": 5,
+        "createdAt": "2025-10-04T12:50:40.757Z",
+        "updatedAt": "2025-10-04T12:50:40.757Z",
+        "deletedAt": null
+      },
+      {
+        "id": 12,
+        "name": "Racing Simulator Elite - Chair 2",
+        "status": 0,
+        "machineId": 5,
+        "createdAt": "2025-10-04T12:50:40.757Z",
+        "updatedAt": "2025-10-04T12:50:40.757Z",
+        "deletedAt": null
+      }
+    ],
+    "users": [
+      {
+        "id": 3,
+        "email": "manager2@example.com",
+        "name": "Gaming Manager",
+        "password": "$2b$10$A4mfIzdG.XZ1D4cAxqLuDeCwQoeQEMPO/FI6YfBTvzTQwN3KXy24G",
+        "createdAt": "2025-10-04T12:50:41.109Z",
+        "updatedAt": "2025-10-04T12:50:41.109Z",
+        "dom_id": 2,
+        "jwtToken": null,
+        "role_id": 3,
+        "accessToken": null,
+        "roles": {
+          "id": 3,
+          "name": "MANAGER",
+          "createdAt": "2025-10-04T12:50:40.259Z",
+          "updatedAt": "2025-10-04T12:50:40.259Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 5,
+        "email": "user1@example.com",
+        "name": "User 1",
+        "password": "$2b$10$A4mfIzdG.XZ1D4cAxqLuDeCwQoeQEMPO/FI6YfBTvzTQwN3KXy24G",
+        "createdAt": "2025-10-04T12:50:41.137Z",
+        "updatedAt": "2025-10-04T12:50:41.137Z",
+        "dom_id": 2,
+        "jwtToken": null,
+        "role_id": 2,
+        "accessToken": null,
+        "roles": {
+          "id": 2,
+          "name": "USER",
+          "createdAt": "2025-10-04T12:50:40.243Z",
+          "updatedAt": "2025-10-04T12:50:40.243Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 8,
+        "email": "user4@example.com",
+        "name": "User 4",
+        "password": "$2b$10$A4mfIzdG.XZ1D4cAxqLuDeCwQoeQEMPO/FI6YfBTvzTQwN3KXy24G",
+        "createdAt": "2025-10-04T12:50:41.184Z",
+        "updatedAt": "2025-10-04T12:50:41.184Z",
+        "dom_id": 2,
+        "jwtToken": null,
+        "role_id": 2,
+        "accessToken": null,
+        "roles": {
+          "id": 2,
+          "name": "USER",
+          "createdAt": "2025-10-04T12:50:40.243Z",
+          "updatedAt": "2025-10-04T12:50:40.243Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 11,
+        "email": "user7@example.com",
+        "name": "User 7",
+        "password": "$2b$10$A4mfIzdG.XZ1D4cAxqLuDeCwQoeQEMPO/FI6YfBTvzTQwN3KXy24G",
+        "createdAt": "2025-10-04T12:50:41.229Z",
+        "updatedAt": "2025-10-04T12:50:41.229Z",
+        "dom_id": 2,
+        "jwtToken": null,
+        "role_id": 2,
+        "accessToken": null,
+        "roles": {
+          "id": 2,
+          "name": "USER",
+          "createdAt": "2025-10-04T12:50:40.243Z",
+          "updatedAt": "2025-10-04T12:50:40.243Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 14,
+        "email": "user10@example.com",
+        "name": "User 10",
+        "password": "$2b$10$A4mfIzdG.XZ1D4cAxqLuDeCwQoeQEMPO/FI6YfBTvzTQwN3KXy24G",
+        "createdAt": "2025-10-04T12:50:41.270Z",
+        "updatedAt": "2025-10-04T12:50:41.270Z",
+        "dom_id": 2,
+        "jwtToken": null,
+        "role_id": 2,
+        "accessToken": null,
+        "roles": {
+          "id": 2,
+          "name": "USER",
+          "createdAt": "2025-10-04T12:50:40.243Z",
+          "updatedAt": "2025-10-04T12:50:40.243Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 17,
+        "email": "user13@example.com",
+        "name": "User 13",
+        "password": "$2b$10$A4mfIzdG.XZ1D4cAxqLuDeCwQoeQEMPO/FI6YfBTvzTQwN3KXy24G",
+        "createdAt": "2025-10-04T12:50:41.312Z",
+        "updatedAt": "2025-10-04T12:50:41.312Z",
+        "dom_id": 2,
+        "jwtToken": null,
+        "role_id": 2,
+        "accessToken": null,
+        "roles": {
+          "id": 2,
+          "name": "USER",
+          "createdAt": "2025-10-04T12:50:40.243Z",
+          "updatedAt": "2025-10-04T12:50:40.243Z",
+          "deletedAt": null
+        }
+      },
+      {
+        "id": 20,
+        "email": "user16@example.com",
+        "name": "User 16",
+        "password": "$2b$10$A4mfIzdG.XZ1D4cAxqLuDeCwQoeQEMPO/FI6YfBTvzTQwN3KXy24G",
+        "createdAt": "2025-10-04T12:50:41.357Z",
+        "updatedAt": "2025-10-04T12:50:41.357Z",
+        "dom_id": 2,
+        "jwtToken": null,
+        "role_id": 2,
+        "accessToken": null,
+        "roles": {
+          "id": 2,
+          "name": "USER",
+          "createdAt": "2025-10-04T12:50:40.243Z",
+          "updatedAt": "2025-10-04T12:50:40.243Z",
+          "deletedAt": null
+        }
+      }
+    ]
+  },
+  "serverTime": "2025-10-04T12:51:13.250Z"
+}

@@ -36,7 +36,7 @@ async function bootstrap() {
         customSiteTitle: 'Vr Api ',
     };
     swagger_1.SwaggerModule.setup('api/docs', app, documentFactory, options);
-    const port = process.env.PORT || 3001;
+    const port = 8459;
     await app.listen(port);
     console.log(`Application is running on: http://localhost:${port}`);
 }

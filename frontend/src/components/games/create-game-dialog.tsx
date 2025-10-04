@@ -22,8 +22,10 @@ import { Plus } from "lucide-react";
 import { useGamesStore, type CreateGamePayload } from "@/stores/games-store";
 import { useGameTypesStore } from "@/stores/game-types-store";
 import { useMachineTypesStore } from "@/stores/machine-types-store";
+import { useDomsStore } from "@/stores/doms-store";
 import { toast } from "sonner";
 import { Loader } from "../loader";
+import { MultiSelect, type Option } from "@/components/ui/multi-select";
 
 interface CreateGameDialogProps {
   trigger?: React.ReactNode;
@@ -41,7 +43,13 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
     fetchMachineTypes,
     loading: machineTypesLoading,
   } = useMachineTypesStore();
+  const {
+    doms,
+    fetchDoms,
+    loading: domsLoading,
+  } = useDomsStore();
   const [open, setOpen] = useState(false);
+  const [selectedDomes, setSelectedDomes] = useState<Option[]>([]);
   const [formData, setFormData] = useState<CreateGamePayload>({
     name: "",
     price: 0,
@@ -49,15 +57,17 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
     age: undefined,
     gameTypeId: undefined,
     machineTypeId: undefined,
+    domeId: [],
   });
 
-  // Fetch game types and machine types when dialog opens
+  // Fetch game types, machine types, and domes when dialog opens
   useEffect(() => {
     if (open) {
       fetchGameTypes();
       fetchMachineTypes();
+      fetchDoms();
     }
-  }, [open, fetchGameTypes, fetchMachineTypes]);
+  }, [open, fetchGameTypes, fetchMachineTypes, fetchDoms]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -78,8 +88,16 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
       return;
     }
 
+    if (selectedDomes.length === 0) {
+      toast.error("Please select at least one dome");
+      return;
+    }
+
     try {
-      await createGame(formData);
+      await createGame({
+        ...formData,
+        domeId: selectedDomes.map((dome) => parseInt(dome.value)),
+      });
       toast.success("Game created successfully");
       setOpen(false);
       // Reset form
@@ -90,7 +108,9 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
         age: undefined,
         gameTypeId: undefined,
         machineTypeId: undefined,
+        domeId: [],
       });
+      setSelectedDomes([]);
     } catch (error: any) {
       toast.error(error.message || "Failed to create game");
     }
@@ -186,6 +206,19 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
               }
             />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="domes">Domes *</Label>
+            <MultiSelect
+              options={doms.map((dom) => ({
+                label: dom.name,
+                value: dom.id.toString(),
+              }))}
+              selected={selectedDomes}
+              onChange={setSelectedDomes}
+              placeholder={domsLoading ? "Loading domes..." : "Select domes"}
+            />
+          </div>
+
           <div className="w-full grid md:grid-cols-2 gap-4">
             <div className="grid gap-2 w-full">
               <Label htmlFor="gameType">Game Type</Label>
@@ -261,7 +294,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
             </Button>
             <Button
               type="submit"
-              disabled={loading || gameTypesLoading || machineTypesLoading}
+              disabled={loading || gameTypesLoading || machineTypesLoading || domsLoading}
             >
               {loading ?   <span className="flex items-center">
                                <Loader size={16} />

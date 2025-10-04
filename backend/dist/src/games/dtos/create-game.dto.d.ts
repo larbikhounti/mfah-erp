@@ -5,4 +5,5 @@ export declare class CreateGameDto {
     gameTypeId?: number;
     machineTypeId?: number;
     age?: number;
+    domeId: number[];
 }
