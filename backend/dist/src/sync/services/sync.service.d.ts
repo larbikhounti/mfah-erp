@@ -20,33 +20,6 @@ export declare class SyncService {
                 updatedAt: Date;
                 deletedAt: Date | null;
             }[];
-            games: ({
-                machineTypes: {
-                    id: number;
-                    name: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    deletedAt: Date | null;
-                };
-                gameTypes: {
-                    id: number;
-                    name: string;
-                    createdAt: Date;
-                    updatedAt: Date;
-                    deletedAt: Date | null;
-                };
-            } & {
-                id: number;
-                name: string;
-                createdAt: Date;
-                updatedAt: Date;
-                deletedAt: Date | null;
-                machineTypeId: number | null;
-                price: number;
-                playTime: number;
-                age: number | null;
-                gameTypeId: number | null;
-            })[];
             roles: {
                 id: number;
                 name: string;
@@ -109,6 +82,25 @@ export declare class SyncService {
                 jwtToken: string | null;
                 role_id: number | null;
                 accessToken: string | null;
+            })[];
+            games: ({
+                machineTypes: {
+                    id: number;
+                };
+                gameTypes: {
+                    id: number;
+                };
+            } & {
+                id: number;
+                name: string;
+                createdAt: Date;
+                updatedAt: Date;
+                deletedAt: Date | null;
+                machineTypeId: number | null;
+                price: number;
+                playTime: number;
+                age: number | null;
+                gameTypeId: number | null;
             })[];
         };
         serverTime: Date;

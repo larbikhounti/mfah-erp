@@ -43,7 +43,7 @@ export class SyncService {
       });
 
       // Fetch global data from central database (available to all domes)
-      const [gameTypes, machineTypes, games, roles] = await Promise.all([
+      const [gameTypes, machineTypes, roles] = await Promise.all([
         this.prisma.gameTypes.findMany({
           where: {
             updatedAt: { gt: lastSync },
@@ -56,16 +56,6 @@ export class SyncService {
             deletedAt: null,
           },
         }),
-        this.prisma.games.findMany({
-          where: {
-            updatedAt: { gt: lastSync },
-            deletedAt: null,
-          },
-          include: {
-            gameTypes: true,
-            machineTypes: true,
-          },
-        }),
         this.prisma.roles.findMany({
           where: {
             updatedAt: { gt: lastSync },
@@ -75,7 +65,7 @@ export class SyncService {
       ]);
 
       // Fetch dome-specific data from central database
-      const [doms, machines, users] = await Promise.all([
+      const [doms, machines, users, domeGames] = await Promise.all([
         this.prisma.doms.findMany({
           where: {
             id: domeId,
@@ -102,6 +92,21 @@ export class SyncService {
             roles: true,
           },
         }),
+        this.prisma.games.findMany({
+          where: {
+            updatedAt: { gt: lastSync },
+            domeGames: { some: { domeId } },
+            deletedAt: null,
+          },
+          include: {
+            gameTypes: {
+              select: { id: true },
+            },
+            machineTypes: {
+              select: { id: true },
+            },
+          },
+        }),
       ]);
 
       // Get machine chairs for machines in this dome
@@ -119,7 +124,6 @@ export class SyncService {
         globalData: {
           gameTypes,
           machineTypes,
-          games,
           roles,
         },
         domeSpecificData: {
@@ -127,6 +131,7 @@ export class SyncService {
           machines,
           machineChairs,
           users,
+          games: domeGames,
         },
         serverTime: new Date(),
       };
@@ -135,12 +140,12 @@ export class SyncService {
       const dataCount =
         gameTypes.length +
         machineTypes.length +
-        games.length +
         roles.length +
         doms.length +
         machines.length +
         machineChairs.length +
-        users.length;
+        users.length +
+        domeGames.length;
 
       // Update sync log with success
       await this.prisma.domeSyncLog.update({

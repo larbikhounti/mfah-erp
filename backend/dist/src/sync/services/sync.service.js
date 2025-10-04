@@ -38,7 +38,7 @@ let SyncService = SyncService_1 = class SyncService {
                     wasSuccess: false,
                 },
             });
-            const [gameTypes, machineTypes, games, roles] = await Promise.all([
+            const [gameTypes, machineTypes, roles] = await Promise.all([
                 this.prisma.gameTypes.findMany({
                     where: {
                         updatedAt: { gt: lastSync },
@@ -51,16 +51,6 @@ let SyncService = SyncService_1 = class SyncService {
                         deletedAt: null,
                     },
                 }),
-                this.prisma.games.findMany({
-                    where: {
-                        updatedAt: { gt: lastSync },
-                        deletedAt: null,
-                    },
-                    include: {
-                        gameTypes: true,
-                        machineTypes: true,
-                    },
-                }),
                 this.prisma.roles.findMany({
                     where: {
                         updatedAt: { gt: lastSync },
@@ -68,7 +58,7 @@ let SyncService = SyncService_1 = class SyncService {
                     },
                 }),
             ]);
-            const [doms, machines, users] = await Promise.all([
+            const [doms, machines, users, domeGames] = await Promise.all([
                 this.prisma.doms.findMany({
                     where: {
                         id: domeId,
@@ -95,6 +85,21 @@ let SyncService = SyncService_1 = class SyncService {
                         roles: true,
                     },
                 }),
+                this.prisma.games.findMany({
+                    where: {
+                        updatedAt: { gt: lastSync },
+                        domeGames: { some: { domeId } },
+                        deletedAt: null,
+                    },
+                    include: {
+                        gameTypes: {
+                            select: { id: true },
+                        },
+                        machineTypes: {
+                            select: { id: true },
+                        },
+                    },
+                }),
             ]);
             const machineIds = machines.map((machine) => machine.id);
             const machineChairs = await this.prisma.machineChairs.findMany({
@@ -108,7 +113,6 @@ let SyncService = SyncService_1 = class SyncService {
                 globalData: {
                     gameTypes,
                     machineTypes,
-                    games,
                     roles,
                 },
                 domeSpecificData: {
@@ -116,17 +120,18 @@ let SyncService = SyncService_1 = class SyncService {
                     machines,
                     machineChairs,
                     users,
+                    games: domeGames,
                 },
                 serverTime: new Date(),
             };
             const dataCount = gameTypes.length +
                 machineTypes.length +
-                games.length +
                 roles.length +
                 doms.length +
                 machines.length +
                 machineChairs.length +
-                users.length;
+                users.length +
+                domeGames.length;
             await this.prisma.domeSyncLog.update({
                 where: { id: syncLog.id },
                 data: {

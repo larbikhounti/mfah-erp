@@ -13,7 +13,6 @@ export class SyncResponseDto {
   globalData: {
     gameTypes: gameTypes[];
     machineTypes: machineTypes[];
-    games: games[];
     roles: roles[];
   };
   domeSpecificData: {
