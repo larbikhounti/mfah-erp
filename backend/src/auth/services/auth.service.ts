@@ -15,7 +15,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { comparePassword, hashPassword } from 'src/helpers/helper.helpers';
 import { Users } from '@prisma/client';
 
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -92,7 +91,7 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email };
 
     const accessToken = await this.jwtService.signAsync(payload, {
-      expiresIn: '15m',
+      expiresIn: '24h',
       secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
     });
 
