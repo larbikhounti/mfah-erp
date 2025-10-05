@@ -7,11 +7,23 @@ import * as fs from 'fs';
 @Injectable()
 export class CdnService {
   async serveDomeClientSide(res: Response): Promise<void> {
-    // From backend/dist -> ../../dom-client-side
-    const sourcePath = path.join(__dirname, '../../../dom-client-side');
+    // Try multiple possible paths
+    const possiblePaths = [
+      '/root/dom-client-side', // absolute path on server
+    ];
 
-    if (!fs.existsSync(sourcePath)) {
-      throw new Error('dom-client-side directory not found');
+    let sourcePath: string;
+    for (const p of possiblePaths) {
+      if (fs.existsSync(p)) {
+        sourcePath = p;
+        break;
+      }
+    }
+
+    if (!sourcePath) {
+      throw new Error(
+        `dom-client-side directory not found. Tried: ${possiblePaths.join(', ')}`,
+      );
     }
 
     res.setHeader('Content-Type', 'application/zip');
