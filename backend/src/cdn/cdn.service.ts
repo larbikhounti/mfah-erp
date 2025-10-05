@@ -10,13 +10,13 @@ export class CdnService {
     const sourcePath = path.resolve(process.cwd(), '../dom-client-side');
 
     if (!fs.existsSync(sourcePath)) {
-      throw new Error('dome-client-side directory not found');
+      throw new Error('dom-client-side directory not found');
     }
 
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="dome-client-side.zip"',
+      'attachment; filename="dom-client-side.zip"',
     );
 
     const archive = archiver('zip', {
