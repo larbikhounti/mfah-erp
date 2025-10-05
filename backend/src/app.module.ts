@@ -14,6 +14,7 @@ import { ExperiencesModule } from './experiences/experiences.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { SyncModule } from './sync/sync.module';
+import { CdnModule } from './cdn/cdn.module';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { SyncModule } from './sync/sync.module';
     ExperiencesModule,
     AuthModule,
     SyncModule,
+    CdnModule,
   ],
   controllers: [AppController],
   providers: [AppService],
