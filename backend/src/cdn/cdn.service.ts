@@ -7,7 +7,8 @@ import * as fs from 'fs';
 @Injectable()
 export class CdnService {
   async serveDomeClientSide(res: Response): Promise<void> {
-    const sourcePath = path.resolve(process.cwd(), '../dom-client-side');
+    // From backend/dist -> ../../dom-client-side
+    const sourcePath = path.join(__dirname, '../../../dom-client-side');
 
     if (!fs.existsSync(sourcePath)) {
       throw new Error('dom-client-side directory not found');
