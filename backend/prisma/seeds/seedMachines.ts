@@ -32,106 +32,116 @@ export async function seedMachines(prisma: PrismaClient) {
 
   const machines = [
     {
-      name: 'VR Station Alpha',
-      machineTypeId: vrHeadset?.id || null,
-      domeId: vrCenter?.id || null,
+      name: 'Alpha',
+      machineTypeId: vrHeadset.id,
+      domeId: vrCenter.id,
+      alias: 'A',
       chairsNumber: 1, // VR stations typically have 1 chair
     },
     {
-      name: 'VR Station Beta',
-      machineTypeId: vrHeadset?.id || null,
-      domeId: vrCenter?.id || null,
+      name: 'Beta',
+      machineTypeId: vrHeadset.id,
+      domeId: vrCenter.id,
+      alias: 'B',
       chairsNumber: 1,
     },
     {
-      name: 'Gaming Console Pro 1',
-      machineTypeId: gamingConsole?.id || null,
-      domeId: gamingHub?.id || null,
+      name: 'Pro 1',
+      machineTypeId: gamingConsole.id,
+      domeId: gamingHub?.id,
+      alias: 'C',
       chairsNumber: 4, // Gaming consoles can have multiple players
     },
     {
-      name: 'Gaming Console Pro 2',
-      machineTypeId: gamingConsole?.id || null,
-      domeId: gamingHub?.id || null,
+      name: 'Pro 2',
+      machineTypeId: gamingConsole.id,
+      domeId: gamingHub?.id,
+      alias: 'D',
       chairsNumber: 4,
     },
     {
-      name: 'Racing Simulator Elite',
-      machineTypeId: racingSimulator?.id || null,
-      domeId: gamingHub?.id || null,
+      name: 'Elite',
+      machineTypeId: racingSimulator.id,
+      domeId: gamingHub.id,
+      alias: 'E',
       chairsNumber: 2, // Racing simulators usually have 1-2 seats
     },
     {
-      name: 'Motion Platform X1',
-      machineTypeId: motionPlatform?.id || null,
-      domeId: entertainmentComplex?.id || null,
+      name: 'X1',
+      machineTypeId: motionPlatform.id,
+      domeId: entertainmentComplex.id,
+      alias: 'F',
       chairsNumber: 6, // Motion platforms can have multiple seats
     },
     {
-      name: 'Arcade Fighter 1',
-      machineTypeId: arcadeCabinet?.id || null,
-      domeId: entertainmentComplex?.id || null,
+      name: 'Fighter 1',
+      machineTypeId: arcadeCabinet.id,
+      domeId: entertainmentComplex.id,
+      alias: 'G',
       chairsNumber: 2, // Fighting games typically have 2 players
     },
     {
-      name: 'Arcade Fighter 2',
-      machineTypeId: arcadeCabinet?.id || null,
-      domeId: entertainmentComplex?.id || null,
+      name: 'Fighter 2',
+      machineTypeId: arcadeCabinet.id,
+      domeId: entertainmentComplex.id,
+      alias: 'H',
       chairsNumber: 2,
     },
     {
-      name: 'VR Station Gamma',
-      machineTypeId: vrHeadset?.id || null,
-      domeId: entertainmentComplex?.id || null,
+      name: 'Gamma',
+      machineTypeId: vrHeadset.id,
+      domeId: entertainmentComplex.id,
+      alias: 'I',
       chairsNumber: 1,
     },
     {
-      name: 'Racing Simulator Standard',
-      machineTypeId: racingSimulator?.id || null,
-      domeId: vrCenter?.id || null,
+      name: 'Standard',
+      machineTypeId: racingSimulator.id,
+      domeId: vrCenter.id,
+      alias: 'J',
       chairsNumber: 1,
     },
   ];
 
   for (const machine of machines) {
-    // Check if machine already exists
-    const existingMachine = await prisma.machines.findFirst({
-      where: {
+    const upsertedMachine = await prisma.machines.upsert({
+      where: { alias: machine.alias },
+      update: {
         name: machine.name,
-        deletedAt: null,
+        machineTypeId: machine.machineTypeId,
+        domeId: machine.domeId,
+      },
+      create: {
+        name: machine.name,
+        machineTypeId: machine.machineTypeId,
+        domeId: machine.domeId,
+        alias: machine.alias,
       },
     });
+    console.log(`Machine upserted: ${upsertedMachine.name}`);
 
-    if (!existingMachine) {
-      const createdMachine = await prisma.machines.create({
-        data: {
-          name: machine.name,
-          machineTypeId: machine.machineTypeId,
-          domeId: machine.domeId,
-        },
-      });
-      console.log(`Machine created: ${createdMachine.name}`);
+    // Delete existing chairs and recreate them
+    await prisma.machineChairs.deleteMany({
+      where: { machineId: upsertedMachine.id },
+    });
 
-      // Create chairs for the machine
-      if (machine.chairsNumber && machine.chairsNumber > 0) {
-        const chairsToCreate = [];
-        for (let i = 1; i <= machine.chairsNumber; i++) {
-          chairsToCreate.push({
-            name: `${createdMachine.name} - Chair ${i}`,
-            status: 0, // 0 = available, 1 = occupied, 2 = maintenance
-            machineId: createdMachine.id,
-          });
-        }
-
-        await prisma.machineChairs.createMany({
-          data: chairsToCreate,
+    // Create chairs for the machine
+    if (machine.chairsNumber && machine.chairsNumber > 0) {
+      const chairsToCreate = [];
+      for (let i = 1; i <= machine.chairsNumber; i++) {
+        chairsToCreate.push({
+          name: `${upsertedMachine.name} - Chair ${i}`,
+          status: 0, // 0 = available, 1 = occupied, 2 = maintenance
+          machineId: upsertedMachine.id,
         });
-        console.log(
-          `Created ${machine.chairsNumber} chairs for ${createdMachine.name}`,
-        );
       }
-    } else {
-      console.log(`Machine already exists: ${machine.name}`);
+
+      await prisma.machineChairs.createMany({
+        data: chairsToCreate,
+      });
+      console.log(
+        `Created ${machine.chairsNumber} chairs for ${upsertedMachine.name}`,
+      );
     }
   }
 

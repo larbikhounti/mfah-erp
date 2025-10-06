@@ -171,6 +171,7 @@ export class MachinesService {
       const machine = await this.prisma.machines.create({
         data: {
           name: data.name,
+          alias: data.alias || null,
           machineTypeId: data.machineTypeId || null,
           domeId: data.domeId || null,
         },

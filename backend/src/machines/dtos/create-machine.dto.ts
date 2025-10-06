@@ -47,4 +47,13 @@ export class CreateMachineDto {
   @Min(1)
   @Max(20) // Reasonable limit for number of chairs
   chairsNumber?: number;
+
+  @ApiProperty({
+    description: 'An optional alias for the machine',
+    example: 'A',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  alias?: string;
 }

@@ -18,19 +18,19 @@ async function main() {
     await seedRoles(prisma);
 
     // // Seed DOMs (users can be assigned to DOMs)
-    // await seedDoms(prisma);
+    await seedDoms(prisma);
 
     // // Seed machine types
-    // await seedMachineTypes(prisma);
+    await seedMachineTypes(prisma);
 
     // // Seed game types
-    // await seedGameTypes(prisma);
+    await seedGameTypes(prisma);
 
     // // Seed machines (depends on machine types and DOMs)
-    // await seedMachines(prisma);
+    await seedMachines(prisma);
 
     // // Seed games (depends on game types and machine types)
-    // await seedGames(prisma);
+    await seedGames(prisma);
 
     // // Then seed users
     await seedUsers(prisma);

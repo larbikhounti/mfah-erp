@@ -51,8 +51,10 @@ export declare class SyncService {
                 createdAt: Date;
                 updatedAt: Date;
                 deletedAt: Date | null;
-                machineTypeId: number | null;
+                alias: string;
+                machineTypeId: number;
                 domeId: number | null;
+                ticketNumber: number;
             })[];
             machineChairs: {
                 id: number;
