@@ -167,13 +167,6 @@ export async function seedGames(prisma: PrismaClient) {
   console.log('Seeding games...');
 
   try {
-    // Check if games already exist
-    const existingGames = await prisma.games.count();
-    if (existingGames > 0) {
-      console.log('Games already seeded, skipping...');
-      return;
-    }
-
     // Get all game types and machine types to validate relationships
     const gameTypes = await prisma.gameTypes.findMany({
       where: { deletedAt: null },
