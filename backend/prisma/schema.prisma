@@ -38,17 +38,23 @@ model doms {
 }
 
 model experiences {
-  id        Int       @id @default(autoincrement())
-  machineId Int
-  gameId    Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  domeId    Int
-  tickets   tickets[]
-  doms      doms      @relation(fields: [domeId], references: [id], onDelete: SetDefault)
-  games     games     @relation(fields: [gameId], references: [id], onDelete: SetDefault)
-  machines  machines  @relation(fields: [machineId], references: [id], onDelete: SetDefault)
+  id           Int       @id @default(autoincrement())
+  machineId    Int
+  gameId       Int
+  isFractioned Boolean   @default(false)
+  isNext       Boolean   @default(false)
+  isStarted    Boolean   @default(false)
+  isEnded      Boolean   @default(false)
+  startedAt    DateTime?
+  endedAt      DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  domeId       Int
+  tickets      tickets[]
+  doms         doms      @relation(fields: [domeId], references: [id], onDelete: SetDefault)
+  games        games     @relation(fields: [gameId], references: [id], onDelete: SetDefault)
+  machines     machines  @relation(fields: [machineId], references: [id], onDelete: SetDefault)
 }
 
 model gameTypes {
@@ -115,15 +121,17 @@ model machineTypes {
 model machines {
   id            Int             @id @default(autoincrement())
   name          String
-  machineTypeId Int?
+  alias         String          @unique
+  machineTypeId Int
   domeId        Int?
+  ticketNumber  Int             @default(0)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   deletedAt     DateTime?
   experiences   experiences[]
   machineChairs machineChairs[]
   doms          doms?           @relation(fields: [domeId], references: [id])
-  machineTypes  machineTypes?   @relation(fields: [machineTypeId], references: [id])
+  machineTypes  machineTypes    @relation(fields: [machineTypeId], references: [id])
 }
 
 model roles {
@@ -136,30 +144,50 @@ model roles {
 }
 
 model tickets {
-  id            Int            @id @default(autoincrement())
-  userId        Int
-  experienceId  Int
-  isPaid        Boolean        @default(false)
-  chairId       Int?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  deletedAt     DateTime?
-  domeId        Int
-  experiences   experiences    @relation(fields: [experienceId], references: [id], onDelete: SetDefault)
-  machineChairs machineChairs? @relation(fields: [chairId], references: [id])
-  doms          doms           @relation(fields: [domeId], references: [id], onDelete: SetDefault)
+  id              Int             @id @default(autoincrement())
+  userId          Int?
+  experienceId    Int
+  alias           String
+  isPaid          Boolean         @default(false)
+  chairId         Int?
+  couponId        Int?
+  notes           String?
+  price           Float?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  deletedAt       DateTime?
+  domeId          Int
+  parentTicketId  Int?
+  parentTicket    tickets?        @relation("FractionedTickets", fields: [parentTicketId], references: [id])
+  childTickets    tickets[]       @relation("FractionedTickets")
+  experiences     experiences     @relation(fields: [experienceId], references: [id], onDelete: SetDefault)
+  machineChairs   machineChairs?  @relation(fields: [chairId], references: [id])
+  doms            doms            @relation(fields: [domeId], references: [id], onDelete: SetDefault)
+  coupons         coupons?        @relation(fields: [couponId], references: [id])
+}
+
+model coupons {
+  id          Int      @id @default(autoincrement())
+  code        String   @unique
+  discount    Float
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+  tickets     tickets[]
 }
 
 model DomeSyncLog {
-  id         Int      @id @default(autoincrement())
-  domeId     Int
-  lastSyncAt DateTime // The lastSync time received from the dome
-  wasSuccess Boolean  @default(true)
-  dataCount  Int? // Number of records returned
-  error      String? // Error message if failed
-
-  // Relation
-  dome doms @relation(fields: [domeId], references: [id], onDelete: Cascade)
+  id          Int      @id @default(autoincrement())
+  domeId      Int
+  lastSyncAt  DateTime // The lastSync time received from the server
+  completedAt DateTime @default(now()) // When the sync completed
+  isFirstSync Boolean  @default(true)
+  wasSuccess  Boolean  @default(true)
+  error       String?
+  dataCount   Int?
+  dome        doms     @relation(fields: [domeId], references: [id], onDelete: Cascade)
 
   @@index([domeId])
+  @@index([completedAt])
 }
