@@ -12,6 +12,13 @@ export async function seedUsers(prisma: PrismaClient) {
   const managerRole = await prisma.roles.findUnique({
     where: { name: 'MANAGER' },
   });
+  // Get existing roles and DOMs
+  const backOfficeRole = await prisma.roles.findUnique({
+    where: { name: 'back office' },
+  });
+  const frontOfficeRole = await prisma.roles.findUnique({
+    where: { name: 'front office' },
+  });
 
   const vrCenter = await prisma.doms.findUnique({
     where: { name: 'VR Experience Center' },
@@ -31,25 +38,19 @@ export async function seedUsers(prisma: PrismaClient) {
       role_id: adminRole?.id || 1,
       dom_id: vrCenter?.id || null,
     },
-
-    // Managers
     {
-      email: 'manager1@example.com',
-      name: 'VR Manager',
-      role_id: managerRole?.id || 3,
-      dom_id: vrCenter?.id || null,
+      email: 'frontoffice@example.com',
+      name: 'Front Office',
+      password: hashedPassword,
+      role_id: frontOfficeRole.id,
+      dom_id: process.env.DOM_ID ? parseInt(process.env.DOM_ID) : null,
     },
     {
-      email: 'manager2@example.com',
-      name: 'Gaming Manager',
-      role_id: managerRole?.id || 3,
-      dom_id: gamingHub?.id || null,
-    },
-    {
-      email: 'manager3@example.com',
-      name: 'Entertainment Manager',
-      role_id: managerRole?.id || 3,
-      dom_id: entertainmentComplex?.id || null,
+      email: 'backoffice@example.com',
+      name: 'Back Office',
+      password: hashedPassword,
+      role_id: backOfficeRole.id,
+      dom_id: process.env.DOM_ID ? parseInt(process.env.DOM_ID) : null,
     },
   ];
 

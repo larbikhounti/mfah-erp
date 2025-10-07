@@ -8,10 +8,10 @@ export async function seedRoles(prisma: PrismaClient) {
       name: 'ADMIN',
     },
     {
-      name: 'USER',
+      name: 'front office',
     },
     {
-      name: 'MANAGER',
+      name: 'back office',
     },
   ];
 
