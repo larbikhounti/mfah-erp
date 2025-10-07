@@ -31,12 +31,14 @@ interface CreateMachineChairDialogProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  defaultMachineId?: number;
 }
 
 export function CreateMachineChairDialog({
   trigger,
   open: controlledOpen,
   onOpenChange,
+  defaultMachineId,
 }: CreateMachineChairDialogProps) {
   const { createMachineChair, loading } = useMachineChairsStore();
   const {
@@ -52,7 +54,7 @@ export function CreateMachineChairDialog({
   const [formData, setFormData] = useState<CreateMachineChairPayload>({
     name: "",
     status: 0,
-    machineId: 0,
+    machineId: defaultMachineId || 0,
   });
 
   // Fetch machines when dialog opens
@@ -84,7 +86,7 @@ export function CreateMachineChairDialog({
       setFormData({
         name: "",
         status: 0,
-        machineId: 0,
+        machineId: defaultMachineId || 0,
       });
     } catch (error: any) {
       toast.error(error.message || "Failed to create machine chair");

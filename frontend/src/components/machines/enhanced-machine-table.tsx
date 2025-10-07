@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import PaginationTable from "@/components/pagination-table";
 import { EditMachineDialog } from "./edit-machine-dialog-new";
 import { CreateMachineDialog } from "./create-machine-dialog-new";
+import { MachineChairsDialog } from "./machine-chairs-dialog";
 
 interface EnhancedMachineTableProps {
   // Remove the callback props since we'll handle them internally
@@ -58,6 +59,9 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [machineToDelete, setMachineToDelete] = useState<number | null>(null);
+  const [chairsDialogOpen, setChairsDialogOpen] = useState(false);
+  const [selectedMachineForChairs, setSelectedMachineForChairs] =
+    useState<Machine | null>(null);
 
   // Fetch machines on component mount
   useEffect(() => {
@@ -153,7 +157,16 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
       key: "chairsCount",
       label: "Chairs",
       render: (machine) => (
-        <Badge variant="secondary">{machine.chairsCount || 0} chairs</Badge>
+        <Badge
+          variant="secondary"
+          className="cursor-pointer hover:bg-secondary/80"
+          onClick={() => {
+            setSelectedMachineForChairs(machine);
+            setChairsDialogOpen(true);
+          }}
+        >
+          {machine.chairsCount || 0} chairs
+        </Badge>
       ),
     },
     {
@@ -290,6 +303,16 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
           totalItems={total}
           onPageChange={setPage}
           onPageSizeChange={setPageSize}
+        />
+      )}
+
+      {/* Machine Chairs Dialog */}
+      {selectedMachineForChairs && (
+        <MachineChairsDialog
+          open={chairsDialogOpen}
+          onOpenChange={setChairsDialogOpen}
+          machineId={selectedMachineForChairs.id}
+          machineName={selectedMachineForChairs.name}
         />
       )}
     </div>

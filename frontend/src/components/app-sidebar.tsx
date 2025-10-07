@@ -76,11 +76,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard/machines",
       icon: IconDeviceDesktop,
     },
-    {
-      title: "Machine Chairs",
-      url: "/dashboard/machine-chairs",
-      icon: IconArmchair,
-    },
+    // {
+    //   title: "Machine Chairs",
+    //   url: "/dashboard/machine-chairs",
+    //   icon: IconArmchair,
+    // },
     {
       title: "Games",
       url: "/dashboard/games",
