@@ -8,7 +8,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 const instance = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "api.mydomhub.store/api/v1",
+  baseURL: process.env.NEXT_PUBLIC_API_URL,
   timeout: 10000,
 });
 
