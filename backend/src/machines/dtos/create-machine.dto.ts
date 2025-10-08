@@ -49,11 +49,10 @@ export class CreateMachineDto {
   chairsNumber?: number;
 
   @ApiProperty({
-    description: 'An optional alias for the machine',
+    description: 'The alias for the machine',
     example: 'A',
-    required: false,
   })
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  alias?: string;
+  alias: string;
 }

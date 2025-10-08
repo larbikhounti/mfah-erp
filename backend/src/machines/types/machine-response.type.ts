@@ -1,6 +1,7 @@
 export interface MachineResponse {
   id: number;
   name: string;
+  alias: string;
   machineTypeId: number | null;
   machineType: string | null;
   domeId: number | null;

@@ -30,4 +30,13 @@ export class UpdateMachineDto {
   @IsInt()
   @Min(1)
   domeId?: number;
+
+  @ApiProperty({
+    description: 'The alias for the machine',
+    example: 'A',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  alias?: string;
 }

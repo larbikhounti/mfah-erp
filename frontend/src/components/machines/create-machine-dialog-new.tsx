@@ -43,6 +43,7 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState<CreateMachinePayload>({
     name: "",
+    alias: "",
     machineTypeId: undefined,
     domeId: undefined,
     chairsNumber: undefined,
@@ -65,6 +66,11 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
       return;
     }
 
+    if (!formData.alias.trim()) {
+      toast.error("Machine alias is required");
+      return;
+    }
+
     try {
       await createMachine(formData);
       toast.success("Machine created successfully");
@@ -72,6 +78,7 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
       // Reset form
       setFormData({
         name: "",
+        alias: "",
         machineTypeId: undefined,
         domeId: undefined,
         chairsNumber: undefined,
@@ -114,6 +121,17 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
               placeholder="Enter machine name"
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="alias">Alias</Label>
+            <Input
+              id="alias"
+              type="text"
+              placeholder="Enter machine alias"
+              value={formData.alias}
+              onChange={(e) => handleInputChange("alias", e.target.value)}
               required
             />
           </div>
@@ -210,10 +228,10 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
               type="submit"
               disabled={loading || machineTypesLoading || domsLoading}
             >
-              {loading ?   <span className="flex items-center">
-                               <Loader size={16} />
-                                <span className="ml-2">Creating...</span>
-                            </span>: "Create Machine"}
+              {loading ? <span className="flex items-center">
+                <Loader size={16} />
+                <span className="ml-2">Creating...</span>
+              </span> : "Create Machine"}
             </Button>
           </div>
         </form>

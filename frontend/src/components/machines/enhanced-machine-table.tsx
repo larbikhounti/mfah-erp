@@ -140,6 +140,15 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
       render: (machine) => <div className="font-medium">{machine.name}</div>,
     },
     {
+      key: "alias",
+      label: "Alias",
+      render: (machine) => (
+        <div className="font-mono text-sm bg-muted px-2 py-1 rounded">
+          {machine.alias}
+        </div>
+      ),
+    },
+    {
       key: "machineType",
       label: "Machine Type",
       render: (machine) => (
@@ -227,8 +236,8 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
         title="Machine Management"
         data={machines}
         columns={columns}
-        searchKeys={["name", "machineType.name", "dome.name"]}
-        searchPlaceholder="Search machines by name, type, or DOM..."
+        searchKeys={["name", "alias", "machineType.name", "dome.name"]}
+        searchPlaceholder="Search machines by name, alias, type, or DOM..."
         emptyMessage="No machines found"
         showCount={true}
         customHeader={

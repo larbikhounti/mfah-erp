@@ -56,6 +56,7 @@ export class MachinesService {
           select: {
             id: true,
             name: true,
+            alias: true,
             machineTypeId: true,
             domeId: true,
             createdAt: true,
@@ -97,6 +98,7 @@ export class MachinesService {
       const formattedData: MachineResponse[] = machines.map((machine) => ({
         id: machine.id,
         name: machine.name,
+        alias: machine.alias,
         machineTypeId: machine.machineTypeId,
         machineType: machine.machineTypes?.name || null,
         domeId: machine.domeId,
@@ -137,6 +139,21 @@ export class MachinesService {
         );
       }
 
+      // Check if machine with this alias already exists
+      const existingAlias = await this.prisma.machines.findFirst({
+        where: {
+          alias: data.alias,
+          deletedAt: null,
+        },
+      });
+
+      if (existingAlias) {
+        throw new HttpException(
+          'Machine with this alias already exists',
+          HttpStatus.CONFLICT,
+        );
+      }
+
       // Validate machineTypeId if provided
       if (data.machineTypeId) {
         const machineType = await this.prisma.machineTypes.findFirst({
@@ -171,8 +188,8 @@ export class MachinesService {
       const machine = await this.prisma.machines.create({
         data: {
           name: data.name,
-          alias: data.alias || null,
-          machineTypeId: data.machineTypeId || null,
+          alias: data.alias,
+          machineTypeId: data.machineTypeId,
           domeId: data.domeId || null,
         },
         include: {
@@ -238,6 +255,7 @@ export class MachinesService {
         return {
           id: machine.id,
           name: machine.name,
+          alias: machine.alias,
           machineTypeId: machine.machineTypeId,
           machineType: machine.machineTypes?.name || null,
           domeId: machine.domeId,
@@ -252,6 +270,7 @@ export class MachinesService {
       return {
         id: machine.id,
         name: machine.name,
+        alias: machine.alias,
         machineTypeId: machine.machineTypeId,
         machineType: machine.machineTypes?.name || null,
         domeId: machine.domeId,
@@ -316,6 +335,7 @@ export class MachinesService {
       return {
         id: machine.id,
         name: machine.name,
+        alias: machine.alias,
         machineTypeId: machine.machineTypeId,
         machineType: machine.machineTypes?.name || null,
         domeId: machine.domeId,
@@ -374,6 +394,26 @@ export class MachinesService {
         }
       }
 
+      // Check if alias is being updated and if it conflicts with existing machine
+      if (data.alias && data.alias !== existingMachine.alias) {
+        const aliasConflict = await this.prisma.machines.findFirst({
+          where: {
+            alias: data.alias,
+            deletedAt: null,
+            NOT: {
+              id: id,
+            },
+          },
+        });
+
+        if (aliasConflict) {
+          throw new HttpException(
+            'Machine alias already taken by another machine',
+            HttpStatus.CONFLICT,
+          );
+        }
+      }
+
       // Validate machineTypeId if provided
       if (data.machineTypeId) {
         const machineType = await this.prisma.machineTypes.findFirst({
@@ -409,6 +449,7 @@ export class MachinesService {
         where: { id },
         data: {
           ...(data.name && { name: data.name }),
+          ...(data.alias && { alias: data.alias }),
           ...(data.machineTypeId !== undefined && {
             machineTypeId: data.machineTypeId,
           }),
@@ -446,6 +487,7 @@ export class MachinesService {
       return {
         id: machine.id,
         name: machine.name,
+        alias: machine.alias,
         machineTypeId: machine.machineTypeId,
         machineType: machine.machineTypes?.name || null,
         domeId: machine.domeId,

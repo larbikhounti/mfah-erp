@@ -55,6 +55,7 @@ export function EditMachineDialog({
   const [loadingData, setLoadingData] = useState(false);
   const [formData, setFormData] = useState<UpdateMachinePayload>({
     name: machine.name,
+    alias: machine.alias,
     machineTypeId: machine.machineTypeId || undefined,
     domeId: machine.domeId || undefined,
   });
@@ -63,6 +64,7 @@ export function EditMachineDialog({
   useEffect(() => {
     setFormData({
       name: machine.name,
+      alias: machine.alias,
       machineTypeId: machine.machineTypeId || undefined,
       domeId: machine.domeId || undefined,
     });
@@ -103,6 +105,11 @@ export function EditMachineDialog({
     // Validate form data
     if (!formData.name?.trim()) {
       toast.error("Machine name is required");
+      return;
+    }
+
+    if (!formData.alias?.trim()) {
+      toast.error("Machine alias is required");
       return;
     }
 
@@ -148,6 +155,19 @@ export function EditMachineDialog({
               placeholder="Enter machine name"
               value={formData.name || ""}
               onChange={(e) => handleInputChange("name", e.target.value)}
+              required
+              className="w-full"
+            />
+          </div>
+
+          <div className="space-y-2 w-full">
+            <Label htmlFor="alias">Alias</Label>
+            <Input
+              id="alias"
+              type="text"
+              placeholder="Enter machine alias"
+              value={formData.alias || ""}
+              onChange={(e) => handleInputChange("alias", e.target.value)}
               required
               className="w-full"
             />
