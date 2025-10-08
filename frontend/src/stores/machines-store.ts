@@ -4,6 +4,7 @@ import { axiosInstance } from "@/lib/utils";
 export interface Machine {
   id: number;
   name: string;
+  alias: string;
   machineTypeId?: number | null;
   domeId?: number | null;
   createdAt: string;
@@ -16,6 +17,7 @@ export interface Machine {
 
 export interface CreateMachinePayload {
   name: string;
+  alias: string;
   machineTypeId?: number;
   domeId?: number;
   chairsNumber?: number;
@@ -23,6 +25,7 @@ export interface CreateMachinePayload {
 
 export interface UpdateMachinePayload {
   name?: string;
+  alias?: string;
   machineTypeId?: number;
   domeId?: number;
 }
