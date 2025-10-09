@@ -43,7 +43,7 @@ export class SyncService {
       });
 
       // Fetch global data from central database (available to all domes)
-      const [gameTypes, machineTypes, roles] = await Promise.all([
+      const [gameTypes, machineTypes, roles, coupons] = await Promise.all([
         this.prisma.gameTypes.findMany({
           where: {
             updatedAt: { gt: lastSync },
@@ -57,6 +57,12 @@ export class SyncService {
           },
         }),
         this.prisma.roles.findMany({
+          where: {
+            updatedAt: { gt: lastSync },
+            deletedAt: null,
+          },
+        }),
+        this.prisma.coupons.findMany({
           where: {
             updatedAt: { gt: lastSync },
             deletedAt: null,
@@ -125,6 +131,7 @@ export class SyncService {
           gameTypes,
           machineTypes,
           roles,
+          coupons,
         },
         domeSpecificData: {
           doms,
@@ -141,6 +148,7 @@ export class SyncService {
         gameTypes.length +
         machineTypes.length +
         roles.length +
+        coupons.length +
         doms.length +
         machines.length +
         machineChairs.length +
