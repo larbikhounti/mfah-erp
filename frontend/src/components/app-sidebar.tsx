@@ -21,6 +21,7 @@ import {
   IconDeviceDesktop,
   IconPlayerPlay,
   IconArmchair,
+  IconTicket,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -85,6 +86,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Games",
       url: "/dashboard/games",
       icon: IconPlayerPlay,
+    },
+      {
+      title: "Coupons",
+      url: "/dashboard/coupons",
+      icon: IconTicket,
     },
     {
       title: "Experiences",
