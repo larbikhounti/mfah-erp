@@ -15,6 +15,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { SyncModule } from './sync/sync.module';
 import { CdnModule } from './cdn/cdn.module';
+import { CouponsModule } from './coupons/coupons.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { CdnModule } from './cdn/cdn.module';
     AuthModule,
     SyncModule,
     CdnModule,
+    CouponsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
