@@ -2,6 +2,7 @@
 import { PrismaService } from '@app/prisma/prisma.service';
 import { Injectable, Logger } from '@nestjs/common';
 import { SyncRequestDto } from '../dtos/SyncRequest.dto';
+import { UploadDataDto } from '../dtos/upload-data.dto';
 
 @Injectable()
 export class SyncService {
@@ -183,6 +184,128 @@ export class SyncService {
         });
       }
 
+      throw error;
+    }
+  }
+
+  async uploadData(uploadData: UploadDataDto) {
+    const { domId, experiences, tickets } = uploadData;
+
+    try {
+      // Verify the dome exists
+      const dome = await this.prisma.doms.findFirst({
+        where: {
+          id: domId,
+          deletedAt: null,
+        },
+      });
+
+      if (!dome) {
+        throw new Error(`Dome with ID ${domId} not found or deleted`);
+      }
+
+      // Use a transaction to ensure all data is saved atomically
+      const result = await this.prisma.$transaction(async (prisma) => {
+        // Upsert experiences
+        const savedExperiences = await Promise.all(
+          experiences.map((experience) =>
+            prisma.experiences.upsert({
+              where: { id: experience.id },
+              update: {
+                machineId: experience.machineId,
+                gameId: experience.gameId,
+                isFractioned: experience.isFractioned,
+                isNext: experience.isNext,
+                isStarted: experience.isStarted,
+                isEnded: experience.isEnded,
+                startedAt: experience.startedAt,
+                endedAt: experience.endedAt,
+                updatedAt: experience.updatedAt,
+                deletedAt: experience.deletedAt,
+                domeId: experience.domeId,
+              },
+              create: {
+                id: experience.id,
+                machineId: experience.machineId,
+                gameId: experience.gameId,
+                isFractioned: experience.isFractioned,
+                isNext: experience.isNext,
+                isStarted: experience.isStarted,
+                isEnded: experience.isEnded,
+                startedAt: experience.startedAt,
+                endedAt: experience.endedAt,
+                createdAt: experience.createdAt,
+                updatedAt: experience.updatedAt,
+                deletedAt: experience.deletedAt,
+                domeId: experience.domeId,
+              },
+            }),
+          ),
+        );
+
+        // Upsert tickets
+        const savedTickets = await Promise.all(
+          tickets.map((ticket) =>
+            prisma.tickets.upsert({
+              where: { id: ticket.id },
+              update: {
+                userId: ticket.userId,
+                experienceId: ticket.experienceId,
+                alias: ticket.alias,
+                isPaid: ticket.isPaid,
+                chairId: ticket.chairId,
+                couponId: ticket.couponId,
+                notes: ticket.notes,
+                price: ticket.price,
+                updatedAt: ticket.updatedAt,
+                deletedAt: ticket.deletedAt,
+                domeId: ticket.domeId,
+                parentTicketId: ticket.parentTicketId,
+              },
+              create: {
+                id: ticket.id,
+                userId: ticket.userId,
+                experienceId: ticket.experienceId,
+                alias: ticket.alias,
+                isPaid: ticket.isPaid,
+                chairId: ticket.chairId,
+                couponId: ticket.couponId,
+                notes: ticket.notes,
+                price: ticket.price,
+                createdAt: ticket.createdAt,
+                updatedAt: ticket.updatedAt,
+                deletedAt: ticket.deletedAt,
+                domeId: ticket.domeId,
+                parentTicketId: ticket.parentTicketId,
+              },
+            }),
+          ),
+        );
+
+        return {
+          experiencesCount: savedExperiences.length,
+          ticketsCount: savedTickets.length,
+        };
+      });
+
+      this.logger.log(
+        `Successfully uploaded data for dome ${domId}: ${result.experiencesCount} experiences, ${result.ticketsCount} tickets`,
+      );
+
+      return {
+        success: true,
+        message: 'Data uploaded successfully',
+        data: {
+          domId,
+          experiencesProcessed: result.experiencesCount,
+          ticketsProcessed: result.ticketsCount,
+        },
+      };
+    } catch (error) {
+      this.logger.error(
+        `Upload failed for dome ${domId}: ${error.message}`,
+        error.stack,
+      );
       throw error;
     }
   }

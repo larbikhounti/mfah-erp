@@ -11,6 +11,7 @@ import {
 import { SyncService } from '../services/sync.service';
 import { SyncRequestDto } from '../dtos/SyncRequest.dto';
 import { SyncResponseDto } from '../dtos/sync-response.dto';
+import { UploadDataDto } from '../dtos/upload-data.dto';
 import { Public } from '@app/decorator/public.decorator';
 @Controller('sync')
 export class SyncController {
@@ -24,6 +25,19 @@ export class SyncController {
     } catch (error) {
       throw new HttpException(
         `Sync failed: ${error.message}`,
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Public()
+  @Post('upload')
+  async upload(@Body() uploadData: UploadDataDto) {
+    try {
+      return await this.syncService.uploadData(uploadData);
+    } catch (error) {
+      throw new HttpException(
+        `Upload failed: ${error.message}`,
         HttpStatus.BAD_REQUEST,
       );
     }
