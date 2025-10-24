@@ -41,6 +41,34 @@ export async function seedTickets(prisma: PrismaClient) {
       take: 20, // Use first 20 experiences
     });
 
+    // Track ticket numbers per machine to generate sequential aliases
+    const machineTicketCounters = new Map<number, number>();
+
+    // Helper function to generate ticket alias and increment machine ticket number
+    const generateTicketAlias = async (
+      machineId: number,
+      machineAlias: string,
+    ): Promise<string> => {
+      // Get current ticket number for this machine
+      let currentTicketNumber = machineTicketCounters.get(machineId);
+
+      if (currentTicketNumber === undefined) {
+        // First time seeing this machine, get its current ticketNumber from DB
+        const machine = await prisma.machines.findUnique({
+          where: { id: machineId },
+          select: { ticketNumber: true },
+        });
+        currentTicketNumber = machine?.ticketNumber || 0;
+        machineTicketCounters.set(machineId, currentTicketNumber);
+      }
+
+      // Increment the counter for next ticket
+      const nextTicketNumber = currentTicketNumber + 1;
+      machineTicketCounters.set(machineId, nextTicketNumber);
+
+      return `${machineAlias}${nextTicketNumber}`;
+    };
+
     const doms = await prisma.doms.findMany({
       where: { deletedAt: null },
     });
@@ -93,9 +121,15 @@ export async function seedTickets(prisma: PrismaClient) {
         const createdAt = new Date();
         createdAt.setHours(createdAt.getHours() - randomHoursAgo);
 
+        const ticketAlias = await generateTicketAlias(
+          vrExp.machines.id,
+          vrExp.machines.alias,
+        );
+
         ticketsToCreate.push({
           userId: user.id,
           experienceId: vrExp.id,
+          alias: ticketAlias,
           isPaid,
           chairId: chair?.id || null,
           domeId: vrExp.doms?.id || doms[0].id,
@@ -130,9 +164,15 @@ export async function seedTickets(prisma: PrismaClient) {
         const createdAt = new Date();
         createdAt.setHours(createdAt.getHours() - randomHoursAgo);
 
+        const ticketAlias = await generateTicketAlias(
+          raceExp.machines.id,
+          raceExp.machines.alias,
+        );
+
         ticketsToCreate.push({
           userId: user.id,
           experienceId: raceExp.id,
+          alias: ticketAlias,
           isPaid,
           chairId: chair?.id || null,
           domeId: raceExp.doms?.id || doms[0].id,
@@ -167,9 +207,15 @@ export async function seedTickets(prisma: PrismaClient) {
         const createdAt = new Date();
         createdAt.setHours(createdAt.getHours() - randomHoursAgo);
 
+        const ticketAlias = await generateTicketAlias(
+          premExp.machines.id,
+          premExp.machines.alias,
+        );
+
         ticketsToCreate.push({
           userId: user.id,
           experienceId: premExp.id,
+          alias: ticketAlias,
           isPaid,
           chairId: chair?.id || null,
           domeId: premExp.doms?.id || doms[0].id,
@@ -207,9 +253,15 @@ export async function seedTickets(prisma: PrismaClient) {
         const createdAt = new Date();
         createdAt.setHours(createdAt.getHours() - randomHoursAgo);
 
+        const ticketAlias = await generateTicketAlias(
+          arcadeExp.machines.id,
+          arcadeExp.machines.alias,
+        );
+
         ticketsToCreate.push({
           userId: user.id,
           experienceId: arcadeExp.id,
+          alias: ticketAlias,
           isPaid,
           chairId: chair?.id || null,
           domeId: arcadeExp.doms?.id || doms[0].id,
@@ -248,9 +300,15 @@ export async function seedTickets(prisma: PrismaClient) {
         const createdAt = new Date();
         createdAt.setHours(createdAt.getHours() - randomHoursAgo);
 
+        const ticketAlias = await generateTicketAlias(
+          exp.machines.id,
+          exp.machines.alias,
+        );
+
         ticketsToCreate.push({
           userId: user.id,
           experienceId: exp.id,
+          alias: ticketAlias,
           isPaid,
           chairId: chair?.id || null,
           domeId: exp.doms?.id || doms[0].id,
@@ -260,12 +318,12 @@ export async function seedTickets(prisma: PrismaClient) {
       }
     }
 
-    // Remove potential duplicates based on userId + experienceId + chairId + similar time
+    // Remove potential duplicates based on alias + similar time (alias already encodes machine + chair)
     const uniqueTickets = [];
     const seen = new Set();
 
     for (const ticket of ticketsToCreate) {
-      const key = `${ticket.userId}-${ticket.experienceId}-${ticket.chairId}-${ticket.createdAt.toDateString()}`;
+      const key = `${ticket.alias}-${ticket.createdAt.toDateString()}`;
       if (!seen.has(key)) {
         seen.add(key);
         uniqueTickets.push(ticket);
@@ -277,9 +335,18 @@ export async function seedTickets(prisma: PrismaClient) {
       skipDuplicates: true,
     });
 
+    // Update machine ticket numbers in the database
+    for (const [machineId, ticketNumber] of machineTicketCounters.entries()) {
+      await prisma.machines.update({
+        where: { id: machineId },
+        data: { ticketNumber },
+      });
+    }
+
     console.log(
       `✅ Created ${uniqueTickets.length} tickets with realistic scenarios`,
     );
+    console.log(`✅ Updated ticket numbers for ${machineTicketCounters.size} machines`);
 
     // Enhanced statistics
     const totalTickets = await prisma.tickets.count({
