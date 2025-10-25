@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { ChartAreaInteractive } from "@/components/chart-area-interactive";
-import { DataTable } from "@/components/data-table";
+import { useEffect, useState } from "react";
+import { MachineStatsTable } from "@/components/machine-stats-table";
 import { SectionCards } from "@/components/section-cards";
 import { DomSelector } from "@/components/dom-selector";
 import { DateRangePicker } from "@/components/date-range-picker";
@@ -10,20 +9,72 @@ import { useStatisticsStore } from "@/stores/statistics-store";
 import { Button } from "@/components/ui/button";
 import { IconRefresh } from "@tabler/icons-react";
 import { DateRange } from "react-day-picker";
+import { axiosInstance } from "@/lib/utils";
 
-import data from "./data.json";
+interface MachineStats {
+  id: number;
+  name: string;
+  alias: string;
+  domName: string;
+  experiencesCount: number;
+  totalRevenue: number;
+}
 
 export default function Page() {
   const { fetchStatistics, selectedDomId, dateRange, setDateRange, loading } =
     useStatisticsStore();
 
-  // Fetch statistics on initial load
-  useEffect(() => {
+  const [machineStats, setMachineStats] = useState<MachineStats[]>([]);
+  const [loadingMachines, setLoadingMachines] = useState(true);
+
+  // Fetch machine stats with DOM and date range filters
+  const fetchMachineStats = async () => {
+    try {
+      setLoadingMachines(true);
+
+      // Build query parameters
+      const params: any = {};
+      if (dateRange?.from) {
+        params.startDate = dateRange.from.toISOString();
+      }
+      if (dateRange?.to) {
+        // Set to end of day for the "to" date
+        const endDate = new Date(dateRange.to);
+        endDate.setHours(23, 59, 59, 999);
+        params.endDate = endDate.toISOString();
+      }
+
+      const response = await axiosInstance.get(
+        `/statistics/machines/${selectedDomId}`,
+        { params }
+      );
+      setMachineStats(response.data.data);
+    } catch (error) {
+      console.error("Error fetching machine stats:", error);
+      setMachineStats([]);
+    } finally {
+      setLoadingMachines(false);
+    }
+  };
+
+  // Fetch all data
+  const fetchAllData = () => {
     fetchStatistics(selectedDomId, dateRange);
+    fetchMachineStats();
+  };
+
+  // Fetch data on initial load
+  useEffect(() => {
+    fetchAllData();
   }, []);
 
+  // Re-fetch machine stats when DOM or date range changes
+  useEffect(() => {
+    fetchMachineStats();
+  }, [selectedDomId, dateRange]);
+
   const handleRefresh = () => {
-    fetchStatistics(selectedDomId, dateRange);
+    fetchAllData();
   };
 
   const handleDateRangeChange = (range: DateRange | undefined) => {
@@ -57,9 +108,14 @@ export default function Page() {
           </div>
           <SectionCards />
           <div className="px-4 lg:px-6">
-            <ChartAreaInteractive />
+            {loadingMachines ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="text-sm text-gray-600">Loading machine statistics...</div>
+              </div>
+            ) : (
+              <MachineStatsTable data={machineStats} />
+            )}
           </div>
-          <DataTable data={data} />
         </div>
       </div>
     </div>

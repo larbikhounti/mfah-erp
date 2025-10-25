@@ -14,3 +14,18 @@ export interface StatisticsResponse {
   data: DomStatistics;
   message?: string;
 }
+
+export interface MachineStatistics {
+  id: number;
+  name: string;
+  alias: string;
+  domName: string;
+  experiencesCount: number;
+  totalRevenue: number;
+}
+
+export interface MachineStatisticsResponse {
+  success: boolean;
+  data: MachineStatistics[];
+  message?: string;
+}

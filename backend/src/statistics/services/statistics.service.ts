@@ -1,6 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { DomStatistics } from '../types/statistics-response.type';
+import {
+  DomStatistics,
+  MachineStatistics,
+} from '../types/statistics-response.type';
 
 @Injectable()
 export class StatisticsService {
@@ -163,5 +166,121 @@ export class StatisticsService {
       domId: isAllDoms ? undefined : domIdNumber,
       domName,
     };
+  }
+
+  async getMachineStatisticsByDom(
+    domId: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<MachineStatistics[]> {
+    const isAllDoms = domId === 'all';
+    const domIdNumber = isAllDoms ? null : parseInt(domId, 10);
+
+    // Default to today if no dates provided
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999); // End of today
+
+    // Build date range filter for tickets (not experiences)
+    const ticketDateFilter: any = {
+      deletedAt: null,
+      isPaid: true,
+    };
+
+    // Use provided dates or default to today
+    ticketDateFilter.createdAt = {
+      gte: startDate ? new Date(startDate) : today,
+      lte: endDate ? new Date(endDate) : endOfToday,
+    };
+
+    // Build the where clause for machines
+    const machineWhereClause = isAllDoms
+      ? { deletedAt: null }
+      : { deletedAt: null, domeId: domIdNumber };
+
+    // Get all machines for the specified DOM(s)
+    const machines = await this.prisma.machines.findMany({
+      where: machineWhereClause,
+      include: {
+        doms: {
+          select: {
+            name: true,
+          },
+        },
+        experiences: {
+          where: {
+            deletedAt: null,
+          },
+          include: {
+            tickets: {
+              where: ticketDateFilter,
+              include: {
+                experiences: {
+                  include: {
+                    games: {
+                      select: {
+                        price: true,
+                      },
+                    },
+                  },
+                },
+                coupons: {
+                  select: {
+                    discount: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Map machines to statistics
+    const machineStats: MachineStatistics[] = machines.map((machine) => {
+      // Only count experiences that have tickets in the date range
+      const experiencesWithTickets = machine.experiences.filter(
+        (exp) => exp.tickets.length > 0,
+      );
+      const experiencesCount = experiencesWithTickets.length;
+
+      // Calculate total revenue from tickets in the date range
+      let totalRevenue = 0;
+      let ticketCount = 0;
+      machine.experiences.forEach((experience) => {
+        experience.tickets.forEach((ticket) => {
+          ticketCount++;
+          // Use ticket price if available, otherwise calculate from game price
+          let price = ticket.price ?? ticket.experiences.games?.price ?? 0;
+
+          // Apply coupon discount if exists
+          if (ticket.coupons) {
+            const discountAmount = (price * ticket.coupons.discount) / 100;
+            price = price - discountAmount;
+          }
+
+          totalRevenue += price;
+        });
+      });
+
+      console.log(
+        `Machine: ${machine.name}, Experiences: ${machine.experiences.length}, ` +
+          `Exp with tickets: ${experiencesCount}, Tickets: ${ticketCount}, Revenue: ${totalRevenue}`,
+      );
+
+      return {
+        id: machine.id,
+        name: machine.name,
+        alias: machine.alias,
+        domName: machine.doms?.name || 'Unassigned',
+        experiencesCount,
+        totalRevenue: Math.round(totalRevenue * 100) / 100, // Round to 2 decimals
+      };
+    });
+
+    // Sort by total revenue descending
+    return machineStats.sort((a, b) => b.totalRevenue - a.totalRevenue);
   }
 }
