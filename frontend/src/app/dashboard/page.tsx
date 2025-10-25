@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { MachineStatsTable } from "@/components/machine-stats-table";
 import { SectionCards } from "@/components/section-cards";
 import { DomSelector } from "@/components/dom-selector";
-import { DateRangePicker } from "@/components/date-range-picker";
+import RangeDate from "@/components/range-date";
 import { useStatisticsStore } from "@/stores/statistics-store";
 import { Button } from "@/components/ui/button";
 import { IconRefresh } from "@tabler/icons-react";
@@ -21,25 +21,26 @@ interface MachineStats {
 }
 
 export default function Page() {
-  const { fetchStatistics, selectedDomId, dateRange, setDateRange, loading } =
-    useStatisticsStore();
+  const { selectedDomId, setDateRange, loading } = useStatisticsStore();
 
   const [machineStats, setMachineStats] = useState<MachineStats[]>([]);
   const [loadingMachines, setLoadingMachines] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [localDateRange, setLocalDateRange] = useState<DateRange | undefined>();
 
   // Fetch machine stats with DOM and date range filters
-  const fetchMachineStats = async () => {
+  const fetchMachineStats = useCallback(async () => {
     try {
       setLoadingMachines(true);
 
       // Build query parameters
       const params: any = {};
-      if (dateRange?.from) {
-        params.startDate = dateRange.from.toISOString();
+      if (localDateRange?.from) {
+        params.startDate = localDateRange.from.toISOString();
       }
-      if (dateRange?.to) {
+      if (localDateRange?.to) {
         // Set to end of day for the "to" date
-        const endDate = new Date(dateRange.to);
+        const endDate = new Date(localDateRange.to);
         endDate.setHours(23, 59, 59, 999);
         params.endDate = endDate.toISOString();
       }
@@ -55,31 +56,37 @@ export default function Page() {
     } finally {
       setLoadingMachines(false);
     }
-  };
+  }, [selectedDomId, localDateRange]);
 
-  // Fetch all data
-  const fetchAllData = () => {
-    fetchStatistics(selectedDomId, dateRange);
-    fetchMachineStats();
-  };
-
-  // Fetch data on initial load
+  // Initialize date range to today only once
   useEffect(() => {
-    fetchAllData();
-  }, []);
+    if (!isInitialized) {
+      const today = new Date();
+      const initialRange = { from: today, to: today };
+      setLocalDateRange(initialRange);
+      setDateRange(initialRange); // This will trigger fetchStatistics in the store
+      setIsInitialized(true);
+    }
+  }, [isInitialized, setDateRange]);
 
-  // Re-fetch machine stats when DOM or date range changes
+  // Fetch machine stats when DOM or date range changes
   useEffect(() => {
-    fetchMachineStats();
-  }, [selectedDomId, dateRange]);
+    if (isInitialized && localDateRange) {
+      fetchMachineStats();
+    }
+  }, [isInitialized, fetchMachineStats, localDateRange]);
 
   const handleRefresh = () => {
-    fetchAllData();
+    if (localDateRange) {
+      setDateRange(localDateRange); // This will trigger fetchStatistics in the store
+      fetchMachineStats();
+    }
   };
 
-  const handleDateRangeChange = (range: DateRange | undefined) => {
-    setDateRange(range);
-  };
+  const handleDateRangeChange = useCallback((range: DateRange | undefined) => {
+    setLocalDateRange(range);
+    setDateRange(range); // This will trigger fetchStatistics in the store
+  }, [setDateRange]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -88,9 +95,9 @@ export default function Page() {
           <div className="flex flex-col gap-4 px-4 lg:px-6 md:flex-row md:items-center md:justify-between">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <DomSelector />
-              <DateRangePicker
-                value={dateRange}
-                onChange={handleDateRangeChange}
+              <RangeDate
+                initialDate={localDateRange}
+                onDateChange={handleDateRangeChange}
               />
             </div>
             <Button

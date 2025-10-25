@@ -48,13 +48,14 @@ export default function RangeDate({
 
   const [month, setMonth] = useState(today);
   const [date, setDate] = useState<DateRange | undefined>(
-    initialDate || last7Days
+    initialDate || { from: today, to: today }
   );
 
   // notify parent
   useEffect(() => {
     onDateChange?.(date);
-  }, [date, onDateChange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date]);
 
   const handleDatePreset = (newDate: DateRange, presetMonth: Date) => {
     setDate(newDate);
