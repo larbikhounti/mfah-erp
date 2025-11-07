@@ -12,7 +12,7 @@ export class UpdateMachineChairDto {
 
   @ApiPropertyOptional({
     description:
-      'The status of the machine chair (0: available, 1: occupied, 2: maintenance)',
+      'The status of the machine chair (0: available, 1: maintenance)',
     example: 0,
   })
   @IsOptional()

@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNumber } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsIn } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
@@ -20,9 +20,13 @@ export class FilterMachinesDto {
   @IsString()
   search?: string;
 
-  @ApiPropertyOptional({ description: 'Filter by status' })
+  @ApiPropertyOptional({
+    description: 'Filter by status',
+    enum: ['active', 'inactive']
+  })
   @IsOptional()
   @IsString()
+  @IsIn(['active', 'inactive'])
   status?: string;
 
   @ApiPropertyOptional({ description: 'Filter by machine ID' })

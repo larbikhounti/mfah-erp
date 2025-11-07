@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsInt, Min, IsIn } from 'class-validator';
 
 export class UpdateMachineDto {
   @ApiProperty({
@@ -39,4 +39,15 @@ export class UpdateMachineDto {
   @IsOptional()
   @IsString()
   alias?: string;
+
+  @ApiProperty({
+    description: 'The status of the machine',
+    example: 'active',
+    enum: ['active', 'inactive'],
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['active', 'inactive'])
+  status?: string;
 }

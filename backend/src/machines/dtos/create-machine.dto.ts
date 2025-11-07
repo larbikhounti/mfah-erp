@@ -6,6 +6,7 @@ import {
   IsInt,
   Min,
   Max,
+  IsIn,
 } from 'class-validator';
 
 export class CreateMachineDto {
@@ -55,4 +56,15 @@ export class CreateMachineDto {
   @IsNotEmpty()
   @IsString()
   alias: string;
+
+  @ApiProperty({
+    description: 'The status of the machine',
+    example: 'active',
+    enum: ['active', 'inactive'],
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @IsIn(['active', 'inactive'])
+  status?: string;
 }

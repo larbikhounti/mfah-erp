@@ -47,6 +47,10 @@ export class MachinesService {
         where.domeId = domeId;
       }
 
+      if (status) {
+        where.status = status;
+      }
+
       // Execute queries in parallel
       const [machines, total] = await Promise.all([
         this.prisma.machines.findMany({
@@ -57,6 +61,7 @@ export class MachinesService {
             id: true,
             name: true,
             alias: true,
+            status: true,
             machineTypeId: true,
             domeId: true,
             createdAt: true,
@@ -99,6 +104,7 @@ export class MachinesService {
         id: machine.id,
         name: machine.name,
         alias: machine.alias,
+        status: machine.status,
         machineTypeId: machine.machineTypeId,
         machineType: machine.machineTypes?.name || null,
         domeId: machine.domeId,
@@ -189,6 +195,7 @@ export class MachinesService {
         data: {
           name: data.name,
           alias: data.alias,
+          status: data.status || 'active',
           machineTypeId: data.machineTypeId,
           domeId: data.domeId || null,
         },
@@ -227,7 +234,7 @@ export class MachinesService {
         for (let i = 1; i <= data.chairsNumber; i++) {
           chairsToCreate.push({
             name: `${machine.name} - Chair ${i}`,
-            status: 0, // 0 = available, 1 = occupied, 2 = maintenance
+            status: 0, // 0 = available, 1 = maintenance
             machineId: machine.id,
           });
         }
@@ -256,6 +263,7 @@ export class MachinesService {
           id: machine.id,
           name: machine.name,
           alias: machine.alias,
+          status: machine.status,
           machineTypeId: machine.machineTypeId,
           machineType: machine.machineTypes?.name || null,
           domeId: machine.domeId,
@@ -271,6 +279,7 @@ export class MachinesService {
         id: machine.id,
         name: machine.name,
         alias: machine.alias,
+        status: machine.status,
         machineTypeId: machine.machineTypeId,
         machineType: machine.machineTypes?.name || null,
         domeId: machine.domeId,
@@ -336,6 +345,7 @@ export class MachinesService {
         id: machine.id,
         name: machine.name,
         alias: machine.alias,
+        status: machine.status,
         machineTypeId: machine.machineTypeId,
         machineType: machine.machineTypes?.name || null,
         domeId: machine.domeId,
@@ -450,6 +460,7 @@ export class MachinesService {
         data: {
           ...(data.name && { name: data.name }),
           ...(data.alias && { alias: data.alias }),
+          ...(data.status && { status: data.status }),
           ...(data.machineTypeId !== undefined && {
             machineTypeId: data.machineTypeId,
           }),
@@ -488,6 +499,7 @@ export class MachinesService {
         id: machine.id,
         name: machine.name,
         alias: machine.alias,
+        status: machine.status,
         machineTypeId: machine.machineTypeId,
         machineType: machine.machineTypes?.name || null,
         domeId: machine.domeId,

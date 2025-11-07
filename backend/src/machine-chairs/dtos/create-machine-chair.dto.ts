@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsNumber, IsOptional } from 'class-validator';
 
 export class CreateMachineChairDto {
   @ApiProperty({
@@ -12,7 +12,7 @@ export class CreateMachineChairDto {
 
   @ApiProperty({
     description:
-      'The status of the machine chair (0: available, 1: occupied, 2: maintenance)',
+      'The status of the machine chair (0: available, 1: maintenance)',
     example: 0,
   })
   @IsNotEmpty()
