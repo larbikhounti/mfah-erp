@@ -125,6 +125,7 @@ model machines {
   machineTypeId Int
   domeId        Int?
   ticketNumber  Int             @default(0)
+  status        String          @default("active")
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   deletedAt     DateTime?
@@ -164,7 +165,34 @@ model tickets {
   machineChairs   machineChairs?  @relation(fields: [chairId], references: [id])
   doms            doms            @relation(fields: [domeId], references: [id], onDelete: SetDefault)
   coupons         coupons?        @relation(fields: [couponId], references: [id])
+
+  ticketComments ticketComments[]
 }
+
+model comments {
+  id          Int      @id @default(autoincrement())
+  content     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
+
+  ticketComments ticketComments[]
+}
+
+model ticketComments {
+  id        Int       @id @default(autoincrement())
+  ticketId  Int
+  commentId Int
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  tickets   tickets   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  comments  comments  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+
+  @@unique([ticketId, commentId])
+}
+
 
 model coupons {
   id          Int      @id @default(autoincrement())
