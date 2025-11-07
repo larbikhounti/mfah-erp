@@ -61,13 +61,12 @@ export interface Game {
   price: number
   playTime: number
   gameTypeId?: number
-  machineTypeId?: number
   createdAt: string
   updatedAt: string
   deletedAt?: string
   // Optional populated relationships
   gameType?: GameType
-  machineType?: MachineType
+  machineTypes?: MachineType[]
 }
 
 export interface Experience {

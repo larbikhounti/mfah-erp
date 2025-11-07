@@ -73,14 +73,27 @@ model games {
   playTime      Int
   gameTypeId    Int?
   age           Int?
-  machineTypeId Int?
+  isFavored       Boolean         @default(false)
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
   deletedAt     DateTime?
   experiences   experiences[]
   domeGames     domeGames[]
+  gameMachineTypes gameMachineTypes[]
   gameTypes     gameTypes?    @relation(fields: [gameTypeId], references: [id])
-  machineTypes  machineTypes? @relation(fields: [machineTypeId], references: [id])
+}
+
+model gameMachineTypes {
+  id            Int       @id @default(autoincrement())
+  gameId        Int
+  machineTypeId Int
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  games         games     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  machineTypes  machineTypes @relation(fields: [machineTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([gameId, machineTypeId])
 }
 
 model domeGames {
@@ -114,7 +127,7 @@ model machineTypes {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   deletedAt DateTime?
-  games     games[]
+  gameMachineTypes gameMachineTypes[]
   machines  machines[]
 }
 

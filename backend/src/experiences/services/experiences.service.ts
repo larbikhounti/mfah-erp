@@ -119,7 +119,11 @@ export class ExperiencesService {
             games: {
               include: {
                 gameTypes: true,
-                machineTypes: true,
+                gameMachineTypes: {
+                  include: {
+                    machineTypes: true,
+                  },
+                },
               },
             },
             doms: true,
@@ -202,7 +206,7 @@ export class ExperiencesService {
             gamePlayTime: experience.games?.playTime || 0,
             gameType: experience.games?.gameTypes?.name || 'Unknown Game Type',
             requiredMachineType:
-              experience.games?.machineTypes?.name || 'Unknown Required Type',
+              experience.games?.gameMachineTypes?.[0]?.machineTypes?.name || 'Unknown Required Type',
             domeAddress: experience.doms?.address || 'Unknown Address',
             ticketCount: tickets.length,
             ticketSummary,
@@ -248,7 +252,11 @@ export class ExperiencesService {
           games: {
             include: {
               gameTypes: true,
-              machineTypes: true,
+              gameMachineTypes: {
+                include: {
+                  machineTypes: true,
+                },
+              },
             },
           },
           doms: true,
@@ -324,7 +332,7 @@ export class ExperiencesService {
         gamePlayTime: experience.games?.playTime || 0,
         gameType: experience.games?.gameTypes?.name || 'Unknown Game Type',
         requiredMachineType:
-          experience.games?.machineTypes?.name || 'Unknown Required Type',
+          experience.games?.gameMachineTypes?.[0]?.machineTypes?.name || 'Unknown Required Type',
         domeAddress: experience.doms?.address || 'Unknown Address',
         ticketCount: tickets.length,
         ticketSummary,

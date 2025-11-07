@@ -183,12 +183,16 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     {
       key: "playTime",
       label: "Play Time",
-      render: (game) => (
-        <div className="flex items-center gap-1">
-          <Clock className="h-3 w-3 text-blue-600" />
-          <span>{game.playTime} min</span>
-        </div>
-      ),
+      render: (game) => {
+        const minutes = Math.floor(game.playTime / 60);
+        const seconds = game.playTime % 60;
+        return (
+          <div className="flex items-center gap-1">
+            <Clock className="h-3 w-3 text-blue-600" />
+            <span>{minutes}:{seconds.toString().padStart(2, '0')}</span>
+          </div>
+        );
+      },
     },
     {
       key: "age",
@@ -207,12 +211,20 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
       ),
     },
     {
-      key: "machineType",
-      label: "Machine Type",
+      key: "machineTypes",
+      label: "Machine Types",
       render: (game) => (
-        <Badge variant="secondary">
-          {game.machineType?.name || "No Machine Type"}
-        </Badge>
+        <div className="flex flex-wrap gap-1">
+          {game.machineTypes && game.machineTypes.length > 0 ? (
+            game.machineTypes.map((machineType) => (
+              <Badge key={machineType.id} variant="secondary" className="text-xs">
+                {machineType.name}
+              </Badge>
+            ))
+          ) : (
+            <Badge variant="outline" className="text-xs">No Machine Types</Badge>
+          )}
+        </div>
       ),
     },
     {
@@ -264,7 +276,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
         title="Game Management"
         data={games}
         columns={columns}
-        searchKeys={["name", "gameType.name", "machineType.name"]}
+        searchKeys={["name", "gameType.name", "machineTypes.name"]}
         searchPlaceholder="Search games by name, game type, or machine type..."
         emptyMessage="No games found"
         showCount={true}

@@ -28,8 +28,8 @@ export class CreateGameDto {
   price: number;
 
   @ApiProperty({
-    description: 'The play time of the game in minutes',
-    example: 30,
+    description: 'The play time of the game in seconds',
+    example: 1800,
   })
   @IsNotEmpty()
   @IsInt()
@@ -47,14 +47,14 @@ export class CreateGameDto {
   gameTypeId?: number;
 
   @ApiProperty({
-    description: 'The machine type ID that can run this game',
-    example: 1,
+    description: 'The machine type IDs that can run this game',
+    example: [1, 2],
     required: false,
   })
   @IsOptional()
-  @IsInt()
-  @Min(1)
-  machineTypeId?: number;
+  @IsInt({ each: true })
+  @Min(1, { each: true })
+  machineTypeIds?: number[];
   @ApiProperty({
     description: 'The recommended age for the game',
     example: 12,

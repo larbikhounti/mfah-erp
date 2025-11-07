@@ -79,9 +79,10 @@ export class GamesController {
     description: 'Filter by game type ID',
   })
   @ApiQuery({
-    name: 'machineTypeId',
+    name: 'machineTypeIds',
     required: false,
-    description: 'Filter by machine type ID',
+    description: 'Filter by machine type IDs',
+    type: [Number],
   })
   @ApiQuery({
     name: 'minPrice',

@@ -7,7 +7,6 @@ export interface Game {
   price: number;
   playTime: number;
   gameTypeId?: number | null;
-  machineTypeId?: number | null;
   isFavored?: boolean;
   createdAt: string;
   updatedAt: string;
@@ -15,10 +14,10 @@ export interface Game {
     id: number;
     name: string;
   } | null;
-  machineType?: {
+  machineTypes?: {
     id: number;
     name: string;
-  } | null;
+  }[];
   experiencesCount?: number;
   age?: number;
   domes?: {
@@ -34,7 +33,7 @@ export interface CreateGamePayload {
   age?: number;
   isFavored?: boolean;
   gameTypeId?: number;
-  machineTypeId?: number;
+  machineTypeIds?: number[];
   domeId: number[];
 }
 
@@ -45,7 +44,7 @@ export interface UpdateGamePayload {
   age?: number;
   isFavored?: boolean;
   gameTypeId?: number;
-  machineTypeId?: number;
+  machineTypeIds?: number[];
   domeId?: number[];
 }
 
@@ -54,7 +53,7 @@ export interface FilterParams {
   limit?: number;
   name?: string;
   gameTypeId?: number;
-  machineTypeId?: number;
+  machineTypeIds?: number[];
   minPrice?: number;
   maxPrice?: number;
   minPlayTime?: number;
@@ -137,8 +136,8 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
       if (params.gameTypeId && params.gameTypeId > 0) {
         apiParams.gameTypeId = params.gameTypeId;
       }
-      if (params.machineTypeId && params.machineTypeId > 0) {
-        apiParams.machineTypeId = params.machineTypeId;
+      if (params.machineTypeIds && params.machineTypeIds.length > 0) {
+        apiParams.machineTypeIds = params.machineTypeIds;
       }
       if (params.minPrice !== undefined) {
         apiParams.minPrice = params.minPrice;

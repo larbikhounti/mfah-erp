@@ -29,14 +29,14 @@ export class FilterGamesDto {
   gameTypeId?: number;
 
   @ApiPropertyOptional({
-    description: 'Filter by machine type ID',
-    example: 1,
+    description: 'Filter by machine type IDs',
+    example: [1, 2],
   })
   @IsOptional()
-  @IsInt()
+  @IsInt({ each: true })
   @Type(() => Number)
-  @Min(1)
-  machineTypeId?: number;
+  @Min(1, { each: true })
+  machineTypeIds?: number[];
 
   @ApiPropertyOptional({
     description: 'Filter by minimum price',

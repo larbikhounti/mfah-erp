@@ -12,6 +12,65 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+
+// Helper component for time input
+interface TimeInputProps {
+  id: string;
+  label: string;
+  totalSeconds: number;
+  onChange: (totalSeconds: number) => void;
+  required?: boolean;
+}
+
+function TimeInput({ id, label, totalSeconds, onChange, required }: TimeInputProps) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  const handleMinutesChange = (newMinutes: number) => {
+    const newTotal = newMinutes * 60 + seconds;
+    onChange(newTotal);
+  };
+
+  const handleSecondsChange = (newSeconds: number) => {
+    const newTotal = minutes * 60 + newSeconds;
+    onChange(newTotal);
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      <div className="flex gap-2 items-center align-middle">
+        <div className="flex-1">
+          <Input
+            id={`${id}-minutes`}
+            type="number"
+            min="0"
+            placeholder="Minutes"
+            value={minutes || ""}
+            onChange={(e) =>
+              handleMinutesChange(e.target.value ? parseInt(e.target.value) : 0)
+            }
+            required={required}
+          />
+        </div>
+        <span className="text-muted-foreground">:</span>
+        <div className="flex-1">
+          <Input
+            id={`${id}-seconds`}
+            type="number"
+            min="0"
+            max="59"
+            placeholder="Seconds"
+            value={seconds || ""}
+            onChange={(e) =>
+              handleSecondsChange(e.target.value ? parseInt(e.target.value) : 0)
+            }
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
 import {
   Select,
   SelectContent,
@@ -51,6 +110,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
   } = useDomsStore();
   const [open, setOpen] = useState(false);
   const [selectedDomes, setSelectedDomes] = useState<Option[]>([]);
+  const [selectedMachineTypes, setSelectedMachineTypes] = useState<Option[]>([]);
   const [formData, setFormData] = useState<CreateGamePayload>({
     name: "",
     price: 0,
@@ -58,7 +118,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
     age: undefined,
     isFavored: false,
     gameTypeId: undefined,
-    machineTypeId: undefined,
+    machineTypeIds: [],
     domeId: [],
   });
 
@@ -86,7 +146,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
     }
 
     if (formData.playTime <= 0) {
-      toast.error("Play time must be greater than 0");
+      toast.error("Play time must be greater than 0 seconds");
       return;
     }
 
@@ -98,6 +158,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
     try {
       await createGame({
         ...formData,
+        machineTypeIds: selectedMachineTypes.map((machineType) => parseInt(machineType.value)),
         domeId: selectedDomes.map((dome) => parseInt(dome.value)),
       });
       toast.success("Game created successfully");
@@ -110,10 +171,11 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
         age: undefined,
         isFavored: false,
         gameTypeId: undefined,
-        machineTypeId: undefined,
+        machineTypeIds: [],
         domeId: [],
       });
       setSelectedDomes([]);
+      setSelectedMachineTypes([]);
     } catch (error: any) {
       toast.error(error.message || "Failed to create game");
     }
@@ -175,23 +237,13 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="playTime">Play Time (minutes)</Label>
-            <Input
-              id="playTime"
-              type="number"
-              min="1"
-              placeholder="Enter play time in minutes"
-              value={formData.playTime || ""}
-              onChange={(e) =>
-                handleInputChange(
-                  "playTime",
-                  e.target.value ? parseInt(e.target.value) : 0
-                )
-              }
-              required
-            />
-          </div>
+          <TimeInput
+            id="playTime"
+            label="Play Time"
+            totalSeconds={formData.playTime || 0}
+            onChange={(totalSeconds) => handleInputChange("playTime", totalSeconds)}
+            required
+          />
 
           <div className="space-y-2">
             <Label htmlFor="age">Age Requirement</Label>
@@ -268,34 +320,16 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
             </div>
 
             <div className="grid gap-2 w-full">
-              <Label htmlFor="machineType">Machine Type</Label>
-              <Select
-                value={formData.machineTypeId?.toString() || "none"}
-                onValueChange={(value) =>
-                  handleInputChange(
-                    "machineTypeId",
-                    value === "none" ? undefined : parseInt(value)
-                  )
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select machine type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No machine type</SelectItem>
-                  {machineTypesLoading ? (
-                    <SelectItem value="loading" disabled>
-                      Loading...
-                    </SelectItem>
-                  ) : (
-                    machineTypes.map((type) => (
-                      <SelectItem key={type.id} value={type.id.toString()}>
-                        {type.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="machineTypes">Machine Types</Label>
+              <MultiSelect
+                options={machineTypes.map((type) => ({
+                  label: type.name,
+                  value: type.id.toString(),
+                }))}
+                selected={selectedMachineTypes}
+                onChange={setSelectedMachineTypes}
+                placeholder="Select machine types"
+              />
             </div>
           </div>
 

@@ -32,17 +32,24 @@ export class GamesService {
       }
     }
 
-    // Check if machine type exists if provided
-    if (createGameDto.machineTypeId) {
-      const machineType = await this.prisma.machineTypes.findFirst({
+    // Check if machine types exist if provided
+    if (
+      createGameDto.machineTypeIds &&
+      createGameDto.machineTypeIds.length > 0
+    ) {
+      const machineTypes = await this.prisma.machineTypes.findMany({
         where: {
-          id: createGameDto.machineTypeId,
+          id: { in: createGameDto.machineTypeIds },
           deletedAt: null,
         },
       });
-      if (!machineType) {
+      if (machineTypes.length !== createGameDto.machineTypeIds.length) {
+        const foundIds = machineTypes.map((mt) => mt.id);
+        const notFoundIds = createGameDto.machineTypeIds.filter(
+          (id) => !foundIds.includes(id),
+        );
         throw new NotFoundException(
-          `Machine type with ID ${createGameDto.machineTypeId} not found`,
+          `Machine types with IDs ${notFoundIds.join(', ')} not found`,
         );
       }
     }
@@ -50,7 +57,6 @@ export class GamesService {
     const game = await this.prisma.games.create({
       data: {
         gameTypeId: createGameDto.gameTypeId,
-        machineTypeId: createGameDto.machineTypeId,
         name: createGameDto.name,
         price: createGameDto.price,
         playTime: createGameDto.playTime,
@@ -59,7 +65,11 @@ export class GamesService {
       },
       include: {
         gameTypes: true,
-        machineTypes: true,
+        gameMachineTypes: {
+          include: {
+            machineTypes: true,
+          },
+        },
         _count: {
           select: {
             experiences: true,
@@ -67,6 +77,22 @@ export class GamesService {
         },
       },
     });
+
+    // Create gameMachineTypes relations
+    if (
+      createGameDto.machineTypeIds &&
+      createGameDto.machineTypeIds.length > 0
+    ) {
+      const gameMachineTypes = createGameDto.machineTypeIds.map(
+        (machineTypeId) => ({
+          gameId: game.id,
+          machineTypeId,
+        }),
+      );
+      await this.prisma.gameMachineTypes.createMany({
+        data: gameMachineTypes,
+      });
+    }
 
     // Create domeGames relations
     if (createGameDto.domeId && createGameDto.domeId.length > 0) {
@@ -104,8 +130,12 @@ export class GamesService {
       where.gameTypeId = filters.gameTypeId;
     }
 
-    if (filters.machineTypeId) {
-      where.machineTypeId = filters.machineTypeId;
+    if (filters.machineTypeIds && filters.machineTypeIds.length > 0) {
+      where.gameMachineTypes = {
+        some: {
+          machineTypeId: { in: filters.machineTypeIds },
+        },
+      };
     }
 
     if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
@@ -142,7 +172,11 @@ export class GamesService {
         take: limit,
         include: {
           gameTypes: true,
-          machineTypes: true,
+          gameMachineTypes: {
+            include: {
+              machineTypes: true,
+            },
+          },
           domeGames: {
             where: {
               deletedAt: null,
@@ -183,7 +217,11 @@ export class GamesService {
       },
       include: {
         gameTypes: true,
-        machineTypes: true,
+        gameMachineTypes: {
+          include: {
+            machineTypes: true,
+          },
+        },
         domeGames: {
           where: {
             deletedAt: null,
@@ -238,17 +276,24 @@ export class GamesService {
       }
     }
 
-    // Check if machine type exists if provided
-    if (updateGameDto.machineTypeId) {
-      const machineType = await this.prisma.machineTypes.findFirst({
+    // Check if machine types exist if provided
+    if (
+      updateGameDto.machineTypeIds &&
+      updateGameDto.machineTypeIds.length > 0
+    ) {
+      const machineTypes = await this.prisma.machineTypes.findMany({
         where: {
-          id: updateGameDto.machineTypeId,
+          id: { in: updateGameDto.machineTypeIds },
           deletedAt: null,
         },
       });
-      if (!machineType) {
+      if (machineTypes.length !== updateGameDto.machineTypeIds.length) {
+        const foundIds = machineTypes.map((mt) => mt.id);
+        const notFoundIds = updateGameDto.machineTypeIds.filter(
+          (id) => !foundIds.includes(id),
+        );
         throw new NotFoundException(
-          `Machine type with ID ${updateGameDto.machineTypeId} not found`,
+          `Machine types with IDs ${notFoundIds.join(', ')} not found`,
         );
       }
     }
@@ -257,7 +302,6 @@ export class GamesService {
       where: { id },
       data: {
         gameTypeId: updateGameDto.gameTypeId,
-        machineTypeId: updateGameDto.machineTypeId,
         name: updateGameDto.name,
         price: updateGameDto.price,
         playTime: updateGameDto.playTime,
@@ -268,7 +312,11 @@ export class GamesService {
       },
       include: {
         gameTypes: true,
-        machineTypes: true,
+        gameMachineTypes: {
+          include: {
+            machineTypes: true,
+          },
+        },
         _count: {
           select: {
             experiences: true,
@@ -276,6 +324,27 @@ export class GamesService {
         },
       },
     });
+
+    // Update gameMachineTypes relations if provided
+    if (updateGameDto.machineTypeIds !== undefined) {
+      // Delete existing relations
+      await this.prisma.gameMachineTypes.deleteMany({
+        where: { gameId: id },
+      });
+
+      // Create new relations if any
+      if (updateGameDto.machineTypeIds.length > 0) {
+        const gameMachineTypes = updateGameDto.machineTypeIds.map(
+          (machineTypeId) => ({
+            gameId: id,
+            machineTypeId,
+          }),
+        );
+        await this.prisma.gameMachineTypes.createMany({
+          data: gameMachineTypes,
+        });
+      }
+    }
 
     await this.prisma.domeGames.deleteMany({
       where: { gameId: id },
@@ -403,7 +472,6 @@ export class GamesService {
       playTime: game.playTime,
       age: game.age,
       gameTypeId: game.gameTypeId,
-      machineTypeId: game.machineTypeId,
       isFavored: game.isFavored || false,
       createdAt: game.createdAt,
       updatedAt: game.updatedAt,
@@ -413,12 +481,12 @@ export class GamesService {
             name: game.gameTypes.name,
           }
         : null,
-      machineType: game.machineTypes
-        ? {
-            id: game.machineTypes.id,
-            name: game.machineTypes.name,
-          }
-        : null,
+      machineTypes: game.gameMachineTypes
+        ? game.gameMachineTypes.map((gmt: any) => ({
+            id: gmt.machineTypes.id,
+            name: gmt.machineTypes.name,
+          }))
+        : [],
       experiencesCount: game._count?.experiences || 0,
       domes: game.domeGames
         ? game.domeGames.map((domeGame: any) => ({
