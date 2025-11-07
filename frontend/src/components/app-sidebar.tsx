@@ -22,6 +22,7 @@ import {
   IconPlayerPlay,
   IconArmchair,
   IconTicket,
+  IconMessage,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -56,9 +57,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Roles",
       url: "/dashboard/roles",
       icon: IconShield,
-    }, // Added roles navigation item
+    },
     {
-      title: "Doms", // Added domains navigation item
+      title: "Comments",
+      url: "/dashboard/comments",
+      icon: IconMessage,
+    },
+    {
+      title: "Doms",
       url: "/dashboard/doms",
       icon: IconWorld,
     },
