@@ -17,6 +17,7 @@ import { SyncModule } from './sync/sync.module';
 import { CdnModule } from './cdn/cdn.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { StatisticsModule } from './statistics/statistics.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { StatisticsModule } from './statistics/statistics.module';
     CdnModule,
     CouponsModule,
     StatisticsModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
