@@ -23,7 +23,6 @@ import {
   useMachineChairsStore,
   type CreateMachineChairPayload,
 } from "@/stores/machine-chairs-store";
-import { useMachinesStore } from "@/stores/machines-store";
 import { toast } from "sonner";
 import { Loader } from "../loader";
 
@@ -41,11 +40,6 @@ export function CreateMachineChairDialog({
   defaultMachineId,
 }: CreateMachineChairDialogProps) {
   const { createMachineChair, loading } = useMachineChairsStore();
-  const {
-    machines,
-    fetchMachines,
-    loading: machinesLoading,
-  } = useMachinesStore();
 
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -54,15 +48,18 @@ export function CreateMachineChairDialog({
   const [formData, setFormData] = useState<CreateMachineChairPayload>({
     name: "",
     status: 0,
-    machineId: defaultMachineId || 0,
+    machineId: defaultMachineId,
   });
 
-  // Fetch machines when dialog opens
+  // Update machineId when defaultMachineId prop changes
   useEffect(() => {
-    if (open) {
-      fetchMachines();
+    if (defaultMachineId) {
+      setFormData((prev) => ({
+        ...prev,
+        machineId: defaultMachineId,
+      }));
     }
-  }, [open, fetchMachines]);
+  }, [defaultMachineId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,11 +67,6 @@ export function CreateMachineChairDialog({
     // Validate form data
     if (!formData.name.trim()) {
       toast.error("Chair name is required");
-      return;
-    }
-
-    if (!formData.machineId || formData.machineId === 0) {
-      toast.error("Please select a machine");
       return;
     }
 
@@ -86,7 +78,7 @@ export function CreateMachineChairDialog({
       setFormData({
         name: "",
         status: 0,
-        machineId: defaultMachineId || 0,
+        machineId: defaultMachineId,
       });
     } catch (error: any) {
       toast.error(error.message || "Failed to create machine chair");
@@ -143,35 +135,7 @@ export function CreateMachineChairDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="0">Available</SelectItem>
-                <SelectItem value="1">Occupied</SelectItem>
-                <SelectItem value="2">Maintenance</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="machine">Machine</Label>
-            <Select
-              value={formData.machineId ? formData.machineId.toString() : ""}
-              onValueChange={(value) =>
-                handleInputChange("machineId", parseInt(value))
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select machine" />
-              </SelectTrigger>
-              <SelectContent>
-                {machinesLoading ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  machines.map((machine) => (
-                    <SelectItem key={machine.id} value={machine.id.toString()}>
-                      {machine.name}
-                    </SelectItem>
-                  ))
-                )}
+                <SelectItem value="1">Maintenance</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -185,7 +149,7 @@ export function CreateMachineChairDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || machinesLoading}>
+            <Button type="submit" disabled={loading}>
               {loading ?   <span className="flex items-center">
                                <Loader size={16} />
                                 <span className="ml-2">Creating...</span>

@@ -179,11 +179,14 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
       ),
     },
     {
-      key: "experiencesCount",
-      label: "Experiences",
+      key: "status",
+      label: "Status",
       render: (machine) => (
-        <Badge variant="secondary">
-          {machine.experiencesCount || 0} experiences
+        <Badge
+          variant={machine.status === "active" ? "default" : "secondary"}
+          className={machine.status === "active" ? "bg-green-600 hover:bg-green-700" : ""}
+        >
+          {machine.status === "active" ? "Active" : "Inactive"}
         </Badge>
       ),
     },

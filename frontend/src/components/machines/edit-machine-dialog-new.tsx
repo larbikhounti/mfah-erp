@@ -56,6 +56,7 @@ export function EditMachineDialog({
   const [formData, setFormData] = useState<UpdateMachinePayload>({
     name: machine.name,
     alias: machine.alias,
+    status: machine.status || "active",
     machineTypeId: machine.machineTypeId || undefined,
     domeId: machine.domeId || undefined,
   });
@@ -65,6 +66,7 @@ export function EditMachineDialog({
     setFormData({
       name: machine.name,
       alias: machine.alias,
+      status: machine.status || "active",
       machineTypeId: machine.machineTypeId || undefined,
       domeId: machine.domeId || undefined,
     });
@@ -171,6 +173,22 @@ export function EditMachineDialog({
               required
               className="w-full"
             />
+          </div>
+
+          <div className="space-y-2 w-full">
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={formData.status || "active"}
+              onValueChange={(value) => handleInputChange("status", value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="w-full grid md:grid-cols-2 gap-4">

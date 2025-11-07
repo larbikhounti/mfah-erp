@@ -22,7 +22,6 @@ import {
   type UpdateMachineChairPayload,
   type MachineChair,
 } from "@/stores/machine-chairs-store";
-import { useMachinesStore } from "@/stores/machines-store";
 import { toast } from "sonner";
 import { Loader } from "../loader";
 
@@ -38,11 +37,6 @@ export function EditMachineChairDialog({
   onOpenChange,
 }: EditMachineChairDialogProps) {
   const { updateMachineChair, loading } = useMachineChairsStore();
-  const {
-    machines,
-    fetchMachines,
-    loading: machinesLoading,
-  } = useMachinesStore();
 
   const [formData, setFormData] = useState<UpdateMachineChairPayload>({
     name: machineChair.name,
@@ -59,24 +53,12 @@ export function EditMachineChairDialog({
     });
   }, [machineChair]);
 
-  // Fetch machines when dialog opens
-  useEffect(() => {
-    if (open) {
-      fetchMachines();
-    }
-  }, [open, fetchMachines]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate form data
     if (!formData.name?.trim()) {
       toast.error("Chair name is required");
-      return;
-    }
-
-    if (!formData.machineId || formData.machineId === 0) {
-      toast.error("Please select a machine");
       return;
     }
 
@@ -131,35 +113,7 @@ export function EditMachineChairDialog({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="0">Available</SelectItem>
-                <SelectItem value="1">Occupied</SelectItem>
-                <SelectItem value="2">Maintenance</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="machine">Machine</Label>
-            <Select
-              value={formData.machineId ? formData.machineId.toString() : ""}
-              onValueChange={(value) =>
-                handleInputChange("machineId", parseInt(value))
-              }
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select machine" />
-              </SelectTrigger>
-              <SelectContent>
-                {machinesLoading ? (
-                  <SelectItem value="loading" disabled>
-                    Loading...
-                  </SelectItem>
-                ) : (
-                  machines.map((machine) => (
-                    <SelectItem key={machine.id} value={machine.id.toString()}>
-                      {machine.name}
-                    </SelectItem>
-                  ))
-                )}
+                <SelectItem value="1">Maintenance</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -173,7 +127,7 @@ export function EditMachineChairDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading || machinesLoading}>
+            <Button type="submit" disabled={loading}>
               {loading ?   <span className="flex items-center">
                                <Loader size={16} />
                                 <span className="ml-2">

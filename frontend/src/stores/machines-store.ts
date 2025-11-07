@@ -5,6 +5,7 @@ export interface Machine {
   id: number;
   name: string;
   alias: string;
+  status?: string;
   machineTypeId?: number | null;
   domeId?: number | null;
   createdAt: string;
@@ -12,12 +13,12 @@ export interface Machine {
   machineType?: string | null;
   dome?: string | null;
   chairsCount?: number;
-  experiencesCount?: number;
 }
 
 export interface CreateMachinePayload {
   name: string;
   alias: string;
+  status?: string;
   machineTypeId?: number;
   domeId?: number;
   chairsNumber?: number;
@@ -26,6 +27,7 @@ export interface CreateMachinePayload {
 export interface UpdateMachinePayload {
   name?: string;
   alias?: string;
+  status?: string;
   machineTypeId?: number;
   domeId?: number;
 }
@@ -34,6 +36,7 @@ export interface FilterParams {
   offset?: number;
   limit?: number;
   search?: string;
+  status?: string;
   machineId?: number;
   machineTypeId?: number;
   domeId?: number;

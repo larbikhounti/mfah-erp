@@ -44,6 +44,7 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
   const [formData, setFormData] = useState<CreateMachinePayload>({
     name: "",
     alias: "",
+    status: "active",
     machineTypeId: undefined,
     domeId: undefined,
     chairsNumber: undefined,
@@ -79,6 +80,7 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
       setFormData({
         name: "",
         alias: "",
+        status: "active",
         machineTypeId: undefined,
         domeId: undefined,
         chairsNumber: undefined,
@@ -134,6 +136,21 @@ export function CreateMachineDialog({ trigger }: CreateMachineDialogProps) {
               onChange={(e) => handleInputChange("alias", e.target.value)}
               required
             />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={formData.status || "active"}
+              onValueChange={(value) => handleInputChange("status", value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-2">
             <Label htmlFor="chairsNumber">Number of Chairs</Label>

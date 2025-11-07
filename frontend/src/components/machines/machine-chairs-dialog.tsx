@@ -126,8 +126,6 @@ export function MachineChairsDialog({
       case 0:
         return <Badge variant="default">Available</Badge>;
       case 1:
-        return <Badge variant="destructive">Occupied</Badge>;
-      case 2:
         return <Badge variant="secondary">Maintenance</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
