@@ -6,6 +6,7 @@ import {
   IsInt,
   Min,
   IsNumber,
+  IsBoolean,
 } from 'class-validator';
 
 export class CreateGameDto {
@@ -63,6 +64,15 @@ export class CreateGameDto {
   @IsInt()
   @Min(0)
   age?: number;
+
+  @ApiProperty({
+    description: 'Whether the game is marked as favored',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  isFavored?: boolean;
 
   @ApiProperty({
     description: 'The dome ID where the game is available',

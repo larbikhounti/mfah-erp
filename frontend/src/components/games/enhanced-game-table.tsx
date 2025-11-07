@@ -28,6 +28,7 @@ import {
   Plus,
   Clock,
   DollarSign,
+  Star,
 } from "lucide-react";
 import { useGamesStore, type Game } from "@/stores/games-store";
 import { toast } from "sonner";
@@ -52,6 +53,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     fetchGames,
     deleteGame,
     bulkDeleteGames,
+    toggleFavorite,
     selectGame,
     clearSelection,
     clearError,
@@ -118,6 +120,15 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     setIsCreateDialogOpen(false);
   };
 
+  const handleToggleFavorite = async (id: number) => {
+    try {
+      await toggleFavorite(id);
+      toast.success("Favorite status updated");
+    } catch (error) {
+      toast.error("Failed to update favorite status");
+    }
+  };
+
   const columns: TableColumn<Game>[] = [
     {
       key: "select",
@@ -139,6 +150,26 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
       key: "name",
       label: "Name",
       render: (game) => <div className="font-medium">{game.name}</div>,
+    },
+    {
+      key: "favorite",
+      label: "Favorite",
+      render: (game) => (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => handleToggleFavorite(game.id)}
+          className="h-8 w-8 p-0"
+        >
+          <Star
+            className={`h-4 w-4 ${
+              game.isFavored
+                ? "fill-yellow-400 text-yellow-400"
+                : "text-gray-400 hover:text-yellow-400"
+            }`}
+          />
+        </Button>
+      ),
     },
     {
       key: "price",
@@ -181,15 +212,6 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
       render: (game) => (
         <Badge variant="secondary">
           {game.machineType?.name || "No Machine Type"}
-        </Badge>
-      ),
-    },
-    {
-      key: "experiencesCount",
-      label: "Experiences",
-      render: (game) => (
-        <Badge variant="secondary">
-          {game.experiencesCount || 0} experiences
         </Badge>
       ),
     },

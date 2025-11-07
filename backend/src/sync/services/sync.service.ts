@@ -44,32 +44,39 @@ export class SyncService {
       });
 
       // Fetch global data from central database (available to all domes)
-      const [gameTypes, machineTypes, roles, coupons] = await Promise.all([
-        this.prisma.gameTypes.findMany({
-          where: {
-            updatedAt: { gt: lastSync },
-            deletedAt: null,
-          },
-        }),
-        this.prisma.machineTypes.findMany({
-          where: {
-            updatedAt: { gt: lastSync },
-            deletedAt: null,
-          },
-        }),
-        this.prisma.roles.findMany({
-          where: {
-            updatedAt: { gt: lastSync },
-            deletedAt: null,
-          },
-        }),
-        this.prisma.coupons.findMany({
-          where: {
-            updatedAt: { gt: lastSync },
-            deletedAt: null,
-          },
-        }),
-      ]);
+      const [gameTypes, machineTypes, roles, coupons, comments] =
+        await Promise.all([
+          this.prisma.gameTypes.findMany({
+            where: {
+              updatedAt: { gt: lastSync },
+              deletedAt: null,
+            },
+          }),
+          this.prisma.machineTypes.findMany({
+            where: {
+              updatedAt: { gt: lastSync },
+              deletedAt: null,
+            },
+          }),
+          this.prisma.roles.findMany({
+            where: {
+              updatedAt: { gt: lastSync },
+              deletedAt: null,
+            },
+          }),
+          this.prisma.coupons.findMany({
+            where: {
+              updatedAt: { gt: lastSync },
+              deletedAt: null,
+            },
+          }),
+          this.prisma.comments.findMany({
+            where: {
+              updatedAt: { gt: lastSync },
+              deletedAt: null,
+            },
+          }),
+        ]);
 
       // Fetch dome-specific data from central database
       const [doms, machines, users, domeGames] = await Promise.all([
@@ -133,6 +140,7 @@ export class SyncService {
           machineTypes,
           roles,
           coupons,
+          comments,
         },
         domeSpecificData: {
           doms,
@@ -150,6 +158,7 @@ export class SyncService {
         machineTypes.length +
         roles.length +
         coupons.length +
+        comments.length +
         doms.length +
         machines.length +
         machineChairs.length +

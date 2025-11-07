@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { MachineStatsTable } from "@/components/machine-stats-table";
+import { GameStatsTable } from "@/components/game-stats-table";
 import { SectionCards } from "@/components/section-cards";
 import { DomSelector } from "@/components/dom-selector";
 import RangeDate from "@/components/range-date";
@@ -20,13 +21,57 @@ interface MachineStats {
   totalRevenue: number;
 }
 
+interface GameStats {
+  id: number;
+  name: string;
+  price: number;
+  playTime: number;
+  domName: string;
+  playsCount: number;
+  totalRevenue: number;
+  gameTypeName?: string;
+  age?: number;
+}
+
 export default function Page() {
   const { selectedDomId, setDateRange, loading } = useStatisticsStore();
 
   const [machineStats, setMachineStats] = useState<MachineStats[]>([]);
+  const [gameStats, setGameStats] = useState<GameStats[]>([]);
   const [loadingMachines, setLoadingMachines] = useState(true);
+  const [loadingGames, setLoadingGames] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const [localDateRange, setLocalDateRange] = useState<DateRange | undefined>();
+
+  // Fetch game stats with DOM and date range filters
+  const fetchGameStats = useCallback(async () => {
+    try {
+      setLoadingGames(true);
+
+      // Build query parameters
+      const params: any = {};
+      if (localDateRange?.from) {
+        params.startDate = localDateRange.from.toISOString();
+      }
+      if (localDateRange?.to) {
+        // Set to end of day for the "to" date
+        const endDate = new Date(localDateRange.to);
+        endDate.setHours(23, 59, 59, 999);
+        params.endDate = endDate.toISOString();
+      }
+
+      const response = await axiosInstance.get(
+        `/statistics/games/${selectedDomId}`,
+        { params }
+      );
+      setGameStats(response.data.data);
+    } catch (error) {
+      console.error("Error fetching game stats:", error);
+      setGameStats([]);
+    } finally {
+      setLoadingGames(false);
+    }
+  }, [selectedDomId, localDateRange]);
 
   // Fetch machine stats with DOM and date range filters
   const fetchMachineStats = useCallback(async () => {
@@ -69,17 +114,19 @@ export default function Page() {
     }
   }, [isInitialized, setDateRange]);
 
-  // Fetch machine stats when DOM or date range changes
+  // Fetch machine and game stats when DOM or date range changes
   useEffect(() => {
     if (isInitialized && localDateRange) {
       fetchMachineStats();
+      fetchGameStats();
     }
-  }, [isInitialized, fetchMachineStats, localDateRange]);
+  }, [isInitialized, fetchMachineStats, fetchGameStats, localDateRange]);
 
   const handleRefresh = () => {
     if (localDateRange) {
       setDateRange(localDateRange); // This will trigger fetchStatistics in the store
       fetchMachineStats();
+      fetchGameStats();
     }
   };
 
@@ -114,13 +161,21 @@ export default function Page() {
             </Button>
           </div>
           <SectionCards />
-          <div className="px-4 lg:px-6">
+          <div className="px-4 lg:px-6 flex flex-col gap-6">
             {loadingMachines ? (
               <div className="flex items-center justify-center p-8">
                 <div className="text-sm text-gray-600">Loading machine statistics...</div>
               </div>
             ) : (
               <MachineStatsTable data={machineStats} />
+            )}
+            
+            {loadingGames ? (
+              <div className="flex items-center justify-center p-8">
+                <div className="text-sm text-gray-600">Loading game statistics...</div>
+              </div>
+            ) : (
+              <GameStatsTable data={gameStats} />
             )}
           </div>
         </div>

@@ -1,6 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, IsInt, Min, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import {
+  IsOptional,
+  IsString,
+  IsInt,
+  Min,
+  IsNumber,
+  IsBoolean,
+} from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 
 export class FilterGamesDto {
   @ApiPropertyOptional({
@@ -70,6 +77,19 @@ export class FilterGamesDto {
   @Type(() => Number)
   @Min(1)
   maxPlayTime?: number;
+
+  @ApiPropertyOptional({
+    description: 'Filter by favored status',
+    example: true,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  isFavored?: boolean;
 
   @ApiPropertyOptional({
     description: 'Page number for pagination',

@@ -21,6 +21,7 @@ export interface Game {
   playTime: number;
   gameTypeId?: number | null;
   machineTypeId?: number | null;
+  isFavored?: boolean;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
@@ -44,6 +45,7 @@ export interface GameResponse {
   playTime: number;
   gameTypeId?: number | null;
   machineTypeId?: number | null;
+  isFavored?: boolean;
   createdAt: Date;
   updatedAt: Date;
   gameType?: {

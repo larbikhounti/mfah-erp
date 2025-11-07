@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -55,6 +56,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
     price: 0,
     playTime: 0,
     age: undefined,
+    isFavored: false,
     gameTypeId: undefined,
     machineTypeId: undefined,
     domeId: [],
@@ -106,6 +108,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
         price: 0,
         playTime: 0,
         age: undefined,
+        isFavored: false,
         gameTypeId: undefined,
         machineTypeId: undefined,
         domeId: [],
@@ -118,7 +121,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
 
   const handleInputChange = (
     field: keyof CreateGamePayload,
-    value: string | number | undefined
+    value: string | number | boolean | undefined
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -205,6 +208,19 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
                 )
               }
             />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="isFavored"
+                checked={formData.isFavored || false}
+                onCheckedChange={(checked) =>
+                  handleInputChange("isFavored", checked === true)
+                }
+              />
+              <Label htmlFor="isFavored">Mark as Favorite</Label>
+            </div>
           </div>
           <div className="space-y-2">
             <Label htmlFor="stores">Stores *</Label>

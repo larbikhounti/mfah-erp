@@ -55,6 +55,7 @@ export class GamesService {
         price: createGameDto.price,
         playTime: createGameDto.playTime,
         age: createGameDto.age,
+        isFavored: createGameDto.isFavored || false,
       },
       include: {
         gameTypes: true,
@@ -128,6 +129,10 @@ export class GamesService {
       if (filters.maxPlayTime !== undefined) {
         where.playTime.lte = filters.maxPlayTime;
       }
+    }
+
+    if (filters.isFavored !== undefined) {
+      where.isFavored = filters.isFavored;
     }
 
     const [games, total] = await Promise.all([
@@ -257,6 +262,9 @@ export class GamesService {
         price: updateGameDto.price,
         playTime: updateGameDto.playTime,
         age: updateGameDto.age,
+        ...(updateGameDto.isFavored !== undefined && {
+          isFavored: updateGameDto.isFavored,
+        }),
       },
       include: {
         gameTypes: true,
@@ -396,6 +404,7 @@ export class GamesService {
       age: game.age,
       gameTypeId: game.gameTypeId,
       machineTypeId: game.machineTypeId,
+      isFavored: game.isFavored || false,
       createdAt: game.createdAt,
       updatedAt: game.updatedAt,
       gameType: game.gameTypes

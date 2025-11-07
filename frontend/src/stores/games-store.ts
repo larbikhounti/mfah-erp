@@ -8,6 +8,7 @@ export interface Game {
   playTime: number;
   gameTypeId?: number | null;
   machineTypeId?: number | null;
+  isFavored?: boolean;
   createdAt: string;
   updatedAt: string;
   gameType?: {
@@ -31,6 +32,7 @@ export interface CreateGamePayload {
   price: number;
   playTime: number;
   age?: number;
+  isFavored?: boolean;
   gameTypeId?: number;
   machineTypeId?: number;
   domeId: number[];
@@ -41,6 +43,7 @@ export interface UpdateGamePayload {
   price?: number;
   playTime?: number;
   age?: number;
+  isFavored?: boolean;
   gameTypeId?: number;
   machineTypeId?: number;
   domeId?: number[];
@@ -56,6 +59,7 @@ export interface FilterParams {
   maxPrice?: number;
   minPlayTime?: number;
   maxPlayTime?: number;
+  isFavored?: boolean;
 }
 
 export interface GamesResponse {
@@ -85,6 +89,7 @@ interface GamesStore {
   deleteGame: (id: number) => Promise<void>;
   bulkDeleteGames: (gameIds: number[]) => Promise<void>;
   getGameById: (id: number) => Promise<Game | null>;
+  toggleFavorite: (id: number) => Promise<void>;
 
   // Pagination actions
   setPage: (page: number) => void;
@@ -146,6 +151,9 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
       }
       if (params.maxPlayTime !== undefined) {
         apiParams.maxPlayTime = params.maxPlayTime;
+      }
+      if (params.isFavored !== undefined) {
+        apiParams.isFavored = params.isFavored;
       }
 
       const response = await axiosInstance.get<GamesResponse>("/games", {
@@ -260,6 +268,34 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
         error: error.response?.data?.message || "Failed to fetch game",
       });
       return null;
+    }
+  },
+
+  // Toggle favorite status
+  toggleFavorite: async (id: number) => {
+    try {
+      const { games } = get();
+      const game = games.find((g) => g.id === id);
+      
+      if (!game) {
+        set({ error: "Game not found" });
+        return;
+      }
+
+      await axiosInstance.patch(`/games/${id}`, {
+        isFavored: !game.isFavored,
+      });
+
+      // Update the game in the local state
+      set({
+        games: games.map((g) =>
+          g.id === id ? { ...g, isFavored: !g.isFavored } : g
+        ),
+      });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to toggle favorite",
+      });
     }
   },
 

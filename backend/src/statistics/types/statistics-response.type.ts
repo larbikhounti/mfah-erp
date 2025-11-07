@@ -29,3 +29,21 @@ export interface MachineStatisticsResponse {
   data: MachineStatistics[];
   message?: string;
 }
+
+export interface GameStatistics {
+  id: number;
+  name: string;
+  price: number;
+  playTime: number;
+  domName: string;
+  playsCount: number;
+  totalRevenue: number;
+  gameTypeName?: string;
+  age?: number;
+}
+
+export interface GameStatisticsResponse {
+  success: boolean;
+  data: GameStatistics[];
+  message?: string;
+}

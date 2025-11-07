@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import {
   DomStatistics,
   MachineStatistics,
+  GameStatistics,
 } from '../types/statistics-response.type';
 
 @Injectable()
@@ -282,5 +283,133 @@ export class StatisticsService {
 
     // Sort by total revenue descending
     return machineStats.sort((a, b) => b.totalRevenue - a.totalRevenue);
+  }
+
+  async getGameStatisticsByDom(
+    domId: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<GameStatistics[]> {
+    const isAllDoms = domId === 'all';
+    const domIdNumber = isAllDoms ? null : parseInt(domId, 10);
+
+    // Default to today if no dates provided
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Start of today
+
+    const endOfToday = new Date();
+    endOfToday.setHours(23, 59, 59, 999); // End of today
+
+    // Build date range filter for experiences
+    const experienceDateFilter: any = {
+      deletedAt: null,
+    };
+
+    // Use provided dates or default to today
+    experienceDateFilter.createdAt = {
+      gte: startDate ? new Date(startDate) : today,
+      lte: endDate ? new Date(endDate) : endOfToday,
+    };
+
+    // Build the where clause for experiences
+    const experienceWhereClause = isAllDoms
+      ? experienceDateFilter
+      : { ...experienceDateFilter, domeId: domIdNumber };
+
+    // Get all experiences grouped by game for the specified DOM(s) and date range
+    const experiences = await this.prisma.experiences.findMany({
+      where: experienceWhereClause,
+      include: {
+        games: {
+          include: {
+            gameTypes: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        doms: {
+          select: {
+            name: true,
+          },
+        },
+        tickets: {
+          where: {
+            deletedAt: null,
+            isPaid: true,
+          },
+          include: {
+            experiences: {
+              include: {
+                games: {
+                  select: {
+                    price: true,
+                  },
+                },
+              },
+            },
+            coupons: {
+              select: {
+                discount: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Group experiences by game and calculate statistics
+    const gameStatsMap = new Map<number, GameStatistics>();
+
+    experiences.forEach((experience) => {
+      const game = experience.games;
+      if (!game) return;
+
+      const gameId = game.id;
+      const domName = experience.doms?.name || 'Unassigned';
+
+      // Initialize game stats if not exists
+      if (!gameStatsMap.has(gameId)) {
+        gameStatsMap.set(gameId, {
+          id: game.id,
+          name: game.name,
+          price: game.price,
+          playTime: game.playTime,
+          domName: isAllDoms ? 'All DOMs' : domName,
+          playsCount: 0,
+          totalRevenue: 0,
+          gameTypeName: game.gameTypes?.name,
+          age: game.age,
+        });
+      }
+
+      const gameStats = gameStatsMap.get(gameId);
+      if (!gameStats) return;
+
+      // Increment play count
+      gameStats.playsCount++;
+
+      // Calculate revenue from tickets for this experience
+      experience.tickets.forEach((ticket) => {
+        // Use ticket price if available, otherwise calculate from game price
+        let price = ticket.price ?? ticket.experiences.games?.price ?? 0;
+
+        // Apply coupon discount if exists
+        if (ticket.coupons) {
+          const discountAmount = (price * ticket.coupons.discount) / 100;
+          price = price - discountAmount;
+        }
+
+        gameStats.totalRevenue += price;
+      });
+
+      // Round revenue to 2 decimals
+      gameStats.totalRevenue = Math.round(gameStats.totalRevenue * 100) / 100;
+    });
+
+    // Convert map to array and sort by plays count descending
+    const gameStats = Array.from(gameStatsMap.values());
+    return gameStats.sort((a, b) => b.playsCount - a.playsCount);
   }
 }
