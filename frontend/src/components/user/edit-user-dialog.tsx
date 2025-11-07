@@ -175,15 +175,15 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
               </div>
 
               <div className="grid gap-2 w-full">
-                <Label htmlFor="edit-dom">DOM</Label>
+                <Label htmlFor="edit-dom">Store</Label>
                 <Select value={dom} onValueChange={(value) => setDom(value)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select DOM" />
+                    <SelectValue placeholder="Select Store" />
                   </SelectTrigger>
                   <SelectContent>
                     {domsLoading ? (
                       <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        Loading DOMs...
+                        Loading Store...
                       </div>
                     ) : doms.length > 0 ? (
                       doms.map((domItem) => (
@@ -193,7 +193,7 @@ export function EditUserDialog({ user }: EditUserDialogProps) {
                       ))
                     ) : (
                       <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        No DOMs available
+                        No Stores available
                       </div>
                     )}
                   </SelectContent>

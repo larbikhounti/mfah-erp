@@ -63,7 +63,7 @@ export function CreateDomDialog({
       };
 
       await createDom(domData);
-      toast.success("DOM created successfully");
+      toast.success("Store created successfully");
 
       // Reset form
       setName("");
@@ -77,7 +77,7 @@ export function CreateDomDialog({
   const defaultTrigger = (
     <Button>
       <Building className="mr-2 h-4 w-4" />
-      Add DOM
+      Add Store
     </Button>
   );
 
@@ -86,9 +86,9 @@ export function CreateDomDialog({
       <DialogTrigger asChild>{trigger || defaultTrigger}</DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New DOM</DialogTitle>
+          <DialogTitle>Add New Store</DialogTitle>
           <DialogDescription>
-            Create a new DOM (Digital Operations Management) location with the required information.
+            Create a new Store (Digital Operations Management) location with the required information.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -99,7 +99,7 @@ export function CreateDomDialog({
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter DOM name (e.g., VR Experience Center)"
+                placeholder="Enter Store name (e.g., VR Experience Center)"
                 required
               />
             </div>
@@ -128,7 +128,7 @@ export function CreateDomDialog({
               {loading ?   <span className="flex items-center">
                                <Loader size={16} />
                                 <span className="ml-2">Creating...</span>
-                            </span>: "Create DOM"}
+                            </span> : "Create Store"}
             </Button>
           </DialogFooter>
         </form>

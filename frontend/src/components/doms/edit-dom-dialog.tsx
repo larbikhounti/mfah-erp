@@ -46,9 +46,9 @@ export function EditDomDialog({ dom }: EditDomDialogProps) {
         name,
         address,
       });
-      toast.success("DOM updated successfully");
+      toast.success("Store updated successfully");
     } catch (error) {
-      console.error("Failed to update DOM:", error);
+      console.error("Failed to update Store:", error);
     }
   };
 
@@ -68,9 +68,9 @@ export function EditDomDialog({ dom }: EditDomDialogProps) {
 
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit DOM</DialogTitle>
+          <DialogTitle>Edit Store</DialogTitle>
           <DialogDescription>
-            Update DOM information.
+            Update Store information.
           </DialogDescription>
         </DialogHeader>
 
@@ -83,7 +83,7 @@ export function EditDomDialog({ dom }: EditDomDialogProps) {
                 id="edit-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Enter DOM name"
+                placeholder="Enter Store name"
                 required
               />
             </div>
@@ -117,7 +117,7 @@ export function EditDomDialog({ dom }: EditDomDialogProps) {
                                 <span className="ml-2">
                                   Updating...
                                 </span>
-                            </span>: "Update DOM"}
+                            </span> : "Update Store"}
             </Button>
           </DialogFooter>
         </form>

@@ -157,9 +157,9 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     },
     {
       key: "dome",
-      label: "DOM",
+      label: "Store",
       render: (machine) => (
-        <Badge variant="secondary">{machine.dome || "No DOM"}</Badge>
+        <Badge variant="secondary">{machine.dome || "No Store"}</Badge>
       ),
     },
     {
@@ -240,7 +240,7 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
         data={machines}
         columns={columns}
         searchKeys={["name", "alias", "machineType.name", "dome.name"]}
-        searchPlaceholder="Search machines by name, alias, type, or DOM..."
+        searchPlaceholder="Search machines by name, alias, type, or store..."
         emptyMessage="No machines found"
         showCount={true}
         customHeader={

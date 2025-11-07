@@ -38,12 +38,12 @@ export function DomSelector() {
         disabled={domsLoading}
       >
         <SelectTrigger className="w-[240px]" id="dom-selector">
-          <SelectValue placeholder="Select a DOM" />
+          <SelectValue placeholder="Select a Store" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectLabel>DOMs</SelectLabel>
-            <SelectItem value="all">All DOMs</SelectItem>
+            <SelectLabel>Stores</SelectLabel>
+            <SelectItem value="all">All Stores</SelectItem>
             {domsLoading ? (
               <div className="flex items-center justify-center p-2">
                 <Loader size={16} />

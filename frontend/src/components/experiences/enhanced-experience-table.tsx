@@ -198,14 +198,14 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="h-5 w-5" />
-            DOM Information
+            Store Information
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="text-sm font-medium text-muted-foreground">
-                DOM Name
+                Store Name
               </label>
               <p className="font-medium">{experience.dome}</p>
             </div>

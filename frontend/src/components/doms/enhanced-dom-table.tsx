@@ -102,7 +102,7 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
         <Checkbox
           checked={selectedDoms.includes(dom.id)}
           onCheckedChange={() => selectDom(dom.id)}
-          aria-label="Select DOM"
+          aria-label="Select Store"
         />
       ),
     },
@@ -203,12 +203,12 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
   return (
     <div className="space-y-4">
       <DataTable
-        title="DOM Management"
+        title="Store Management"
         data={doms}
         columns={columns}
         searchKeys={["name", "address"]}
-        searchPlaceholder="Search DOMs by name or address..."
-        emptyMessage="No DOMs found"
+        searchPlaceholder="Search Stores by name or address..."
+        emptyMessage="No Stores found"
         showCount={true}
         customHeader={
           <div className="flex items-center gap-2">
@@ -234,7 +234,7 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              DOM and all associated data.
+              Store and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -260,7 +260,7 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
             </AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              selected DOMs and all associated data.
+              selected Stores and all associated data.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

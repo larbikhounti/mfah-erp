@@ -165,7 +165,7 @@ const columns: ColumnDef<MachineStats>[] = [
   },
   {
     accessorKey: "domName",
-    header: "DOM",
+    header: "Store",
     cell: ({ row }) => (
       <div className="font-medium text-muted-foreground">
         {row.original.domName}

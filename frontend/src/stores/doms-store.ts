@@ -184,7 +184,7 @@ export const useDomsStore = create<DomsStore>((set, get) => ({
       });
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || "Failed to delete DOM",
+        error: error.response?.data?.message || "Failed to delete Store",
         loading: false,
       });
       throw error;
@@ -211,7 +211,7 @@ export const useDomsStore = create<DomsStore>((set, get) => ({
       return response.data;
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || "Failed to delete DOMs",
+        error: error.response?.data?.message || "Failed to delete Stores",
         loading: false,
       });
       throw error;
@@ -224,7 +224,7 @@ export const useDomsStore = create<DomsStore>((set, get) => ({
       const response = await axiosInstance.get<Dom>(`/doms/admin/${id}`);
       return response.data;
     } catch (error: any) {
-      set({ error: error.response?.data?.message || "Failed to fetch DOM" });
+      set({ error: error.response?.data?.message || "Failed to fetch Store" });
       return null;
     }
   },

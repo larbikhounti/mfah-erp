@@ -207,7 +207,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="domes">Domes *</Label>
+            <Label htmlFor="stores">Stores *</Label>
             <MultiSelect
               options={doms.map((dom) => ({
                 label: dom.name,
@@ -215,7 +215,7 @@ export function CreateGameDialog({ trigger }: CreateGameDialogProps) {
               }))}
               selected={selectedDomes}
               onChange={setSelectedDomes}
-              placeholder={domsLoading ? "Loading domes..." : "Select domes"}
+              placeholder={domsLoading ? "Loading Stores..." : "Select Stores"}
             />
           </div>
 

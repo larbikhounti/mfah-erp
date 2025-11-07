@@ -224,7 +224,7 @@ export function EditMachineDialog({
             </div>
 
             <div className="grid gap-2 w-full">
-              <Label htmlFor="dom">DOM</Label>
+              <Label htmlFor="store">Store</Label>
               <Select
                 value={formData.domeId?.toString() || "none"}
                 onValueChange={(value) =>
@@ -235,10 +235,10 @@ export function EditMachineDialog({
                 }
               >
                 <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select DOM" />
+                  <SelectValue placeholder="Select Store" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">No DOM</SelectItem>
+                  <SelectItem value="none">No Store</SelectItem>
                   {loadingData ? (
                     <SelectItem value="loading" disabled>
                       Loading...

@@ -180,12 +180,12 @@ export function CreateUserDialog({
                 <Label htmlFor="doms">DOMs</Label>
                 <Select value={dom} onValueChange={(value) => setDom(value)}>
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select DOM" />
+                    <SelectValue placeholder="Select Store" />
                   </SelectTrigger>
                   <SelectContent>
                     {domsLoading ? (
                       <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        Loading DOMs...
+                        Loading Stores...
                       </div>
                     ) : doms.length > 0 ? (
                       doms.map((domItem) => (
@@ -195,7 +195,7 @@ export function CreateUserDialog({
                       ))
                     ) : (
                       <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        No DOMs available
+                        No Stores available
                       </div>
                     )}
                   </SelectContent>
