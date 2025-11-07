@@ -146,12 +146,12 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
               <Badge variant="outline" className="text-xs">
                 {dom._count.machines} Machines
               </Badge>
-              <Badge variant="outline" className="text-xs">
+              {/* <Badge variant="outline" className="text-xs">
                 {dom._count.experiences} Experiences
               </Badge>
               <Badge variant="outline" className="text-xs">
                 {dom._count.tickets} Tickets
-              </Badge>
+              </Badge> */}
             </>
           )}
         </div>

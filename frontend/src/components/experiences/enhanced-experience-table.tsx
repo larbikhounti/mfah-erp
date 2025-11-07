@@ -51,8 +51,6 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
       case 0:
         return <Badge variant="secondary">Available</Badge>;
       case 1:
-        return <Badge variant="default">Occupied</Badge>;
-      case 2:
         return <Badge variant="destructive">Maintenance</Badge>;
       default:
         return <Badge variant="outline">Unknown</Badge>;
