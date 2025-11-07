@@ -116,9 +116,7 @@ export class SyncService {
             gameTypes: {
               select: { id: true },
             },
-            gameMachineTypes: {
-              select: { machineTypeId: true },
-            },
+            gameMachineTypes: true,
           },
         }),
       ]);

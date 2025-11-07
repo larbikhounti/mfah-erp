@@ -85,9 +85,9 @@ export function SectionCards() {
 
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Money Made</CardDescription>
+          <CardDescription>Total Revenu</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            ${statistics.moneyMade.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            €{statistics.moneyMade.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
@@ -107,7 +107,7 @@ export function SectionCards() {
         <CardHeader>
           <CardDescription>Potential Revenue</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            ${statistics.potentialRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            €{statistics.potentialRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">

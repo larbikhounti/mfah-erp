@@ -113,7 +113,7 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
                 Price
               </label>
               <p className="font-medium flex items-center gap-1">
-                ${experience.gamePrice.toFixed(2)}
+                €{experience.gamePrice.toFixed(2)}
               </p>
             </div>
             <div>
@@ -243,7 +243,7 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
             </div>
             <div>
               <p className="text-lg ">
-                ${experience.ticketSummary.totalRevenue.toFixed(2)}
+                €{experience.ticketSummary.totalRevenue.toFixed(2)}
               </p>
               <p className="text-sm text-muted-foreground">Revenue</p>
             </div>
@@ -347,7 +347,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
         <div className="space-y-1">
           <Badge variant="secondary">{experience.game}</Badge>
           <div className="text-xs text-muted-foreground flex items-center gap-1">
-            ${experience.gamePrice.toFixed(2)}
+            €{experience.gamePrice.toFixed(2)}
           </div>
         </div>
       ),

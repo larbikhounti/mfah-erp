@@ -176,7 +176,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
       label: "Price",
       render: (game) => (
         <div className="flex items-center gap-1">
-          <span className="font-medium">${game.price.toFixed(2)}</span>
+          <span className="font-medium">€{game.price.toFixed(2)}</span>
         </div>
       ),
     },

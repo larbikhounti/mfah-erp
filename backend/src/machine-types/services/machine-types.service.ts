@@ -43,6 +43,15 @@ export class MachineTypesService {
             name: true,
             createdAt: true,
             updatedAt: true,
+            _count: {
+              select: {
+                machines: {
+                  where: {
+                    deletedAt: null,
+                  },
+                },
+              },
+            },
           },
           orderBy: {
             createdAt: 'desc',
@@ -56,6 +65,7 @@ export class MachineTypesService {
         (machineType) => ({
           id: machineType.id,
           name: machineType.name,
+          machinesCount: machineType._count.machines,
           createdAt: machineType.createdAt.toISOString(),
           updatedAt: machineType.updatedAt.toISOString(),
         }),
@@ -103,12 +113,22 @@ export class MachineTypesService {
             name: true,
             createdAt: true,
             updatedAt: true,
+            _count: {
+              select: {
+                machines: {
+                  where: {
+                    deletedAt: null,
+                  },
+                },
+              },
+            },
           },
         });
 
         return {
           id: updatedMachineType.id,
           name: updatedMachineType.name,
+          machinesCount: updatedMachineType._count.machines,
           createdAt: updatedMachineType.createdAt.toISOString(),
           updatedAt: updatedMachineType.updatedAt.toISOString(),
         };
@@ -124,12 +144,22 @@ export class MachineTypesService {
           name: true,
           createdAt: true,
           updatedAt: true,
+          _count: {
+            select: {
+              machines: {
+                where: {
+                  deletedAt: null,
+                },
+              },
+            },
+          },
         },
       });
 
       return {
         id: machineType.id,
         name: machineType.name,
+        machinesCount: machineType._count.machines,
         createdAt: machineType.createdAt.toISOString(),
         updatedAt: machineType.updatedAt.toISOString(),
       };
@@ -157,6 +187,15 @@ export class MachineTypesService {
           name: true,
           createdAt: true,
           updatedAt: true,
+          _count: {
+            select: {
+              machines: {
+                where: {
+                  deletedAt: null,
+                },
+              },
+            },
+          },
         },
       });
 
@@ -167,6 +206,7 @@ export class MachineTypesService {
       return {
         id: machineType.id,
         name: machineType.name,
+        machinesCount: machineType._count.machines,
         createdAt: machineType.createdAt.toISOString(),
         updatedAt: machineType.updatedAt.toISOString(),
       };
@@ -229,12 +269,22 @@ export class MachineTypesService {
           name: true,
           createdAt: true,
           updatedAt: true,
+          _count: {
+            select: {
+              machines: {
+                where: {
+                  deletedAt: null,
+                },
+              },
+            },
+          },
         },
       });
 
       return {
         id: updatedMachineType.id,
         name: updatedMachineType.name,
+        machinesCount: updatedMachineType._count.machines,
         createdAt: updatedMachineType.createdAt.toISOString(),
         updatedAt: updatedMachineType.updatedAt.toISOString(),
       };

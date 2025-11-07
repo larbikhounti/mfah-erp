@@ -186,7 +186,7 @@ const columns: ColumnDef<MachineStats>[] = [
     header: () => <div className="text-right">Total Revenue</div>,
     cell: ({ row }) => (
       <div className="text-right font-semibold">
-        ${row.original.totalRevenue.toLocaleString(undefined, {
+        €{row.original.totalRevenue.toLocaleString(undefined, {
           minimumFractionDigits: 2,
           maximumFractionDigits: 2
         })}
