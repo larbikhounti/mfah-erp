@@ -28,7 +28,6 @@ import {
 } from "@/stores/machine-chairs-store";
 import { toast } from "sonner";
 import { EditMachineChairDialog } from "./edit-machine-chair-dialog";
-import { CreateMachineChairDialog } from "./create-machine-chair-dialog";
 import PaginationTable from "@/components/pagination-table";
 
 interface EnhancedMachineChairTableProps {
@@ -242,7 +241,6 @@ export function EnhancedMachineChairTable({}: EnhancedMachineChairTableProps) {
                 Delete Selected ({selectedMachineChairs.length})
               </Button>
             )}
-            <CreateMachineChairDialog />
           </div>
         }
       />

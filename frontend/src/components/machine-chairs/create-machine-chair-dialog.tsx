@@ -30,7 +30,7 @@ interface CreateMachineChairDialogProps {
   trigger?: React.ReactNode;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  defaultMachineId?: number;
+  defaultMachineId: number;
 }
 
 export function CreateMachineChairDialog({
@@ -45,7 +45,7 @@ export function CreateMachineChairDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
 
-  const [formData, setFormData] = useState<Partial<CreateMachineChairPayload>>({
+  const [formData, setFormData] = useState<CreateMachineChairPayload>({
     name: "",
     status: 0,
     machineId: defaultMachineId,
@@ -65,18 +65,13 @@ export function CreateMachineChairDialog({
     e.preventDefault();
 
     // Validate form data
-    if (!formData.name?.trim()) {
+    if (!formData.name.trim()) {
       toast.error("Chair name is required");
       return;
     }
 
-    if (!formData.machineId) {
-      toast.error("Machine ID is required");
-      return;
-    }
-
     try {
-      await createMachineChair(formData as CreateMachineChairPayload);
+      await createMachineChair(formData);
       toast.success("Machine chair created successfully");
       setOpen(false);
       // Reset form
