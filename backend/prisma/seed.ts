@@ -15,30 +15,30 @@ async function main() {
 
   try {
     // // Seed roles first (users depend on roles)
-    await seedRoles(prisma);
+    // await seedRoles(prisma);
 
-    // // Seed DOMs (users can be assigned to DOMs)
-    await seedDoms(prisma);
+    // // // Seed DOMs (users can be assigned to DOMs)
+    // await seedDoms(prisma);
 
-    // // Seed machine types
-    await seedMachineTypes(prisma);
+    // // // Seed machine types
+    // await seedMachineTypes(prisma);
 
-    // // Seed game types
-    await seedGameTypes(prisma);
+    // // // Seed game types
+    // await seedGameTypes(prisma);
 
-    // // Seed machines (depends on machine types and DOMs)
-    await seedMachines(prisma);
+    // // // Seed machines (depends on machine types and DOMs)
+    // await seedMachines(prisma);
 
-    // // Seed games (depends on game types and machine types)
-    await seedGames(prisma);
+    // // // Seed games (depends on game types and machine types)
+    // await seedGames(prisma);
 
-    // // Then seed users
-    await seedUsers(prisma);
+    // // // Then seed users
+    // await seedUsers(prisma);
 
-    // // Finally seed experiences (depends on machines, games, and doms)
+    // // // Finally seed experiences (depends on machines, games, and doms)
     // await seedExperiences(prisma);
 
-    // // Seed tickets (depends on users, experiences, machine chairs, and doms)
+    // // // Seed tickets (depends on users, experiences, machine chairs, and doms)
     // await seedTickets(prisma);
 
     console.log('Database seeding completed successfully!');

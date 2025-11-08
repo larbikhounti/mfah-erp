@@ -252,8 +252,8 @@ export class SyncService {
 
         // Upsert tickets
         const savedTickets = await Promise.all(
-          tickets.map((ticket) =>
-            prisma.tickets.upsert({
+          tickets.map(async (ticket) => {
+            const savedTicket = await prisma.tickets.upsert({
               where: { id: ticket.id },
               update: {
                 userId: ticket.userId,
@@ -263,6 +263,7 @@ export class SyncService {
                 chairId: ticket.chairId,
                 couponId: ticket.couponId,
                 notes: ticket.notes,
+                paidWith: ticket.paidWith,
                 price: ticket.price,
                 updatedAt: ticket.updatedAt,
                 deletedAt: ticket.deletedAt,
@@ -278,6 +279,7 @@ export class SyncService {
                 chairId: ticket.chairId,
                 couponId: ticket.couponId,
                 notes: ticket.notes,
+                paidWith: ticket.paidWith,
                 price: ticket.price,
                 createdAt: ticket.createdAt,
                 updatedAt: ticket.updatedAt,
@@ -285,8 +287,33 @@ export class SyncService {
                 domeId: ticket.domeId,
                 parentTicketId: ticket.parentTicketId,
               },
-            }),
-          ),
+            });
+
+            // Upsert ticket comments (many-to-many relationship)
+            if (ticket.ticketComments && ticket.ticketComments.length > 0) {
+              await Promise.all(
+                ticket.ticketComments.map((ticketComment) =>
+                  prisma.ticketComments.upsert({
+                    where: { id: ticketComment.id },
+                    update: {
+                      ticketId: ticketComment.ticketId,
+                      commentId: ticketComment.commentId,
+                      updatedAt: ticketComment.updatedAt,
+                    },
+                    create: {
+                      id: ticketComment.id,
+                      ticketId: ticketComment.ticketId,
+                      commentId: ticketComment.commentId,
+                      createdAt: ticketComment.createdAt,
+                      updatedAt: ticketComment.updatedAt,
+                    },
+                  }),
+                ),
+              );
+            }
+
+            return savedTicket;
+          }),
         );
 
         return {

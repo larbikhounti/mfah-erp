@@ -9,8 +9,14 @@ import {
   IsOptional,
   IsString,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+
+export enum PaymentMethod {
+  CASH = 0,
+  CREDIT_CARD = 1,
+}
 
 export class UploadExperienceDto {
   @ApiProperty({ type: Number })
@@ -69,6 +75,28 @@ export class UploadExperienceDto {
   domeId: number;
 }
 
+export class TicketCommentsDto {
+  @ApiProperty({ type: Number })
+  @IsInt()
+  id: number;
+
+  @ApiProperty({ type: Number })
+  @IsInt()
+  ticketId: number;
+
+  @ApiProperty({ type: Number })
+  @IsInt()
+  commentId: number;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  @IsISO8601()
+  createdAt: Date;
+
+  @ApiProperty({ type: String, format: 'date-time' })
+  @IsISO8601()
+  updatedAt: Date;
+}
+
 export class UploadTicketDto {
   @ApiProperty({ type: Number })
   @IsInt()
@@ -106,6 +134,14 @@ export class UploadTicketDto {
   @IsString()
   notes: string | null;
 
+  @ApiProperty({
+    enum: PaymentMethod,
+    description: 'Payment method: 0 = Cash, 1 = Credit Card',
+    example: PaymentMethod.CASH,
+  })
+  @IsEnum(PaymentMethod)
+  paidWith: PaymentMethod;
+
   @ApiProperty({ type: Number, nullable: true })
   @IsOptional()
   @IsNumber()
@@ -132,6 +168,13 @@ export class UploadTicketDto {
   @IsOptional()
   @IsInt()
   parentTicketId: number | null;
+
+  // ticket comments (many-to-many relationship)
+  @ApiProperty({ type: [TicketCommentsDto] })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TicketCommentsDto)
+  ticketComments: TicketCommentsDto[];
 }
 
 export class UploadDataDto {

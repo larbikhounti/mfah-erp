@@ -59,11 +59,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconShield,
     },
     {
-      title: "Comments",
-      url: "/dashboard/comments",
-      icon: IconMessage,
-    },
-    {
       title: "Stores",
       url: "/dashboard/doms",
       icon: IconWorld,
@@ -97,6 +92,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Coupons",
       url: "/dashboard/coupons",
       icon: IconTicket,
+    },
+    {
+      title: "Comments",
+      url: "/dashboard/comments",
+      icon: IconMessage,
     },
     {
       title: "Experiences",

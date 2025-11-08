@@ -157,6 +157,7 @@ model roles {
   Users     Users[]
 }
 
+
 model tickets {
   id              Int             @id @default(autoincrement())
   userId          Int?
@@ -166,6 +167,7 @@ model tickets {
   chairId         Int?
   couponId        Int?
   notes           String?
+  paidWith        Int         @default(0)
   price           Float?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
