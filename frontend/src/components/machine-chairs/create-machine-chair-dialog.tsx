@@ -45,7 +45,7 @@ export function CreateMachineChairDialog({
   const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
 
-  const [formData, setFormData] = useState<CreateMachineChairPayload>({
+  const [formData, setFormData] = useState<Partial<CreateMachineChairPayload>>({
     name: "",
     status: 0,
     machineId: defaultMachineId,
@@ -65,13 +65,18 @@ export function CreateMachineChairDialog({
     e.preventDefault();
 
     // Validate form data
-    if (!formData.name.trim()) {
+    if (!formData.name?.trim()) {
       toast.error("Chair name is required");
       return;
     }
 
+    if (!formData.machineId) {
+      toast.error("Machine ID is required");
+      return;
+    }
+
     try {
-      await createMachineChair(formData);
+      await createMachineChair(formData as CreateMachineChairPayload);
       toast.success("Machine chair created successfully");
       setOpen(false);
       // Reset form
