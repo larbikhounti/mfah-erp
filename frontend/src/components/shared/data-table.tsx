@@ -19,13 +19,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { IconSearch, IconX } from "@tabler/icons-react";
+import { IconSearch, IconX, IconArrowUp, IconArrowDown } from "@tabler/icons-react";
 
 export interface TableColumn<T> {
   key: string;
   label: string;
   render?: (item: T) => ReactNode;
   sortable?: boolean;
+  sortFunction?: (a: T, b: T) => number;
 }
 
 export interface FilterOption<T = unknown> {
@@ -70,6 +71,8 @@ export function DataTable<T extends object>({
   const [filterValues, setFilterValues] = useState<Record<string, string>>(
     filters.reduce((acc, filter) => ({ ...acc, [filter.key]: "all" }), {})
   );
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc" | null>(null);
 
   const getNestedValue = useCallback((obj: T, path: string): unknown => {
     return path.split(".").reduce((curr: unknown, key: string) => {
@@ -81,7 +84,7 @@ export function DataTable<T extends object>({
   }, []);
 
   const filteredData = useMemo(() => {
-    return data.filter((item) => {
+    let result = data.filter((item) => {
       const matchesSearch = searchKeys.some((key) => {
         const value = getNestedValue(item, key);
         return (
@@ -98,13 +101,59 @@ export function DataTable<T extends object>({
 
       return matchesSearch && matchesFilters;
     });
-  }, [data, searchTerm, filterValues, searchKeys, filters, getNestedValue]);
+
+    // Apply sorting if active
+    if (sortColumn && sortDirection) {
+      const column = columns.find((col) => col.key === sortColumn);
+      if (column) {
+        result = [...result].sort((a, b) => {
+          // Use custom sort function if provided
+          if (column.sortFunction) {
+            return sortDirection === "asc"
+              ? column.sortFunction(a, b)
+              : column.sortFunction(b, a);
+          }
+
+          // Default sort by comparing values
+          const aValue = getNestedValue(a, sortColumn);
+          const bValue = getNestedValue(b, sortColumn);
+
+          // Handle null/undefined values
+          if (aValue === null || aValue === undefined) return 1;
+          if (bValue === null || bValue === undefined) return -1;
+
+          // Compare values
+          if (aValue < bValue) return sortDirection === "asc" ? -1 : 1;
+          if (aValue > bValue) return sortDirection === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+    }
+
+    return result;
+  }, [data, searchTerm, filterValues, searchKeys, filters, getNestedValue, sortColumn, sortDirection, columns]);
 
   const clearFilters = () => {
     setSearchTerm("");
     setFilterValues(
       filters.reduce((acc, filter) => ({ ...acc, [filter.key]: "all" }), {})
     );
+  };
+
+  const handleSort = (columnKey: string) => {
+    if (sortColumn === columnKey) {
+      // Cycle through: asc -> desc -> null
+      if (sortDirection === "asc") {
+        setSortDirection("desc");
+      } else if (sortDirection === "desc") {
+        setSortColumn(null);
+        setSortDirection(null);
+      }
+    } else {
+      // New column, start with ascending
+      setSortColumn(columnKey);
+      setSortDirection("asc");
+    }
   };
 
   const hasActiveFilters =
@@ -184,7 +233,22 @@ export function DataTable<T extends object>({
             <TableHeader>
               <TableRow>
                 {columns.map((column) => (
-                  <TableHead key={column.key}>{column.label}</TableHead>
+                  <TableHead
+                    key={column.key}
+                    className={column.sortable ? "cursor-pointer select-none hover:bg-muted/50" : ""}
+                    onClick={() => column.sortable && handleSort(column.key)}
+                  >
+                    <div className="flex items-center gap-1">
+                      <span>{column.label}</span>
+                      {column.sortable && sortColumn === column.key && (
+                        sortDirection === "asc" ? (
+                          <IconArrowUp className="h-4 w-4" />
+                        ) : (
+                          <IconArrowDown className="h-4 w-4" />
+                        )
+                      )}
+                    </div>
+                  </TableHead>
                 ))}
                 {actions && (
                   <TableHead className="text-right">Actions</TableHead>
