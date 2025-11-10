@@ -40,10 +40,18 @@ function ExperienceDetailSheet({ experience }: { experience: Experience }) {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   };
 
-  const formatPlayTime = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+  const formatPlayTime = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+
+    if (hours > 0) {
+      return `${hours}h ${mins}m ${secs}s`;
+    } else if (mins > 0) {
+      return `${mins}m ${secs}s`;
+    } else {
+      return `${secs}s`;
+    }
   };
 
   const getChairStatusBadge = (status: number) => {
@@ -324,6 +332,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (experience) => (
         <div className="font-mono text-sm">{experience.id}</div>
       ),
@@ -331,6 +340,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
     {
       key: "machine",
       label: "Machine",
+      sortable: true,
       render: (experience) => (
         <div className="space-y-1">
           <Badge variant="outline">{experience.machine}</Badge>
@@ -343,6 +353,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
     {
       key: "game",
       label: "Game",
+      sortable: true,
       render: (experience) => (
         <div className="space-y-1">
           <Badge variant="secondary">{experience.game}</Badge>
@@ -355,6 +366,7 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
     {
       key: "dome",
       label: "DOM",
+      sortable: true,
       render: (experience) => (
         <Badge variant="secondary">{experience.dome}</Badge>
       ),
@@ -372,20 +384,36 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
     {
       key: "playTime",
       label: "Duration",
-      render: (experience) => (
-        <div className="flex items-center gap-1 text-sm">
-          <Clock className="h-4 w-4" />
-          {Math.floor(experience.gamePlayTime / 60) > 0
-            ? `${Math.floor(experience.gamePlayTime / 60)}h ${
-                experience.gamePlayTime % 60
-              }m`
-            : `${experience.gamePlayTime}m`}
-        </div>
-      ),
+      render: (experience) => {
+        const seconds = experience.gamePlayTime;
+        const hours = Math.floor(seconds / 3600);
+        const mins = Math.floor((seconds % 3600) / 60);
+        const secs = seconds % 60;
+
+        let timeString;
+        if (hours > 0) {
+          timeString = `${hours}h ${mins}m ${secs}s`;
+        } else if (mins > 0) {
+          timeString = `${mins}m ${secs}s`;
+        } else {
+          timeString = `${secs}s`;
+        }
+
+        return (
+          <div className="flex items-center gap-1 text-sm">
+            <Clock className="h-4 w-4" />
+            {timeString}
+          </div>
+        );
+      },
     },
     {
       key: "createdAt",
       label: "Created",
+      sortable: true,
+      sortFunction: (a, b) => {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      },
       render: (experience) => {
         const date = new Date(experience.createdAt);
         return (

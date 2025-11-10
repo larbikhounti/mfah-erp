@@ -106,11 +106,13 @@ export function EnhancedCommentsTable({}: EnhancedCommentsTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (comment) => <div className="font-mono text-sm">{comment.id}</div>,
     },
     {
       key: "content",
       label: "Content",
+      sortable: true,
       render: (comment) => (
         <div className="flex items-start gap-2 max-w-md">
           <MessageSquare className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />

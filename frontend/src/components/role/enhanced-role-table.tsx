@@ -108,11 +108,13 @@ export function EnhancedRoleTable({}: EnhancedRoleTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (role) => <div className="font-mono text-sm">{role.id}</div>,
     },
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (role) => (
         <div className="flex items-center gap-2">
           <Shield className="h-4 w-4 text-muted-foreground" />

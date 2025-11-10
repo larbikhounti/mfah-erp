@@ -128,6 +128,7 @@ export function EnhancedGameTypeTable({}: EnhancedGameTypeTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (gameType) => (
         <div className="font-mono text-sm">{gameType.id}</div>
       ),
@@ -135,6 +136,7 @@ export function EnhancedGameTypeTable({}: EnhancedGameTypeTableProps) {
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (gameType) => <div className="font-medium">{gameType.name}</div>,
     },
     {

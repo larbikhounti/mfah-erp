@@ -108,11 +108,13 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (coupon) => <div className="font-mono text-sm">{coupon.id}</div>,
     },
     {
       key: "code",
       label: "Code",
+      sortable: true,
       render: (coupon) => (
         <div className="flex items-center gap-2">
           <Ticket className="h-4 w-4 text-muted-foreground" />
@@ -123,6 +125,7 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
     {
       key: "discount",
       label: "Discount",
+      sortable: true,
       render: (coupon) => (
         <Badge variant="secondary">
           {coupon.discount}%
@@ -132,6 +135,7 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
     {
       key: "isActive",
       label: "Status",
+      sortable: true,
       render: (coupon) => (
         <Badge variant={coupon.isActive ? "default" : "destructive"}>
           {coupon.isActive ? "Active" : "Inactive"}

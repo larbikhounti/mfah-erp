@@ -148,6 +148,7 @@ export function EnhancedMachineChairTable({}: EnhancedMachineChairTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (machineChair) => (
         <div className="font-mono text-sm">{machineChair.id}</div>
       ),
@@ -155,6 +156,7 @@ export function EnhancedMachineChairTable({}: EnhancedMachineChairTableProps) {
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (machineChair) => (
         <div className="font-medium">{machineChair.name}</div>
       ),
@@ -162,6 +164,7 @@ export function EnhancedMachineChairTable({}: EnhancedMachineChairTableProps) {
     {
       key: "status",
       label: "Status",
+      sortable: true,
       render: (machineChair) => getStatusBadge(machineChair.status),
     },
     {

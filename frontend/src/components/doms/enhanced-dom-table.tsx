@@ -109,11 +109,13 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (dom) => <div className="font-mono text-sm">{dom.id}</div>,
     },
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (dom) => (
         <div className="flex items-center gap-2">
           <Building className="h-4 w-4 text-muted-foreground" />
@@ -124,6 +126,7 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
     {
       key: "address",
       label: "Address",
+      sortable: true,
       render: (dom) => (
         <div className="flex items-center gap-2">
           <MapPin className="h-4 w-4 text-muted-foreground" />

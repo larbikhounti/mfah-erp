@@ -144,11 +144,13 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (game) => <div className="font-mono text-sm">{game.id}</div>,
     },
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (game) => <div className="font-medium">{game.name}</div>,
     },
     {
@@ -174,6 +176,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     {
       key: "price",
       label: "Price",
+      sortable: true,
       render: (game) => (
         <div className="flex items-center gap-1">
           <span className="font-medium">€{game.price.toFixed(2)}</span>
@@ -183,6 +186,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     {
       key: "playTime",
       label: "Play Time",
+      sortable: true,
       render: (game) => {
         const minutes = Math.floor(game.playTime / 60);
         const seconds = game.playTime % 60;

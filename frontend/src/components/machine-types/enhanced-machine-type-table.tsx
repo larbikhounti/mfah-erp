@@ -134,6 +134,7 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (machineType) => (
         <div className="font-mono text-sm">{machineType.id}</div>
       ),
@@ -141,6 +142,7 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (machineType) => (
         <div className="font-medium">{machineType.name}</div>
       ),

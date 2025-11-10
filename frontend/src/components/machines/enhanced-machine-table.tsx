@@ -130,6 +130,7 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (machine) => (
         <div className="font-mono text-sm">{machine.id}</div>
       ),
@@ -137,11 +138,13 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (machine) => <div className="font-medium">{machine.name}</div>,
     },
     {
       key: "alias",
       label: "Alias",
+      sortable: true,
       render: (machine) => (
         <div className="font-mono text-sm bg-muted px-2 py-1 rounded">
           {machine.alias}
@@ -151,6 +154,7 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     {
       key: "machineType",
       label: "Machine Type",
+      sortable: true,
       render: (machine) => (
         <Badge variant="secondary">{machine.machineType || "No Type"}</Badge>
       ),
@@ -158,6 +162,7 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     {
       key: "dome",
       label: "Store",
+      sortable: true,
       render: (machine) => (
         <Badge variant="secondary">{machine.dome || "No Store"}</Badge>
       ),
@@ -181,6 +186,7 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     {
       key: "status",
       label: "Status",
+      sortable: true,
       render: (machine) => (
         <Badge
           variant={machine.status === "active" ? "default" : "secondary"}
