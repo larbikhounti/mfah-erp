@@ -51,7 +51,10 @@ export default function Page() {
       // Build query parameters
       const params: any = {};
       if (localDateRange?.from) {
-        params.startDate = localDateRange.from.toISOString();
+        // Set to start of day for the "from" date
+        const startDate = new Date(localDateRange.from);
+        startDate.setHours(0, 0, 0, 0);
+        params.startDate = startDate.toISOString();
       }
       if (localDateRange?.to) {
         // Set to end of day for the "to" date
@@ -81,7 +84,10 @@ export default function Page() {
       // Build query parameters
       const params: any = {};
       if (localDateRange?.from) {
-        params.startDate = localDateRange.from.toISOString();
+        // Set to start of day for the "from" date
+        const startDate = new Date(localDateRange.from);
+        startDate.setHours(0, 0, 0, 0);
+        params.startDate = startDate.toISOString();
       }
       if (localDateRange?.to) {
         // Set to end of day for the "to" date
@@ -107,6 +113,7 @@ export default function Page() {
   useEffect(() => {
     if (!isInitialized) {
       const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to start of day
       const initialRange = { from: today, to: today };
       setLocalDateRange(initialRange);
       setDateRange(initialRange); // This will trigger fetchStatistics in the store
