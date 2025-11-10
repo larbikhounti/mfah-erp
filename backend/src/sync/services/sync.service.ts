@@ -1,6 +1,6 @@
 // src/sync/sync.service.ts
 import { PrismaService } from '@app/prisma/prisma.service';
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { SyncRequestDto } from '../dtos/SyncRequest.dto';
 import { UploadDataDto } from '../dtos/upload-data.dto';
 
@@ -217,7 +217,12 @@ export class SyncService {
         const savedExperiences = await Promise.all(
           experiences.map((experience) =>
             prisma.experiences.upsert({
-              where: { id: experience.id },
+              where: {
+                domeId_id: {
+                  domeId: experience.domeId,
+                  id: experience.id,
+                },
+              },
               update: {
                 machineId: experience.machineId,
                 gameId: experience.gameId,
@@ -229,7 +234,6 @@ export class SyncService {
                 endedAt: experience.endedAt,
                 updatedAt: experience.updatedAt,
                 deletedAt: experience.deletedAt,
-                domeId: experience.domeId,
               },
               create: {
                 id: experience.id,
@@ -254,7 +258,12 @@ export class SyncService {
         const savedTickets = await Promise.all(
           tickets.map(async (ticket) => {
             const savedTicket = await prisma.tickets.upsert({
-              where: { id: ticket.id },
+              where: {
+                domeId_id: {
+                  domeId: ticket.domeId,
+                  id: ticket.id,
+                },
+              },
               update: {
                 userId: ticket.userId,
                 experienceId: ticket.experienceId,
@@ -267,7 +276,6 @@ export class SyncService {
                 price: ticket.price,
                 updatedAt: ticket.updatedAt,
                 deletedAt: ticket.deletedAt,
-                domeId: ticket.domeId,
                 parentTicketId: ticket.parentTicketId,
               },
               create: {
@@ -294,7 +302,12 @@ export class SyncService {
               await Promise.all(
                 ticket.ticketComments.map((ticketComment) =>
                   prisma.ticketComments.upsert({
-                    where: { id: ticketComment.id },
+                    where: {
+                      domeId_id: {
+                        domeId: ticketComment.domeId,
+                        id: ticketComment.id,
+                      },
+                    },
                     update: {
                       ticketId: ticketComment.ticketId,
                       commentId: ticketComment.commentId,
@@ -304,6 +317,7 @@ export class SyncService {
                       id: ticketComment.id,
                       ticketId: ticketComment.ticketId,
                       commentId: ticketComment.commentId,
+                      domeId: ticketComment.domeId,
                       createdAt: ticketComment.createdAt,
                       updatedAt: ticketComment.updatedAt,
                     },
@@ -311,7 +325,6 @@ export class SyncService {
                 ),
               );
             }
-
             return savedTicket;
           }),
         );
@@ -340,7 +353,10 @@ export class SyncService {
         `Upload failed for dome ${domId}: ${error.message}`,
         error.stack,
       );
-      throw error;
+      throw new HttpException(
+        `Upload failed for dome ${domId}: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 

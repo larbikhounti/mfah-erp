@@ -88,6 +88,10 @@ export class TicketCommentsDto {
   @IsInt()
   commentId: number;
 
+  @ApiProperty({ type: Number })
+  @IsInt()
+  domeId: number;
+
   @ApiProperty({ type: String, format: 'date-time' })
   @IsISO8601()
   createdAt: Date;
@@ -140,7 +144,8 @@ export class UploadTicketDto {
     example: PaymentMethod.CASH,
   })
   @IsEnum(PaymentMethod)
-  paidWith: PaymentMethod;
+  @IsOptional()
+  paidWith: PaymentMethod | null;
 
   @ApiProperty({ type: Number, nullable: true })
   @IsOptional()
