@@ -38,7 +38,7 @@ model doms {
 }
 
 model experiences {
-  id           Int       @id @default(autoincrement())
+  id           Int       @default(autoincrement())
   machineId    Int
   gameId       Int
   isFractioned Boolean   @default(false)
@@ -55,6 +55,8 @@ model experiences {
   doms         doms      @relation(fields: [domeId], references: [id], onDelete: SetDefault)
   games        games     @relation(fields: [gameId], references: [id], onDelete: SetDefault)
   machines     machines  @relation(fields: [machineId], references: [id], onDelete: SetDefault)
+
+  @@id([domeId, id])
 }
 
 model gameTypes {
@@ -159,7 +161,7 @@ model roles {
 
 
 model tickets {
-  id              Int             @id @default(autoincrement())
+  id              Int             @default(autoincrement())
   userId          Int?
   experienceId    Int
   alias           String
@@ -167,21 +169,23 @@ model tickets {
   chairId         Int?
   couponId        Int?
   notes           String?
-  paidWith        Int         @default(0)
+  paidWith        Int?
   price           Float?
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
   deletedAt       DateTime?
   domeId          Int
   parentTicketId  Int?
-  parentTicket    tickets?        @relation("FractionedTickets", fields: [parentTicketId], references: [id])
+  parentTicket    tickets?        @relation("FractionedTickets", fields: [domeId, parentTicketId], references: [domeId, id], onDelete: NoAction, onUpdate: NoAction)
   childTickets    tickets[]       @relation("FractionedTickets")
-  experiences     experiences     @relation(fields: [experienceId], references: [id], onDelete: SetDefault)
+  experiences     experiences     @relation(fields: [domeId, experienceId], references: [domeId, id], onDelete: SetDefault)
   machineChairs   machineChairs?  @relation(fields: [chairId], references: [id])
   doms            doms            @relation(fields: [domeId], references: [id], onDelete: SetDefault)
   coupons         coupons?        @relation(fields: [couponId], references: [id])
 
   ticketComments ticketComments[]
+
+  @@id([domeId, id])
 }
 
 model comments {
@@ -195,17 +199,19 @@ model comments {
 }
 
 model ticketComments {
-  id        Int       @id @default(autoincrement())
+  id        Int       @default(autoincrement())
   ticketId  Int
   commentId Int
+  domeId    Int
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
   // Relations
-  tickets   tickets   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  tickets   tickets   @relation(fields: [domeId, ticketId], references: [domeId, id], onDelete: Cascade)
   comments  comments  @relation(fields: [commentId], references: [id], onDelete: Cascade)
 
-  @@unique([ticketId, commentId])
+  @@id([domeId, id])
+  @@unique([domeId, ticketId, commentId])
 }
 
 
