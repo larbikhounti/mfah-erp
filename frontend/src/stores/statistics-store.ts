@@ -55,7 +55,10 @@ export const useStatisticsStore = create<StatisticsStore>((set, get) => ({
       // Build query parameters
       const params: any = {};
       if (dateRange?.from) {
-        params.startDate = dateRange.from.toISOString();
+        // Set to start of day for the "from" date
+        const startDate = new Date(dateRange.from);
+        startDate.setHours(0, 0, 0, 0);
+        params.startDate = startDate.toISOString();
       }
       if (dateRange?.to) {
         // Set to end of day for the "to" date
