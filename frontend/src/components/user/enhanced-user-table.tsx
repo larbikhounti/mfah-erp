@@ -126,16 +126,19 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
     {
       key: "id",
       label: "ID",
+      sortable: true,
       render: (user) => <div className="font-mono text-sm">{user.id}</div>,
     },
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (user) => <div className="font-medium">{user.name}</div>,
     },
     {
       key: "email",
       label: "Email",
+      sortable: true,
       render: (user) => (
         <div className="text-sm text-muted-foreground">{user.email}</div>
       ),
