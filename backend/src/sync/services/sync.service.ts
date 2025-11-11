@@ -272,6 +272,7 @@ export class SyncService {
                 chairId: ticket.chairId,
                 couponId: ticket.couponId,
                 notes: ticket.notes,
+                domeId: ticket.domeId,
                 paidWith: ticket.paidWith,
                 price: ticket.price,
                 updatedAt: ticket.updatedAt,
@@ -311,6 +312,7 @@ export class SyncService {
                     update: {
                       ticketId: ticketComment.ticketId,
                       commentId: ticketComment.commentId,
+                      domeId: ticketComment.domeId,
                       updatedAt: ticketComment.updatedAt,
                     },
                     create: {
