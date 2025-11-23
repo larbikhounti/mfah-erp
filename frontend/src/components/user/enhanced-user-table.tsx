@@ -21,7 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash2, Edit, UserPlus, Users } from "lucide-react";
+import { MoreHorizontal, Trash2, Edit, UserPlus, Users, RotateCcw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useUsersStore, type User } from "@/stores/users-store";
 import { toast } from "sonner";
 import { CreateUserDialog } from "@/components/user/create-user-dialog";
@@ -42,22 +44,29 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
     currentPage,
     pageSize,
     totalPages,
+    showArchived,
     fetchUsers,
     deleteUser,
     bulkDeleteUsers,
+    restoreUser,
+    bulkRestoreUsers,
     selectUser,
     clearSelection,
     clearError,
     setPage,
     setPageSize,
+    setShowArchived,
   } = useUsersStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkRestoreDialogOpen, setBulkRestoreDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
+  const [userToRestore, setUserToRestore] = useState<number | null>(null);
 
   // Fetch users on component mount
   useEffect(() => {
@@ -111,7 +120,32 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
     setIsCreateDialogOpen(false);
   };
 
-  const columns: TableColumn<User>[] = [
+  const handleRestoreUser = async (id: number) => {
+    try {
+      await restoreUser(id);
+      toast.success("User restored successfully");
+      setRestoreDialogOpen(false);
+      setUserToRestore(null);
+    } catch (error) {
+      toast.error("Failed to restore user");
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    try {
+      await bulkRestoreUsers(selectedUsers);
+      toast.success(`${selectedUsers.length} users restored successfully`);
+      setBulkRestoreDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to restore users");
+    }
+  };
+
+  const selectedDeletedUsers = users.filter(u => selectedUsers.includes(u.id) && u.deletedAt);
+  const selectedActiveUsers = users.filter(u => selectedUsers.includes(u.id) && !u.deletedAt);
+
+  // Define base columns that are always visible
+  const baseColumns: TableColumn<User>[] = [
     {
       key: "select",
       label: "Select",
@@ -146,6 +180,7 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
     {
       key: "role",
       label: "Role",
+       sortable: true,
       render: (user) => (
         <Badge
           variant={
@@ -159,49 +194,96 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
     {
       key: "dom",
       label: "DOM",
+       sortable: true,
       render: (user) => <div className="text-sm">{user.dom || "No DOM"}</div>,
     },
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (user) => {
-        const date = new Date(user.createdAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  ];
+
+  // Created column (shown when NOT in archive mode)
+  const createdColumn: TableColumn<User> = {
+    key: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (user) => {
+      const date = new Date(user.createdAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (user) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild> 
-              <EditUserDialog user={user} />
-            </DropdownMenuItem>
+  };
+
+  // Deleted column (shown when in archive mode)
+  const deletedColumn: TableColumn<User> = {
+    key: "deletedAt",
+    label: "Deleted",
+    sortable: true,
+    render: (user) => {
+      if (!user.deletedAt) {
+        return <div className="text-sm text-muted-foreground">-</div>;
+      }
+      const date = new Date(user.deletedAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
+    },
+  };
+
+  // Actions column
+  const actionsColumn: TableColumn<User> = {
+    key: "actions",
+    label: "Actions",
+    render: (user) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {!user.deletedAt && (
+            <>
+              <DropdownMenuItem asChild>
+                <EditUserDialog user={user} />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setUserToDelete(user.id);
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+          {user.deletedAt && (
             <DropdownMenuItem
               onClick={() => {
-                setUserToDelete(user.id);
-                setDeleteDialogOpen(true);
+                setUserToRestore(user.id);
+                setRestoreDialogOpen(true);
               }}
-              className="text-destructive"
+              className="text-green-600"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Restore
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  };
+
+  // Build the final columns array based on showArchived state
+  const columns: TableColumn<User>[] = [
+    ...baseColumns,
+    ...(showArchived ? [deletedColumn] : [createdColumn]),
+    actionsColumn,
   ];
 
   return (
@@ -215,16 +297,41 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
         emptyMessage="No users found"
         showCount={true}
         customHeader={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                className="data-[state=checked]:bg-red-600"
+              />
+              <Label htmlFor="show-archived" className="text-sm font-medium">
+                Archive
+              </Label>
+            </div>
             {selectedUsers.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setBulkDeleteDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedUsers.length})
-              </Button>
+              <>
+                {selectedActiveUsers.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setBulkDeleteDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedActiveUsers.length})
+                  </Button>
+                )}
+                {selectedDeletedUsers.length > 0 && (
+                  <Button
+                    variant="default"
+                    onClick={() => setBulkRestoreDialogOpen(true)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore Selected ({selectedDeletedUsers.length})
+                  </Button>
+                )}
+              </>
             )}
             <CreateUserDialog />
           </div>
@@ -236,8 +343,7 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              user.
+              This will archive the user. You can restore it later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -245,7 +351,28 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
             <AlertDialogAction
               onClick={() => userToDelete && handleDeleteUser(userToDelete)}
             >
-              Delete
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Single Restore Dialog */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the user and make it active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => userToRestore && handleRestoreUser(userToRestore)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -259,17 +386,42 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {selectedUsers.length} users?
+              Archive {selectedActiveUsers.length} users?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              selected users.
+              This will archive the selected users. You can restore them later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete}>
-              Delete All
+              Archive All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Restore Dialog */}
+      <AlertDialog
+        open={bulkRestoreDialogOpen}
+        onOpenChange={setBulkRestoreDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Restore {selectedDeletedUsers.length} users?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the selected users and make them active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkRestore}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

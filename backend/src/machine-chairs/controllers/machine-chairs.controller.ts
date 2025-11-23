@@ -11,6 +11,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import { CreateMachineChairDto } from '../dtos/create-machine-chair.dto';
 import { UpdateMachineChairDto } from '../dtos/update-machine-chair.dto';
@@ -198,5 +199,34 @@ export class MachineChairsController {
   })
   async findByMachineId(@Param('machineId', ParseIntPipe) machineId: number) {
     return this.machineChairsService.findByMachineId(machineId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Patch('admin/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore deleted machine chair (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Machine chair restored successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Machine chair not found' })
+  restoreMachineChair(@Param('id', ParseIntPipe) id: number) {
+    return this.machineChairsService.restore(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Post('admin/bulk-restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore multiple machine chairs (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  bulkRestoreMachineChairs(@Body() body: { ids: number[] }) {
+    return this.machineChairsService.bulkRestore(body.ids);
   }
 }

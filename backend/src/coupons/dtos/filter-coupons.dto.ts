@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class FilterCouponsDto {
   @ApiProperty({
@@ -51,4 +51,18 @@ export class FilterCouponsDto {
   @IsOptional()
   @IsNumber()
   couponId?: number;
+
+  @ApiProperty({
+    description: 'Show archived/deleted items',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  showArchived?: boolean;
 }

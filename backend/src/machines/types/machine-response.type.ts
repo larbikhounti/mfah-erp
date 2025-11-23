@@ -15,4 +15,5 @@ export interface MachineResponse {
   }[];
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }

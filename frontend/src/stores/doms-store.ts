@@ -7,6 +7,7 @@ export interface Dom {
   address: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
   _count?: {
     Users: number;
     experiences: number;
@@ -30,6 +31,7 @@ export interface FilterParams {
   limit?: number;
   search?: string;
   domId?: number;
+  showArchived?: boolean;
 }
 
 export interface DomsResponse {
@@ -43,7 +45,8 @@ interface DomsStore {
   loading: boolean;
   error: string | null;
   selectedDoms: number[];
-  
+  showArchived: boolean;
+
   // Pagination state
   currentPage: number;
   pageSize: number;
@@ -55,11 +58,16 @@ interface DomsStore {
   updateDom: (id: number, domData: UpdateDomPayload) => Promise<void>;
   deleteDom: (id: number) => Promise<void>;
   bulkDeleteDoms: (domIds: number[]) => Promise<void>;
+  restoreDom: (id: number) => Promise<void>;
+  bulkRestoreDoms: (domIds: number[]) => Promise<void>;
   getDomById: (id: number) => Promise<Dom | null>;
 
   // Pagination actions
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
+
+  // Archive actions
+  setShowArchived: (show: boolean) => void;
 
   // Selection actions
   selectDom: (id: number) => void;
@@ -78,7 +86,8 @@ export const useDomsStore = create<DomsStore>((set, get) => ({
   loading: false,
   error: null,
   selectedDoms: [],
-  
+  showArchived: false,
+
   // Pagination state
   currentPage: 1,
   pageSize: 25,
@@ -89,19 +98,20 @@ export const useDomsStore = create<DomsStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize } = get();
+      const { currentPage, pageSize, showArchived } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       // Always send default values to ensure integers
       const finalOffset = Math.max(0, Math.floor(params.offset ?? offset));
       const finalLimit = Math.max(1, Math.floor(params.limit ?? pageSize));
-      
+
       // Use axios params instead of URLSearchParams for better type handling
       const apiParams: any = {
         offset: finalOffset,
         limit: finalLimit,
+        showArchived: params.showArchived ?? showArchived,
       };
-      
+
       if (params.search && params.search.trim()) {
         apiParams.search = params.search.trim();
       }
@@ -176,12 +186,10 @@ export const useDomsStore = create<DomsStore>((set, get) => ({
 
       await axiosInstance.delete(`/doms/admin/${id}`);
 
-      // Remove dom from local state
-      const { doms } = get();
-      set({
-        doms: doms.filter((dom) => dom.id !== id),
-        loading: false,
-      });
+      // Refresh the doms list
+      await get().fetchDoms();
+
+      set({ loading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to delete Store",
@@ -196,22 +204,61 @@ export const useDomsStore = create<DomsStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const response = await axiosInstance.delete("/doms/admin/bulk", {
+      await axiosInstance.delete("/doms/admin/bulk", {
         data: { domIds },
       });
 
-      // Remove deleted doms from local state
-      const { doms } = get();
-      set({
-        doms: doms.filter((dom) => !domIds.includes(dom.id)),
-        selectedDoms: [],
-        loading: false,
-      });
+      // Clear selection and refresh
+      set({ selectedDoms: [] });
+      await get().fetchDoms();
 
-      return response.data;
+      set({ loading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to delete Stores",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Restore dom (admin only)
+  restoreDom: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/doms/admin/${id}/restore`);
+
+      // Refresh the doms list
+      await get().fetchDoms();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore Store",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore doms (admin only)
+  bulkRestoreDoms: async (domIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/doms/admin/bulk-restore", {
+        domIds: domIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedDoms: [] });
+      await get().fetchDoms();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore Stores",
         loading: false,
       });
       throw error;
@@ -240,6 +287,12 @@ export const useDomsStore = create<DomsStore>((set, get) => ({
     const validPageSize = Math.max(1, Math.floor(pageSize));
     set({ pageSize: validPageSize, currentPage: 1 });
     get().fetchDoms();
+  },
+
+  // Archive actions
+  setShowArchived: (show: boolean) => {
+    set({ showArchived: show, currentPage: 1 });
+    get().fetchDoms({ showArchived: show });
   },
 
   // Selection management

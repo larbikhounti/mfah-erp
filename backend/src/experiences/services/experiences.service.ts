@@ -24,12 +24,19 @@ export class ExperiencesService {
         domeId,
         startDate,
         endDate,
+        showArchived,
       } = filterParams;
 
       // Build where clause
-      const where: any = {
-        deletedAt: null,
+          const where: any = {
+        
       };
+
+      if (!showArchived) {
+        where.deletedAt = null;
+      }else {
+        where.deletedAt = { not: null };
+      }
 
       if (experienceId) {
         where.id = experienceId;
@@ -131,6 +138,14 @@ export class ExperiencesService {
               where: {
                 deletedAt: null,
               },
+              include: {
+                coupons: true,
+                ticketComments: {
+                  include: {
+                    comments: true,
+                  },
+                },
+              },
             },
           },
           orderBy: {
@@ -175,6 +190,48 @@ export class ExperiencesService {
             recentTickets,
           };
 
+          // Process coupons used
+          const couponsMap = new Map();
+          tickets.forEach((ticket) => {
+            if (ticket.coupons) {
+              const couponId = ticket.coupons.id;
+              if (couponsMap.has(couponId)) {
+                couponsMap.get(couponId).usageCount++;
+              } else {
+                couponsMap.set(couponId, {
+                  id: ticket.coupons.id,
+                  code: ticket.coupons.code,
+                  discount: ticket.coupons.discount,
+                  usageCount: 1,
+                });
+              }
+            }
+          });
+          const couponsUsed = Array.from(couponsMap.values());
+
+          // Process comments used
+          const commentsMap = new Map();
+          tickets.forEach((ticket) => {
+            if (ticket.ticketComments && ticket.ticketComments.length > 0) {
+              ticket.ticketComments.forEach((tc) => {
+                if (tc.comments) {
+                  const commentId = tc.comments.id;
+                  if (commentsMap.has(commentId)) {
+                    commentsMap.get(commentId).usageCount++;
+                  } else {
+                    commentsMap.set(commentId, {
+                      id: tc.comments.id,
+                      content: tc.comments.content,
+                      createdAt: tc.comments.createdAt.toISOString(),
+                      usageCount: 1,
+                    });
+                  }
+                }
+              });
+            }
+          });
+          const commentsUsed = Array.from(commentsMap.values());
+
           return {
             id: experience.id,
             machineId: experience.machineId,
@@ -210,6 +267,8 @@ export class ExperiencesService {
             domeAddress: experience.doms?.address || 'Unknown Address',
             ticketCount: tickets.length,
             ticketSummary,
+            couponsUsed,
+            commentsUsed,
           };
         },
       );
@@ -264,6 +323,14 @@ export class ExperiencesService {
             where: {
               deletedAt: null,
             },
+            include: {
+              coupons: true,
+              ticketComments: {
+                include: {
+                  comments: true,
+                },
+              },
+            },
           },
         },
       });
@@ -302,6 +369,48 @@ export class ExperiencesService {
         recentTickets,
       };
 
+      // Process coupons used
+      const couponsMap = new Map();
+      tickets.forEach((ticket) => {
+        if (ticket.coupons) {
+          const couponId = ticket.coupons.id;
+          if (couponsMap.has(couponId)) {
+            couponsMap.get(couponId).usageCount++;
+          } else {
+            couponsMap.set(couponId, {
+              id: ticket.coupons.id,
+              code: ticket.coupons.code,
+              discount: ticket.coupons.discount,
+              usageCount: 1,
+            });
+          }
+        }
+      });
+      const couponsUsed = Array.from(couponsMap.values());
+
+      // Process comments used
+      const commentsMap = new Map();
+      tickets.forEach((ticket) => {
+        if (ticket.ticketComments && ticket.ticketComments.length > 0) {
+          ticket.ticketComments.forEach((tc) => {
+            if (tc.comments) {
+              const commentId = tc.comments.id;
+              if (commentsMap.has(commentId)) {
+                commentsMap.get(commentId).usageCount++;
+              } else {
+                commentsMap.set(commentId, {
+                  id: tc.comments.id,
+                  content: tc.comments.content,
+                  createdAt: tc.comments.createdAt.toISOString(),
+                  usageCount: 1,
+                });
+              }
+            }
+          });
+        }
+      });
+      const commentsUsed = Array.from(commentsMap.values());
+
       return {
         id: experience.id,
         machineId: experience.machineId,
@@ -336,6 +445,8 @@ export class ExperiencesService {
         domeAddress: experience.doms?.address || 'Unknown Address',
         ticketCount: tickets.length,
         ticketSummary,
+        couponsUsed,
+        commentsUsed,
       };
     } catch (error) {
       if (error instanceof HttpException) {

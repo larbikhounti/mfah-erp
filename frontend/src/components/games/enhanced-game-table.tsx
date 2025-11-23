@@ -29,7 +29,10 @@ import {
   Clock,
   DollarSign,
   Star,
+  RotateCcw,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useGamesStore, type Game } from "@/stores/games-store";
 import { toast } from "sonner";
 import PaginationTable from "@/components/pagination-table";
@@ -50,23 +53,30 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     currentPage,
     pageSize,
     totalPages,
+    showArchived,
     fetchGames,
     deleteGame,
     bulkDeleteGames,
+    restoreGame,
+    bulkRestoreGames,
     toggleFavorite,
     selectGame,
     clearSelection,
     clearError,
     setPage,
     setPageSize,
+    setShowArchived,
   } = useGamesStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkRestoreDialogOpen, setBulkRestoreDialogOpen] = useState(false);
   const [gameToDelete, setGameToDelete] = useState<number | null>(null);
+  const [gameToRestore, setGameToRestore] = useState<number | null>(null);
 
   // Fetch games on component mount
   useEffect(() => {
@@ -129,7 +139,34 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     }
   };
 
-  const columns: TableColumn<Game>[] = [
+  const handleRestoreGame = async (id: number) => {
+    try {
+      await restoreGame(id);
+      toast.success("Game restored successfully");
+      setRestoreDialogOpen(false);
+      setGameToRestore(null);
+    } catch (error) {
+      toast.error("Failed to restore game");
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    try {
+      await bulkRestoreGames(selectedGames);
+      toast.success(`${selectedGames.length} games restored successfully`);
+      setBulkRestoreDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to restore games");
+    }
+  };
+
+  const hasDeletedGames = games.some(game => game.deletedAt);
+  const hasActiveGames = games.some(game => !game.deletedAt);
+  const selectedDeletedGames = games.filter(g => selectedGames.includes(g.id) && g.deletedAt);
+  const selectedActiveGames = games.filter(g => selectedGames.includes(g.id) && !g.deletedAt);
+
+  // Define base columns that are always visible
+  const baseColumns: TableColumn<Game>[] = [
     {
       key: "select",
       label: "Select",
@@ -156,6 +193,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     {
       key: "favorite",
       label: "Favorite",
+      sortable: true,
       render: (game) => (
         <Button
           variant="ghost"
@@ -201,6 +239,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     {
       key: "age",
       label: "Game Age",
+       sortable: true,
       render: (game) => (
         <div className="flex items-center gap-1">
           <span className="font-medium">{game.age || "N/A"}+</span>
@@ -210,6 +249,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     {
       key: "gameType",
       label: "Game Type",
+       sortable: true,
       render: (game) => (
         <Badge variant="secondary">{game.gameType?.name || "No Type"}</Badge>
       ),
@@ -217,6 +257,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
     {
       key: "machineTypes",
       label: "Machine Types",
+       sortable: true,
       render: (game) => (
         <div className="flex flex-wrap gap-1">
           {game.machineTypes && game.machineTypes.length > 0 ? (
@@ -231,47 +272,93 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
         </div>
       ),
     },
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (game) => {
-        const date = new Date(game.createdAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  ];
+
+  // Created column (shown when NOT in archive mode)
+  const createdColumn: TableColumn<Game> = {
+    key: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (game) => {
+      const date = new Date(game.createdAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (game) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <EditGameDialog game={game} />
-            </DropdownMenuItem>
+  };
+
+  // Deleted column (shown when in archive mode)
+  const deletedColumn: TableColumn<Game> = {
+    key: "deletedAt",
+    label: "Deleted",
+    sortable: true,
+    render: (game) => {
+      if (!game.deletedAt) {
+        return <div className="text-sm text-muted-foreground">-</div>;
+      }
+      const date = new Date(game.deletedAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
+    },
+  };
+
+  // Actions column
+  const actionsColumn: TableColumn<Game> = {
+    key: "actions",
+    label: "Actions",
+    render: (game) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {!game.deletedAt && (
+            <>
+              <DropdownMenuItem asChild>
+                <EditGameDialog game={game} />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setGameToDelete(game.id);
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+          {game.deletedAt && (
             <DropdownMenuItem
               onClick={() => {
-                setGameToDelete(game.id);
-                setDeleteDialogOpen(true);
+                setGameToRestore(game.id);
+                setRestoreDialogOpen(true);
               }}
-              className="text-destructive"
+              className="text-green-600"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Restore
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  };
+
+  // Build the final columns array based on showArchived state
+  const columns: TableColumn<Game>[] = [
+    ...baseColumns,
+    ...(showArchived ? [deletedColumn] : [createdColumn]),
+    actionsColumn,
   ];
 
   return (
@@ -285,16 +372,41 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
         emptyMessage="No games found"
         showCount={true}
         customHeader={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                className="data-[state=checked]:bg-red-600"
+              />
+              <Label htmlFor="show-archived" className="text-sm font-medium">
+                Archive
+              </Label>
+            </div>
             {selectedGames.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setBulkDeleteDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedGames.length})
-              </Button>
+              <>
+                {selectedActiveGames.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setBulkDeleteDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedActiveGames.length})
+                  </Button>
+                )}
+                {selectedDeletedGames.length > 0 && (
+                  <Button
+                    variant="default"
+                    onClick={() => setBulkRestoreDialogOpen(true)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore Selected ({selectedDeletedGames.length})
+                  </Button>
+                )}
+              </>
             )}
             <CreateGameDialog />
           </div>
@@ -306,8 +418,7 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              game and all its associated experiences.
+              This will archive the game. You can restore it later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -315,7 +426,28 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
             <AlertDialogAction
               onClick={() => gameToDelete && handleDeleteGame(gameToDelete)}
             >
-              Delete
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Single Restore Dialog */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore game?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the game and make it active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => gameToRestore && handleRestoreGame(gameToRestore)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -329,17 +461,42 @@ export function EnhancedGameTable({}: EnhancedGameTableProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {selectedGames.length} games?
+              Archive {selectedActiveGames.length} games?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              selected games and all their associated experiences.
+              This will archive the selected games. You can restore them later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete}>
-              Delete All
+              Archive All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Restore Dialog */}
+      <AlertDialog
+        open={bulkRestoreDialogOpen}
+        onOpenChange={setBulkRestoreDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Restore {selectedDeletedGames.length} games?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the selected games and make them active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkRestore}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

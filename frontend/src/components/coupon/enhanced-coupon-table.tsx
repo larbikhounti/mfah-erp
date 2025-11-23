@@ -21,7 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash2, Ticket } from "lucide-react";
+import { MoreHorizontal, Trash2, Ticket, RotateCcw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useCouponsStore, type Coupon } from "@/stores/coupons-store";
 import { toast } from "sonner";
 import { EditCouponDialog } from "./edit-coupon-dialog";
@@ -37,17 +39,24 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
     loading,
     error,
     selectedCoupons,
+    showArchived,
     fetchCoupons,
     deleteCoupon,
     bulkDeleteCoupons,
+    restoreCoupon,
+    bulkRestoreCoupons,
     selectCoupon,
     clearSelection,
     clearError,
+    setShowArchived,
   } = useCouponsStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkRestoreDialogOpen, setBulkRestoreDialogOpen] = useState(false);
   const [couponToDelete, setCouponToDelete] = useState<number | null>(null);
+  const [couponToRestore, setCouponToRestore] = useState<number | null>(null);
 
   // Clear error when component unmounts or when error changes
   useEffect(() => {
@@ -87,13 +96,44 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
     }
   };
 
+  const handleRestoreCoupon = async () => {
+    if (couponToRestore) {
+      try {
+        await restoreCoupon(couponToRestore);
+        toast.success("Coupon restored successfully");
+        setRestoreDialogOpen(false);
+        setCouponToRestore(null);
+      } catch (error) {
+        console.error("Failed to restore coupon:", error);
+        toast.error("Failed to restore coupon");
+      }
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    if (selectedCoupons.length > 0) {
+      try {
+        await bulkRestoreCoupons(selectedCoupons);
+        toast.success(`${selectedCoupons.length} coupon(s) restored successfully`);
+        setBulkRestoreDialogOpen(false);
+        clearSelection();
+      } catch (error) {
+        console.error("Failed to restore coupons:", error);
+        toast.error("Failed to restore coupons");
+      }
+    }
+  };
+
   // Handle search with debounce
   useEffect(() => {
     fetchCoupons();
   }, [fetchCoupons]);
 
-  // Define table columns
-  const columns: TableColumn<Coupon>[] = [
+  const selectedDeletedCoupons = coupons.filter(c => selectedCoupons.includes(c.id) && c.deletedAt);
+  const selectedActiveCoupons = coupons.filter(c => selectedCoupons.includes(c.id) && !c.deletedAt);
+
+  // Define base columns that are always visible
+  const baseColumns: TableColumn<Coupon>[] = [
     {
       key: "select",
       label: "Select",
@@ -145,65 +185,100 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
     {
       key: "tickets",
       label: "Uses",
+       sortable: true,
       render: (coupon) => (
         <Badge variant="outline">
           {coupon._count?.tickets || 0} ticket{coupon._count?.tickets !== 1 ? 's' : ''}
         </Badge>
       ),
     },
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (coupon) => {
-        const date = new Date(coupon.createdAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  ];
+
+  // Created column (shown when NOT in archive mode)
+  const createdColumn: TableColumn<Coupon> = {
+    key: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (coupon) => {
+      const date = new Date(coupon.createdAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "updatedAt",
-      label: "Updated",
-      render: (coupon) => {
-        const date = new Date(coupon.updatedAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  };
+
+  // Deleted column (shown when in archive mode)
+  const deletedColumn: TableColumn<Coupon> = {
+    key: "deletedAt",
+    label: "Deleted",
+    sortable: true,
+    render: (coupon) => {
+      if (!coupon.deletedAt) {
+        return <div className="text-sm text-muted-foreground">-</div>;
+      }
+      const date = new Date(coupon.deletedAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (coupon) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <EditCouponDialog coupon={coupon} />
-            </DropdownMenuItem>
+  };
+
+  // Actions column
+  const actionsColumn: TableColumn<Coupon> = {
+    key: "actions",
+    label: "Actions",
+    render: (coupon) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {!coupon.deletedAt && (
+            <>
+              <DropdownMenuItem asChild>
+                <EditCouponDialog coupon={coupon} />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setCouponToDelete(coupon.id);
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+          {coupon.deletedAt && (
             <DropdownMenuItem
               onClick={() => {
-                setCouponToDelete(coupon.id);
-                setDeleteDialogOpen(true);
+                setCouponToRestore(coupon.id);
+                setRestoreDialogOpen(true);
               }}
-              className="text-destructive"
+              className="text-green-600"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Restore
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  };
+
+  // Build the final columns array based on showArchived state
+  const columns: TableColumn<Coupon>[] = [
+    ...baseColumns,
+    ...(showArchived ? [deletedColumn] : [createdColumn]),
+    actionsColumn,
   ];
 
   return (
@@ -217,16 +292,41 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
         emptyMessage="No coupons found"
         showCount={true}
         customHeader={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                className="data-[state=checked]:bg-red-600"
+              />
+              <Label htmlFor="show-archived" className="text-sm font-medium">
+                Archive
+              </Label>
+            </div>
             {selectedCoupons.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setBulkDeleteDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedCoupons.length})
-              </Button>
+              <>
+                {selectedActiveCoupons.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setBulkDeleteDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedActiveCoupons.length})
+                  </Button>
+                )}
+                {selectedDeletedCoupons.length > 0 && (
+                  <Button
+                    variant="default"
+                    onClick={() => setBulkRestoreDialogOpen(true)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore Selected ({selectedDeletedCoupons.length})
+                  </Button>
+                )}
+              </>
             )}
             <CreateCouponDialog />
           </div>
@@ -239,17 +339,34 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              coupon and may affect tickets using this coupon.
+              This will archive the coupon. You can restore it later from the archived view.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCoupon}>
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Single Restore Dialog */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore coupon?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the coupon and make it active again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteCoupon}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleRestoreCoupon}
+              className="bg-green-600 hover:bg-green-700"
             >
-              Delete Coupon
+              Restore
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -262,19 +379,43 @@ export function EnhancedCouponTable({}: EnhancedCouponTableProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Multiple Coupons</AlertDialogTitle>
+            <AlertDialogTitle>
+              Archive {selectedActiveCoupons.length} coupons?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedCoupons.length} coupon{selectedCoupons.length !== 1 ? 's' : ''}?
-              This action cannot be undone and may affect tickets using these coupons.
+              This will archive the selected coupons. You can restore them later from the archived view.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete}>
+              Archive All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Restore Dialog */}
+      <AlertDialog
+        open={bulkRestoreDialogOpen}
+        onOpenChange={setBulkRestoreDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Restore {selectedDeletedCoupons.length} coupons?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the selected coupons and make them active again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleBulkDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleBulkRestore}
+              className="bg-green-600 hover:bg-green-700"
             >
-              Delete Coupons
+              Restore All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

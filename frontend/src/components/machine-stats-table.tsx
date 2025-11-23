@@ -21,6 +21,8 @@ import {
 } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
 import {
+  IconArrowDown,
+  IconArrowUp,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
@@ -141,14 +143,44 @@ const columns: ColumnDef<MachineStats>[] = [
   },
   {
     accessorKey: "id",
-    header: "Machine ID",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-4 h-8 hover:bg-transparent"
+        >
+          Machine ID
+          {column.getIsSorted() === "asc" ? (
+            <IconArrowUp className="ml-2 size-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <IconArrowDown className="ml-2 size-4" />
+          ) : null}
+        </Button>
+      )
+    },
     cell: ({ row }) => (
       <div className="font-medium">{row.original.id}</div>
     ),
   },
   {
     accessorKey: "name",
-    header: "Machine Name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-4 h-8 hover:bg-transparent"
+        >
+          Machine Name
+          {column.getIsSorted() === "asc" ? (
+            <IconArrowUp className="ml-2 size-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <IconArrowDown className="ml-2 size-4" />
+          ) : null}
+        </Button>
+      )
+    },
     cell: ({ row }) => (
       <div className="font-semibold">{row.original.name}</div>
     ),
@@ -156,7 +188,22 @@ const columns: ColumnDef<MachineStats>[] = [
   },
   {
     accessorKey: "alias",
-    header: "Alias",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-4 h-8 hover:bg-transparent"
+        >
+          Alias
+          {column.getIsSorted() === "asc" ? (
+            <IconArrowUp className="ml-2 size-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <IconArrowDown className="ml-2 size-4" />
+          ) : null}
+        </Button>
+      )
+    },
     cell: ({ row }) => (
       <Badge variant="outline" className="text-muted-foreground px-1.5">
         {row.original.alias}
@@ -165,7 +212,22 @@ const columns: ColumnDef<MachineStats>[] = [
   },
   {
     accessorKey: "domName",
-    header: "Store",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-4 h-8 hover:bg-transparent"
+        >
+          Store
+          {column.getIsSorted() === "asc" ? (
+            <IconArrowUp className="ml-2 size-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <IconArrowDown className="ml-2 size-4" />
+          ) : null}
+        </Button>
+      )
+    },
     cell: ({ row }) => (
       <div className="font-medium text-muted-foreground">
         {row.original.domName}
@@ -174,7 +236,24 @@ const columns: ColumnDef<MachineStats>[] = [
   },
   {
     accessorKey: "experiencesCount",
-    header: () => <div className="text-right">Experiences</div>,
+    header: ({ column }) => {
+      return (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-mr-4 h-8 hover:bg-transparent"
+          >
+            Experiences
+            {column.getIsSorted() === "asc" ? (
+              <IconArrowUp className="ml-2 size-4" />
+            ) : column.getIsSorted() === "desc" ? (
+              <IconArrowDown className="ml-2 size-4" />
+            ) : null}
+          </Button>
+        </div>
+      )
+    },
     cell: ({ row }) => (
       <div className="text-right font-medium">
         {row.original.experiencesCount.toLocaleString()}
@@ -183,7 +262,24 @@ const columns: ColumnDef<MachineStats>[] = [
   },
   {
     accessorKey: "totalRevenue",
-    header: () => <div className="text-right">Total Revenue</div>,
+    header: ({ column }) => {
+      return (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-mr-4 h-8 hover:bg-transparent"
+          >
+            Total Revenue
+            {column.getIsSorted() === "asc" ? (
+              <IconArrowUp className="ml-2 size-4" />
+            ) : column.getIsSorted() === "desc" ? (
+              <IconArrowDown className="ml-2 size-4" />
+            ) : null}
+          </Button>
+        </div>
+      )
+    },
     cell: ({ row }) => (
       <div className="text-right font-semibold">
         €{row.original.totalRevenue.toLocaleString(undefined, {

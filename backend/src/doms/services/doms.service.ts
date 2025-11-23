@@ -61,10 +61,18 @@ export class DomsService {
     filterParams: FilterDomsDto,
   ): Promise<{ data: DomResponse[]; total: number }> {
     try {
-      const { offset = 0, limit = 10, search, domId } = filterParams;
+      const { offset = 0, limit = 10, search, domId, showArchived } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {};
+      const where: any = {
+        
+      };
+
+      if (!showArchived) {
+        where.deletedAt = null;
+      }else {
+        where.deletedAt = { not: null };
+      }
 
       if (search) {
         where.OR = [
@@ -225,38 +233,24 @@ export class DomsService {
       // Check if DOM exists
       const existingDom = await this.prisma.doms.findUnique({
         where: { id },
-        include: {
-          _count: {
-            select: {
-              Users: true,
-              experiences: true,
-              machines: true,
-              tickets: true,
-            },
-          },
-        },
       });
 
       if (!existingDom) {
         throw new HttpException('DOM not found', HttpStatus.NOT_FOUND);
       }
 
-      // Check if DOM has related records
-      const hasRelatedRecords =
-        existingDom._count.Users > 0 ||
-        existingDom._count.experiences > 0 ||
-        existingDom._count.machines > 0 ||
-        existingDom._count.tickets > 0;
-
-      if (hasRelatedRecords) {
+      // Check if already deleted
+      if (existingDom.deletedAt) {
         throw new HttpException(
-          'Cannot delete DOM. It has related users, experiences, machines, or tickets.',
+          'DOM is already deleted',
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      await this.prisma.doms.delete({
+      // Soft delete the DOM
+      await this.prisma.doms.update({
         where: { id },
+        data: { deletedAt: new Date() },
       });
 
       return { message: 'DOM deleted successfully' };
@@ -278,56 +272,42 @@ export class DomsService {
     message: string;
     deletedCount: number;
     notFound: number[];
-    hasRelatedRecords: number[];
+    alreadyDeleted: number[];
   }> {
     try {
       const { domIds } = bulkDeleteDto;
 
-      // Check which DOMs exist and their related records
+      // Check which DOMs exist
       const existingDoms = await this.prisma.doms.findMany({
         where: { id: { in: domIds } },
         select: {
           id: true,
-          _count: {
-            select: {
-              Users: true,
-              experiences: true,
-              machines: true,
-              tickets: true,
-            },
-          },
+          deletedAt: true,
         },
       });
 
       const existingDomIds = existingDoms.map((dom) => dom.id);
       const notFoundIds = domIds.filter((id) => !existingDomIds.includes(id));
 
-      // Filter out DOMs that have related records
-      const domsWithRelatedRecords = existingDoms.filter(
-        (dom) =>
-          dom._count.Users > 0 ||
-          dom._count.experiences > 0 ||
-          dom._count.machines > 0 ||
-          dom._count.tickets > 0,
-      );
+      // Filter out DOMs that are already deleted
+      const alreadyDeletedDoms = existingDoms.filter((dom) => dom.deletedAt !== null);
+      const alreadyDeletedIds = alreadyDeletedDoms.map((dom) => dom.id);
 
-      const domIdsWithRelatedRecords = domsWithRelatedRecords.map(
-        (dom) => dom.id,
-      );
       const deletableIds = existingDomIds.filter(
-        (id) => !domIdsWithRelatedRecords.includes(id),
+        (id) => !alreadyDeletedIds.includes(id),
       );
 
-      // Delete DOMs that don't have related records
-      const deleteResult = await this.prisma.doms.deleteMany({
+      // Soft delete DOMs
+      const deleteResult = await this.prisma.doms.updateMany({
         where: { id: { in: deletableIds } },
+        data: { deletedAt: new Date() },
       });
 
       return {
         message: `Bulk delete completed. ${deleteResult.count} DOMs deleted successfully.`,
         deletedCount: deleteResult.count,
         notFound: notFoundIds,
-        hasRelatedRecords: domIdsWithRelatedRecords,
+        alreadyDeleted: alreadyDeletedIds,
       };
     } catch (error) {
       this.logger.error('Error bulk deleting DOMs:', error);
@@ -336,6 +316,91 @@ export class DomsService {
       }
       throw new HttpException(
         'Error bulk deleting DOMs',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async restore(id: number): Promise<{ message: string }> {
+    try {
+      const dom = await this.prisma.doms.findUnique({
+        where: { id },
+      });
+
+      if (!dom) {
+        throw new HttpException('DOM not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (!dom.deletedAt) {
+        throw new HttpException(
+          'DOM is not deleted',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.prisma.doms.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return { message: 'DOM restored successfully' };
+    } catch (error) {
+      this.logger.error('Error restoring DOM:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error restoring DOM',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async bulkRestore(
+    domIds: number[],
+  ): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingDoms = await this.prisma.doms.findMany({
+        where: { id: { in: domIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingDomIds = existingDoms.map((dom) => dom.id);
+      const notFoundIds = domIds.filter((id) => !existingDomIds.includes(id));
+
+      const notDeletedDoms = existingDoms.filter((dom) => dom.deletedAt === null);
+      const notDeletedIds = notDeletedDoms.map((dom) => dom.id);
+
+      const restorableIds = existingDomIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      const restoreResult = await this.prisma.doms.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} DOMs restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring DOMs:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error bulk restoring DOMs',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

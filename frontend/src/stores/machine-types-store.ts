@@ -7,6 +7,7 @@ export interface MachineType {
   machinesCount: number;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
 
 export interface CreateMachineTypePayload {
@@ -22,6 +23,7 @@ export interface FilterParams {
   limit?: number;
   search?: string;
   machineTypeId?: number;
+  showArchived?: boolean;
 }
 
 export interface MachineTypesResponse {
@@ -35,6 +37,7 @@ interface MachineTypesStore {
   loading: boolean;
   error: string | null;
   selectedMachineTypes: number[];
+  showArchived: boolean;
 
   // Pagination state
   currentPage: number;
@@ -52,11 +55,16 @@ interface MachineTypesStore {
   ) => Promise<void>;
   deleteMachineType: (id: number) => Promise<void>;
   bulkDeleteMachineTypes: (machineTypeIds: number[]) => Promise<void>;
+  restoreMachineType: (id: number) => Promise<void>;
+  bulkRestoreMachineTypes: (machineTypeIds: number[]) => Promise<void>;
   getMachineTypeById: (id: number) => Promise<MachineType | null>;
 
   // Pagination actions
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
+
+  // Archive actions
+  setShowArchived: (show: boolean) => void;
 
   // Selection actions
   selectMachineType: (id: number) => void;
@@ -75,6 +83,7 @@ export const useMachineTypesStore = create<MachineTypesStore>((set, get) => ({
   loading: false,
   error: null,
   selectedMachineTypes: [],
+  showArchived: false,
 
   // Pagination state
   currentPage: 1,
@@ -86,7 +95,7 @@ export const useMachineTypesStore = create<MachineTypesStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize } = get();
+      const { currentPage, pageSize, showArchived } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       // Always send default values to ensure integers
@@ -97,6 +106,7 @@ export const useMachineTypesStore = create<MachineTypesStore>((set, get) => ({
       const apiParams: any = {
         offset: finalOffset,
         limit: finalLimit,
+        showArchived: params.showArchived ?? showArchived,
       };
 
       if (params.search && params.search.trim()) {
@@ -231,6 +241,50 @@ export const useMachineTypesStore = create<MachineTypesStore>((set, get) => ({
     }
   },
 
+  // Restore machine type (admin only)
+  restoreMachineType: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/machine-types/admin/${id}/restore`);
+
+      // Refresh the machine types list
+      await get().fetchMachineTypes();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore machine type",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore machine types (admin only)
+  bulkRestoreMachineTypes: async (machineTypeIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/machine-types/admin/bulk-restore", {
+        machineTypeIds: machineTypeIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedMachineTypes: [] });
+      await get().fetchMachineTypes();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error:
+          error.response?.data?.message || "Failed to restore machine types",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
   // Pagination actions
   setPage: (page: number) => {
     set({ currentPage: page });
@@ -240,6 +294,12 @@ export const useMachineTypesStore = create<MachineTypesStore>((set, get) => ({
   setPageSize: (pageSize: number) => {
     set({ pageSize, currentPage: 1 });
     get().fetchMachineTypes();
+  },
+
+  // Archive actions
+  setShowArchived: (show: boolean) => {
+    set({ showArchived: show, currentPage: 1 });
+    get().fetchMachineTypes({ showArchived: show });
   },
 
   // Selection actions

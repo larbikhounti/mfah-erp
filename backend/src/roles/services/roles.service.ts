@@ -58,10 +58,12 @@ export class RolesService {
     filterParams: FilterRolesDto,
   ): Promise<{ data: RoleResponse[]; total: number }> {
     try {
-      const { offset = 0, limit = 10, search, roleId } = filterParams;
+      const { offset = 0, limit = 10, search, roleId, showArchived } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {};
+      const where: any = {
+        deletedAt: showArchived ? undefined : null, // Filter based on showArchived
+      };
 
       if (search) {
         where.name = { contains: search, mode: 'insensitive' };
@@ -191,29 +193,24 @@ export class RolesService {
     try {
       const role = await this.prisma.roles.findUnique({
         where: { id },
-        include: {
-          _count: {
-            select: {
-              Users: true,
-            },
-          },
-        },
       });
 
       if (!role) {
         throw new HttpException('Role not found', HttpStatus.NOT_FOUND);
       }
 
-      // Check if role has related users
-      if (role._count && role._count.Users > 0) {
+      // Check if already deleted
+      if (role.deletedAt) {
         throw new HttpException(
-          'Cannot delete role with related users',
+          'Role is already deleted',
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      await this.prisma.roles.delete({
+      // Soft delete the role
+      await this.prisma.roles.update({
         where: { id },
+        data: { deletedAt: new Date() },
       });
 
       return { message: 'Role deleted successfully' };
@@ -235,59 +232,132 @@ export class RolesService {
     message: string;
     deletedCount: number;
     notFound: number[];
-    hasRelatedRecords: number[];
+    alreadyDeleted: number[];
   }> {
     try {
       const { roleIds } = bulkDeleteDto;
-      let deletedCount = 0;
-      const notFound: number[] = [];
-      const hasRelatedRecords: number[] = [];
 
-      for (const roleId of roleIds) {
-        try {
-          const role = await this.prisma.roles.findUnique({
-            where: { id: roleId },
-            include: {
-              _count: {
-                select: {
-                  Users: true,
-                },
-              },
-            },
-          });
+      // Check which roles exist
+      const existingRoles = await this.prisma.roles.findMany({
+        where: { id: { in: roleIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
 
-          if (!role) {
-            notFound.push(roleId);
-            continue;
-          }
+      const existingRoleIds = existingRoles.map((role) => role.id);
+      const notFoundIds = roleIds.filter((id) => !existingRoleIds.includes(id));
 
-          // Check if role has related users
-          if (role._count && role._count.Users > 0) {
-            hasRelatedRecords.push(roleId);
-            continue;
-          }
+      // Filter out roles that are already deleted
+      const alreadyDeletedRoles = existingRoles.filter((role) => role.deletedAt !== null);
+      const alreadyDeletedIds = alreadyDeletedRoles.map((role) => role.id);
 
-          await this.prisma.roles.delete({
-            where: { id: roleId },
-          });
+      const deletableIds = existingRoleIds.filter(
+        (id) => !alreadyDeletedIds.includes(id),
+      );
 
-          deletedCount++;
-        } catch (error) {
-          this.logger.error(`Error deleting role ${roleId}:`, error);
-          // Continue with next role instead of failing the entire operation
-        }
-      }
+      // Soft delete roles
+      const deleteResult = await this.prisma.roles.updateMany({
+        where: { id: { in: deletableIds } },
+        data: { deletedAt: new Date() },
+      });
 
       return {
-        message: `Bulk delete completed. ${deletedCount} roles deleted.`,
-        deletedCount,
-        notFound,
-        hasRelatedRecords,
+        message: `Bulk delete completed. ${deleteResult.count} roles deleted.`,
+        deletedCount: deleteResult.count,
+        notFound: notFoundIds,
+        alreadyDeleted: alreadyDeletedIds,
       };
     } catch (error) {
       this.logger.error('Error in bulk delete roles:', error);
       throw new HttpException(
         'Error in bulk delete operation',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async restore(id: number): Promise<{ message: string }> {
+    try {
+      const role = await this.prisma.roles.findUnique({
+        where: { id },
+      });
+
+      if (!role) {
+        throw new HttpException('Role not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (!role.deletedAt) {
+        throw new HttpException(
+          'Role is not deleted',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.prisma.roles.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return { message: 'Role restored successfully' };
+    } catch (error) {
+      this.logger.error(`Error restoring role with id ${id}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error restoring role',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async bulkRestore(
+    roleIds: number[],
+  ): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingRoles = await this.prisma.roles.findMany({
+        where: { id: { in: roleIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingRoleIds = existingRoles.map((role) => role.id);
+      const notFoundIds = roleIds.filter((id) => !existingRoleIds.includes(id));
+
+      const notDeletedRoles = existingRoles.filter((role) => role.deletedAt === null);
+      const notDeletedIds = notDeletedRoles.map((role) => role.id);
+
+      const restorableIds = existingRoleIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      const restoreResult = await this.prisma.roles.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} roles restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring roles:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error bulk restoring roles',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

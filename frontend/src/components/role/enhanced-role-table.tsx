@@ -125,6 +125,7 @@ export function EnhancedRoleTable({}: EnhancedRoleTableProps) {
     {
       key: "users",
       label: "Users",
+       sortable: true,
       render: (role) => (
         <Badge variant="outline">
           {role._count?.Users || 0} user{role._count?.Users !== 1 ? 's' : ''}
@@ -134,6 +135,7 @@ export function EnhancedRoleTable({}: EnhancedRoleTableProps) {
     {
       key: "createdAt",
       label: "Created",
+       sortable: true,
       render: (role) => {
         const date = new Date(role.createdAt);
         return (
@@ -146,6 +148,7 @@ export function EnhancedRoleTable({}: EnhancedRoleTableProps) {
     {
       key: "updatedAt",
       label: "Updated",
+       sortable: true,
       render: (role) => {
         const date = new Date(role.updatedAt);
         return (

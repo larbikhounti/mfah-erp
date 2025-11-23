@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 
 export class FilterRolesDto {
   @ApiProperty({
@@ -41,4 +41,18 @@ export class FilterRolesDto {
   @IsOptional()
   @IsNumber()
   roleId?: number;
+
+  @ApiProperty({
+    description: 'Show archived/deleted items',
+    example: false,
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  showArchived?: boolean;
 }

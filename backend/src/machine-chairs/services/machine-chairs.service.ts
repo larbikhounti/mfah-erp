@@ -39,10 +39,19 @@ export class MachineChairsService {
         search,
         status,
         machineId,
+        showArchived,
       } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {};
+            const where: any = {
+        
+      };
+
+      if (!showArchived) {
+        where.deletedAt = null;
+      }else {
+        where.deletedAt = { not: null };
+      }
 
       if (search) {
         where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
@@ -55,9 +64,6 @@ export class MachineChairsService {
       if (machineId) {
         where.machineId = machineId;
       }
-
-      // Add deletedAt filter to exclude soft-deleted records
-      where.deletedAt = null;
 
       const [machineChairs, total] = await Promise.all([
         this.prisma.machineChairs.findMany({
@@ -181,6 +187,81 @@ export class MachineChairsService {
         'Error fetching machine chairs by machine ID',
         500,
       );
+    }
+  }
+
+  async restore(id: number): Promise<string | Error> {
+    try {
+      const machineChair = await this.prisma.machineChairs.findUnique({
+        where: { id },
+      });
+
+      if (!machineChair) {
+        throw new HttpException('Machine chair not found', 404);
+      }
+
+      if (!machineChair.deletedAt) {
+        throw new HttpException('Machine chair is not deleted', 400);
+      }
+
+      await this.prisma.machineChairs.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return `Machine chair restored successfully`;
+    } catch (error) {
+      console.error('Error restoring machine chair:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      return new HttpException('Error restoring machine chair', 500);
+    }
+  }
+
+  async bulkRestore(
+    ids: number[],
+  ): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingMachineChairs = await this.prisma.machineChairs.findMany({
+        where: { id: { in: ids } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingIds = existingMachineChairs.map((chair) => chair.id);
+      const notFoundIds = ids.filter((id) => !existingIds.includes(id));
+
+      const notDeletedMachineChairs = existingMachineChairs.filter(
+        (chair) => chair.deletedAt === null,
+      );
+      const notDeletedIds = notDeletedMachineChairs.map((chair) => chair.id);
+
+      const restorableIds = existingIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      const restoreResult = await this.prisma.machineChairs.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} machine chairs restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      console.error('Error bulk restoring machine chairs:', error);
+      throw new HttpException('Error bulk restoring machine chairs', 500);
     }
   }
 }

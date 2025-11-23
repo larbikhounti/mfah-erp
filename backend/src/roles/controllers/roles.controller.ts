@@ -11,6 +11,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import { CreateRoleDto } from '../dtos/create-role.dto';
 import { UpdateRoleDto } from '../dtos/update-role.dto';
@@ -151,5 +152,34 @@ export class RolesController {
   @ApiResponse({ status: 403, description: 'Admin access required' })
   getAllRolesAdmin(@Query() filterParams: FilterRolesDto) {
     return this.rolesService.findAll(filterParams);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Patch('admin/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore deleted role (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Role restored successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Role not found' })
+  restoreRole(@Param('id', ParseIntPipe) id: number) {
+    return this.rolesService.restore(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Post('admin/bulk-restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore multiple roles (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  bulkRestoreRoles(@Body() body: { roleIds: number[] }) {
+    return this.rolesService.bulkRestore(body.roleIds);
   }
 }

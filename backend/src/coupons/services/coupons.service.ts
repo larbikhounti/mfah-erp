@@ -59,10 +59,18 @@ export class CouponsService {
     filterParams: FilterCouponsDto,
   ): Promise<{ data: CouponResponse[]; total: number }> {
     try {
-      const { offset = 0, limit = 10, search, isActive, couponId } = filterParams;
+      const { offset = 0, limit = 10, search, isActive, couponId, showArchived } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {};
+        const where: any = {
+        
+      };
+
+      if (!showArchived) {
+        where.deletedAt = null;
+      }else {
+        where.deletedAt = { not: null };
+      }
 
       if (search) {
         where.code = { contains: search, mode: 'insensitive' };
@@ -230,29 +238,24 @@ export class CouponsService {
     try {
       const coupon = await this.prisma.coupons.findUnique({
         where: { id },
-        include: {
-          _count: {
-            select: {
-              tickets: true,
-            },
-          },
-        },
       });
 
       if (!coupon) {
         throw new HttpException('Coupon not found', HttpStatus.NOT_FOUND);
       }
 
-      // Check if coupon has related tickets
-      if (coupon._count && coupon._count.tickets > 0) {
+      // Check if already deleted
+      if (coupon.deletedAt) {
         throw new HttpException(
-          'Cannot delete coupon with related tickets',
+          'Coupon is already deleted',
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      await this.prisma.coupons.delete({
+      // Soft delete the coupon
+      await this.prisma.coupons.update({
         where: { id },
+        data: { deletedAt: new Date() },
       });
 
       return { message: 'Coupon deleted successfully' };
@@ -274,59 +277,132 @@ export class CouponsService {
     message: string;
     deletedCount: number;
     notFound: number[];
-    hasRelatedRecords: number[];
+    alreadyDeleted: number[];
   }> {
     try {
       const { couponIds } = bulkDeleteDto;
-      let deletedCount = 0;
-      const notFound: number[] = [];
-      const hasRelatedRecords: number[] = [];
 
-      for (const couponId of couponIds) {
-        try {
-          const coupon = await this.prisma.coupons.findUnique({
-            where: { id: couponId },
-            include: {
-              _count: {
-                select: {
-                  tickets: true,
-                },
-              },
-            },
-          });
+      // Check which coupons exist
+      const existingCoupons = await this.prisma.coupons.findMany({
+        where: { id: { in: couponIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
 
-          if (!coupon) {
-            notFound.push(couponId);
-            continue;
-          }
+      const existingCouponIds = existingCoupons.map((coupon) => coupon.id);
+      const notFoundIds = couponIds.filter((id) => !existingCouponIds.includes(id));
 
-          // Check if coupon has related tickets
-          if (coupon._count && coupon._count.tickets > 0) {
-            hasRelatedRecords.push(couponId);
-            continue;
-          }
+      // Filter out coupons that are already deleted
+      const alreadyDeletedCoupons = existingCoupons.filter((coupon) => coupon.deletedAt !== null);
+      const alreadyDeletedIds = alreadyDeletedCoupons.map((coupon) => coupon.id);
 
-          await this.prisma.coupons.delete({
-            where: { id: couponId },
-          });
+      const deletableIds = existingCouponIds.filter(
+        (id) => !alreadyDeletedIds.includes(id),
+      );
 
-          deletedCount++;
-        } catch (error) {
-          this.logger.error(`Error deleting coupon ${couponId}:`, error);
-          // Continue with next coupon instead of failing the entire operation
-        }
-      }
+      // Soft delete coupons
+      const deleteResult = await this.prisma.coupons.updateMany({
+        where: { id: { in: deletableIds } },
+        data: { deletedAt: new Date() },
+      });
 
       return {
-        message: `Bulk delete completed. ${deletedCount} coupons deleted.`,
-        deletedCount,
-        notFound,
-        hasRelatedRecords,
+        message: `Bulk delete completed. ${deleteResult.count} coupons deleted.`,
+        deletedCount: deleteResult.count,
+        notFound: notFoundIds,
+        alreadyDeleted: alreadyDeletedIds,
       };
     } catch (error) {
       this.logger.error('Error in bulk delete coupons:', error);
       throw new HttpException(
         'Error in bulk delete operation',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async restore(id: number): Promise<{ message: string }> {
+    try {
+      const coupon = await this.prisma.coupons.findUnique({
+        where: { id },
+      });
+
+      if (!coupon) {
+        throw new HttpException('Coupon not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (!coupon.deletedAt) {
+        throw new HttpException(
+          'Coupon is not deleted',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.prisma.coupons.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return { message: 'Coupon restored successfully' };
+    } catch (error) {
+      this.logger.error(`Error restoring coupon with id ${id}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error restoring coupon',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async bulkRestore(
+    couponIds: number[],
+  ): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingCoupons = await this.prisma.coupons.findMany({
+        where: { id: { in: couponIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingCouponIds = existingCoupons.map((coupon) => coupon.id);
+      const notFoundIds = couponIds.filter((id) => !existingCouponIds.includes(id));
+
+      const notDeletedCoupons = existingCoupons.filter((coupon) => coupon.deletedAt === null);
+      const notDeletedIds = notDeletedCoupons.map((coupon) => coupon.id);
+
+      const restorableIds = existingCouponIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      const restoreResult = await this.prisma.coupons.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} coupons restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring coupons:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error bulk restoring coupons',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

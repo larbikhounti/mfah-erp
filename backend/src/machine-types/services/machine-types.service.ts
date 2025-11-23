@@ -17,12 +17,18 @@ export class MachineTypesService {
     filterParams: FilterMachineTypesDto,
   ): Promise<{ data: MachineTypeResponse[]; total: number }> {
     try {
-      const { offset = 0, limit = 10, search, machineTypeId } = filterParams;
+      const { offset = 0, limit = 10, search, machineTypeId, showArchived } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {
-        deletedAt: null, // Only get non-deleted machine types
+            const where: any = {
+        
       };
+
+      if (!showArchived) {
+        where.deletedAt = null;
+      }else {
+        where.deletedAt = { not: null };
+      }
 
       if (search) {
         where.name = { contains: search, mode: 'insensitive' };
@@ -43,6 +49,7 @@ export class MachineTypesService {
             name: true,
             createdAt: true,
             updatedAt: true,
+            deletedAt: true,
             _count: {
               select: {
                 machines: {
@@ -68,6 +75,7 @@ export class MachineTypesService {
           machinesCount: machineType._count.machines,
           createdAt: machineType.createdAt.toISOString(),
           updatedAt: machineType.updatedAt.toISOString(),
+          deletedAt: machineType.deletedAt?.toISOString() || null,
         }),
       );
 
@@ -374,6 +382,93 @@ export class MachineTypesService {
       this.logger.error('Error bulk deleting machine types:', error);
       throw new HttpException(
         'Error bulk deleting machine types',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async restore(id: number): Promise<{ message: string }> {
+    try {
+      const machineType = await this.prisma.machineTypes.findUnique({
+        where: { id },
+      });
+
+      if (!machineType) {
+        throw new HttpException(
+          'Machine type not found',
+          HttpStatus.NOT_FOUND,
+        );
+      }
+
+      if (!machineType.deletedAt) {
+        throw new HttpException(
+          'Machine type is not deleted',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.prisma.machineTypes.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return { message: 'Machine type restored successfully' };
+    } catch (error) {
+      this.logger.error(`Error restoring machine type with id ${id}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error restoring machine type',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async bulkRestore(machineTypeIds: number[]): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingMachineTypes = await this.prisma.machineTypes.findMany({
+        where: { id: { in: machineTypeIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingMachineTypeIds = existingMachineTypes.map((mt) => mt.id);
+      const notFoundIds = machineTypeIds.filter(
+        (id) => !existingMachineTypeIds.includes(id),
+      );
+
+      const notDeletedMachineTypes = existingMachineTypes.filter(
+        (mt) => mt.deletedAt === null,
+      );
+      const notDeletedIds = notDeletedMachineTypes.map((mt) => mt.id);
+
+      const restorableIds = existingMachineTypeIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      const restoreResult = await this.prisma.machineTypes.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} machine types restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring machine types:', error);
+      throw new HttpException(
+        'Error bulk restoring machine types',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

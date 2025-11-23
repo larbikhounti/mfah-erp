@@ -5,6 +5,7 @@ import {
   Get,
   Put,
   Delete,
+  Patch,
   Query,
   Param,
   ParseIntPipe,
@@ -170,5 +171,34 @@ export class GameTypesController {
   @ApiResponse({ status: 404, description: 'Game type not found' })
   deleteGameTypeByAdmin(@Param('id', ParseIntPipe) id: number) {
     return this.gameTypesService.deleteGameTypeByAdmin(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Patch('admin/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore deleted game type (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Game type restored successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Game type not found' })
+  restoreGameType(@Param('id', ParseIntPipe) id: number) {
+    return this.gameTypesService.restore(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Post('admin/bulk-restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore multiple game types (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  bulkRestoreGameTypes(@Body() body: { gameTypeIds: number[] }) {
+    return this.gameTypesService.bulkRestore(body.gameTypeIds);
   }
 }

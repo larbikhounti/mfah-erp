@@ -18,6 +18,8 @@ import {
 
 import { Button } from "@/components/ui/button"
 import {
+  IconArrowDown,
+  IconArrowUp,
   IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
@@ -67,7 +69,22 @@ interface GameStatsTableProps {
 const columns: ColumnDef<GameStats>[] = [
   {
     accessorKey: "name",
-    header: "Game Name",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+          className="-ml-4 h-8 hover:bg-transparent"
+        >
+          Game Name
+          {column.getIsSorted() === "asc" ? (
+            <IconArrowUp className="ml-2 size-4" />
+          ) : column.getIsSorted() === "desc" ? (
+            <IconArrowDown className="ml-2 size-4" />
+          ) : null}
+        </Button>
+      )
+    },
     cell: ({ row }) => (
       <div className="font-semibold">{row.original.name}</div>
     ),
@@ -75,7 +92,24 @@ const columns: ColumnDef<GameStats>[] = [
   },
   {
     accessorKey: "playsCount",
-    header: () => <div className="text-right">Plays Count</div>,
+    header: ({ column }) => {
+      return (
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="-mr-4 h-8 hover:bg-transparent"
+          >
+            Plays Count
+            {column.getIsSorted() === "asc" ? (
+              <IconArrowUp className="ml-2 size-4" />
+            ) : column.getIsSorted() === "desc" ? (
+              <IconArrowDown className="ml-2 size-4" />
+            ) : null}
+          </Button>
+        </div>
+      )
+    },
     cell: ({ row }) => (
       <div className="text-right font-semibold text-blue-600">
         {row.original.playsCount.toLocaleString()}

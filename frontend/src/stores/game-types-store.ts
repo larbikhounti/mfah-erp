@@ -7,6 +7,7 @@ export interface GameType {
   gamesCount: number;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
 
 export interface CreateGameTypePayload {
@@ -22,6 +23,7 @@ export interface FilterParams {
   limit?: number;
   search?: string;
   gameTypeId?: number;
+  showArchived?: boolean;
 }
 
 export interface GameTypesResponse {
@@ -35,6 +37,7 @@ interface GameTypesStore {
   loading: boolean;
   error: string | null;
   selectedGameTypes: number[];
+  showArchived: boolean;
 
   // Pagination state
   currentPage: number;
@@ -50,11 +53,16 @@ interface GameTypesStore {
   ) => Promise<void>;
   deleteGameType: (id: number) => Promise<void>;
   bulkDeleteGameTypes: (gameTypeIds: number[]) => Promise<void>;
+  restoreGameType: (id: number) => Promise<void>;
+  bulkRestoreGameTypes: (gameTypeIds: number[]) => Promise<void>;
   getGameTypeById: (id: number) => Promise<GameType | null>;
 
   // Pagination actions
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
+
+  // Archive actions
+  setShowArchived: (show: boolean) => void;
 
   // Selection actions
   selectGameType: (id: number) => void;
@@ -73,6 +81,7 @@ export const useGameTypesStore = create<GameTypesStore>((set, get) => ({
   loading: false,
   error: null,
   selectedGameTypes: [],
+  showArchived: false,
 
   // Pagination state
   currentPage: 1,
@@ -84,7 +93,7 @@ export const useGameTypesStore = create<GameTypesStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize } = get();
+      const { currentPage, pageSize, showArchived } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       // Always send default values to ensure integers
@@ -95,6 +104,7 @@ export const useGameTypesStore = create<GameTypesStore>((set, get) => ({
       const apiParams: any = {
         offset: finalOffset,
         limit: finalLimit,
+        showArchived: params.showArchived ?? showArchived,
       };
 
       if (params.search && params.search.trim()) {
@@ -148,7 +158,10 @@ export const useGameTypesStore = create<GameTypesStore>((set, get) => ({
   },
 
   // Update game type (admin only)
-  updateGameType: async (id: number, gameTypeData: UpdateGameTypePayload) => {
+  updateGameType: async (
+    id: number,
+    gameTypeData: UpdateGameTypePayload
+  ) => {
     try {
       set({ loading: true, error: null });
 
@@ -203,7 +216,52 @@ export const useGameTypesStore = create<GameTypesStore>((set, get) => ({
       set({ loading: false });
     } catch (error: any) {
       set({
-        error: error.response?.data?.message || "Failed to delete game types",
+        error:
+          error.response?.data?.message || "Failed to delete game types",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Restore game type (admin only)
+  restoreGameType: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/game-types/admin/${id}/restore`);
+
+      // Refresh the game types list
+      await get().fetchGameTypes();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore game type",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore game types (admin only)
+  bulkRestoreGameTypes: async (gameTypeIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/game-types/admin/bulk-restore", {
+        gameTypeIds: gameTypeIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedGameTypes: [] });
+      await get().fetchGameTypes();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error:
+          error.response?.data?.message || "Failed to restore game types",
         loading: false,
       });
       throw error;
@@ -213,7 +271,9 @@ export const useGameTypesStore = create<GameTypesStore>((set, get) => ({
   // Get game type by ID
   getGameTypeById: async (id: number) => {
     try {
-      const response = await axiosInstance.get<GameType>(`/game-types/${id}`);
+      const response = await axiosInstance.get<GameType>(
+        `/game-types/${id}`
+      );
       return response.data;
     } catch (error: any) {
       set({
@@ -232,6 +292,12 @@ export const useGameTypesStore = create<GameTypesStore>((set, get) => ({
   setPageSize: (pageSize: number) => {
     set({ pageSize, currentPage: 1 });
     get().fetchGameTypes();
+  },
+
+  // Archive actions
+  setShowArchived: (show: boolean) => {
+    set({ showArchived: show, currentPage: 1 });
+    get().fetchGameTypes({ showArchived: show });
   },
 
   // Selection actions

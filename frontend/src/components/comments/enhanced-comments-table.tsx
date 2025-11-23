@@ -21,7 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash2, MessageSquare } from "lucide-react";
+import { MoreHorizontal, Trash2, MessageSquare, RotateCcw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useCommentsStore, type Comment } from "@/stores/comments-store";
 import { toast } from "sonner";
 import { EditCommentDialog } from "./edit-comment-dialog";
@@ -35,17 +37,24 @@ export function EnhancedCommentsTable({}: EnhancedCommentsTableProps) {
     loading,
     error,
     selectedComments,
+    showArchived,
     fetchComments,
     deleteComment,
     bulkDeleteComments,
+    restoreComment,
+    bulkRestoreComments,
     selectComment,
     clearSelection,
     clearError,
+    setShowArchived,
   } = useCommentsStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkRestoreDialogOpen, setBulkRestoreDialogOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState<number | null>(null);
+  const [commentToRestore, setCommentToRestore] = useState<number | null>(null);
 
   // Clear error when component unmounts or when error changes
   useEffect(() => {
@@ -85,13 +94,44 @@ export function EnhancedCommentsTable({}: EnhancedCommentsTableProps) {
     }
   };
 
+  const handleRestoreComment = async () => {
+    if (commentToRestore) {
+      try {
+        await restoreComment(commentToRestore);
+        toast.success("Comment restored successfully");
+        setRestoreDialogOpen(false);
+        setCommentToRestore(null);
+      } catch (error) {
+        console.error("Failed to restore comment:", error);
+        toast.error("Failed to restore comment");
+      }
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    if (selectedComments.length > 0) {
+      try {
+        await bulkRestoreComments(selectedComments);
+        toast.success(`${selectedComments.length} comment(s) restored successfully`);
+        setBulkRestoreDialogOpen(false);
+        clearSelection();
+      } catch (error) {
+        console.error("Failed to restore comments:", error);
+        toast.error("Failed to restore comments");
+      }
+    }
+  };
+
   // Handle search with debounce
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
 
-  // Define table columns
-  const columns: TableColumn<Comment>[] = [
+  const selectedDeletedComments = comments.filter(c => selectedComments.includes(c.id) && c.deletedAt);
+  const selectedActiveComments = comments.filter(c => selectedComments.includes(c.id) && !c.deletedAt);
+
+  // Define base columns that are always visible
+  const baseColumns: TableColumn<Comment>[] = [
     {
       key: "select",
       label: "Select",
@@ -123,65 +163,100 @@ export function EnhancedCommentsTable({}: EnhancedCommentsTableProps) {
     {
       key: "tickets",
       label: "Tickets",
+       sortable: true,
       render: (comment) => (
         <Badge variant="outline">
           {comment._count?.ticketComments || 0} ticket{comment._count?.ticketComments !== 1 ? 's' : ''}
         </Badge>
       ),
     },
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (comment) => {
-        const date = new Date(comment.createdAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  ];
+
+  // Created column (shown when NOT in archive mode)
+  const createdColumn: TableColumn<Comment> = {
+    key: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (comment) => {
+      const date = new Date(comment.createdAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "updatedAt",
-      label: "Updated",
-      render: (comment) => {
-        const date = new Date(comment.updatedAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  };
+
+  // Deleted column (shown when in archive mode)
+  const deletedColumn: TableColumn<Comment> = {
+    key: "deletedAt",
+    label: "Deleted",
+    sortable: true,
+    render: (comment) => {
+      if (!comment.deletedAt) {
+        return <div className="text-sm text-muted-foreground">-</div>;
+      }
+      const date = new Date(comment.deletedAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (comment) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <EditCommentDialog comment={comment} />
-            </DropdownMenuItem>
+  };
+
+  // Actions column
+  const actionsColumn: TableColumn<Comment> = {
+    key: "actions",
+    label: "Actions",
+    render: (comment) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {!comment.deletedAt && (
+            <>
+              <DropdownMenuItem asChild>
+                <EditCommentDialog comment={comment} />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setCommentToDelete(comment.id);
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+          {comment.deletedAt && (
             <DropdownMenuItem
               onClick={() => {
-                setCommentToDelete(comment.id);
-                setDeleteDialogOpen(true);
+                setCommentToRestore(comment.id);
+                setRestoreDialogOpen(true);
               }}
-              className="text-destructive"
+              className="text-green-600"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Restore
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  };
+
+  // Build the final columns array based on showArchived state
+  const columns: TableColumn<Comment>[] = [
+    ...baseColumns,
+    ...(showArchived ? [deletedColumn] : [createdColumn]),
+    actionsColumn,
   ];
 
   return (
@@ -195,16 +270,41 @@ export function EnhancedCommentsTable({}: EnhancedCommentsTableProps) {
         emptyMessage="No comments found"
         showCount={true}
         customHeader={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                className="data-[state=checked]:bg-red-600"
+              />
+              <Label htmlFor="show-archived" className="text-sm font-medium">
+                Archive
+              </Label>
+            </div>
             {selectedComments.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setBulkDeleteDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedComments.length})
-              </Button>
+              <>
+                {selectedActiveComments.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setBulkDeleteDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedActiveComments.length})
+                  </Button>
+                )}
+                {selectedDeletedComments.length > 0 && (
+                  <Button
+                    variant="default"
+                    onClick={() => setBulkRestoreDialogOpen(true)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore Selected ({selectedDeletedComments.length})
+                  </Button>
+                )}
+              </>
             )}
             <CreateCommentDialog />
           </div>
@@ -217,17 +317,34 @@ export function EnhancedCommentsTable({}: EnhancedCommentsTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              comment.
+              This will archive the comment. You can restore it later from the archived view.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteComment}>
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Single Restore Dialog */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore comment?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the comment and make it active again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteComment}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleRestoreComment}
+              className="bg-green-600 hover:bg-green-700"
             >
-              Delete Comment
+              Restore
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -240,19 +357,43 @@ export function EnhancedCommentsTable({}: EnhancedCommentsTableProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Multiple Comments</AlertDialogTitle>
+            <AlertDialogTitle>
+              Archive {selectedActiveComments.length} comments?
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete {selectedComments.length} comment{selectedComments.length !== 1 ? 's' : ''}?
-              This action cannot be undone.
+              This will archive the selected comments. You can restore them later from the archived view.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleBulkDelete}>
+              Archive All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Restore Dialog */}
+      <AlertDialog
+        open={bulkRestoreDialogOpen}
+        onOpenChange={setBulkRestoreDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Restore {selectedDeletedComments.length} comments?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the selected comments and make them active again.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleBulkDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleBulkRestore}
+              className="bg-green-600 hover:bg-green-700"
             >
-              Delete Comments
+              Restore All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

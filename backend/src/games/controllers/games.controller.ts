@@ -206,4 +206,59 @@ export class GamesController {
   ): Promise<{ message: string }> {
     return this.gamesService.remove(id);
   }
+
+  @Patch('admin/:id/restore')
+  @UseGuards(AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Restore a deleted game' })
+  @ApiParam({ name: 'id', description: 'Game ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Game restored successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+      },
+    },
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Game not found',
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Game is not deleted',
+  })
+  async restore(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ message: string }> {
+    return this.gamesService.restore(id);
+  }
+
+  @Post('admin/bulk-restore')
+  @UseGuards(AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Restore multiple deleted games' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        restoredCount: { type: 'number' },
+        notFound: { type: 'array', items: { type: 'number' } },
+        notDeleted: { type: 'array', items: { type: 'number' } },
+      },
+    },
+  })
+  async bulkRestore(@Body() body: { gameIds: number[] }): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    return this.gamesService.bulkRestore(body.gameIds);
+  }
 }

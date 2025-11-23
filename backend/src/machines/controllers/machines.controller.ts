@@ -5,6 +5,7 @@ import {
   Get,
   Put,
   Delete,
+  Patch,
   Query,
   Param,
   ParseIntPipe,
@@ -178,5 +179,34 @@ export class MachinesController {
   @ApiResponse({ status: 404, description: 'Machine not found' })
   deleteMachineByAdmin(@Param('id', ParseIntPipe) id: number) {
     return this.machinesService.deleteMachineByAdmin(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Patch('admin/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore deleted machine (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Machine restored successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Machine not found' })
+  restoreMachine(@Param('id', ParseIntPipe) id: number) {
+    return this.machinesService.restore(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Post('admin/bulk-restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore multiple machines (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  bulkRestoreMachines(@Body() body: { machineIds: number[] }) {
+    return this.machinesService.bulkRestore(body.machineIds);
   }
 }

@@ -10,6 +10,7 @@ export interface Machine {
   domeId?: number | null;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
   machineType?: string | null;
   dome?: string | null;
   chairsCount?: number;
@@ -40,6 +41,7 @@ export interface FilterParams {
   machineId?: number;
   machineTypeId?: number;
   domeId?: number;
+  showArchived?: boolean;
 }
 
 export interface MachinesResponse {
@@ -53,6 +55,7 @@ interface MachinesStore {
   loading: boolean;
   error: string | null;
   selectedMachines: number[];
+  showArchived: boolean;
 
   // Pagination state
   currentPage: number;
@@ -68,6 +71,8 @@ interface MachinesStore {
   ) => Promise<void>;
   deleteMachine: (id: number) => Promise<void>;
   bulkDeleteMachines: (machineIds: number[]) => Promise<void>;
+  restoreMachine: (id: number) => Promise<void>;
+  bulkRestoreMachines: (machineIds: number[]) => Promise<void>;
   getMachineById: (id: number) => Promise<Machine | null>;
 
   // Pagination actions
@@ -83,6 +88,7 @@ interface MachinesStore {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearError: () => void;
+  setShowArchived: (showArchived: boolean) => void;
 }
 
 export const useMachinesStore = create<MachinesStore>((set, get) => ({
@@ -91,6 +97,7 @@ export const useMachinesStore = create<MachinesStore>((set, get) => ({
   loading: false,
   error: null,
   selectedMachines: [],
+  showArchived: false,
 
   // Pagination state
   currentPage: 1,
@@ -102,7 +109,7 @@ export const useMachinesStore = create<MachinesStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize } = get();
+      const { currentPage, pageSize, showArchived } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       // Always send default values to ensure integers
@@ -113,6 +120,7 @@ export const useMachinesStore = create<MachinesStore>((set, get) => ({
       const apiParams: any = {
         offset: finalOffset,
         limit: finalLimit,
+        showArchived: params.showArchived ?? showArchived,
       };
 
       if (params.search && params.search.trim()) {
@@ -283,8 +291,55 @@ export const useMachinesStore = create<MachinesStore>((set, get) => ({
     set({ selectedMachines: [] });
   },
 
+  // Restore machine (admin only)
+  restoreMachine: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/machines/admin/${id}/restore`);
+
+      // Refresh the machines list
+      await get().fetchMachines();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore machine",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore machines (admin only)
+  bulkRestoreMachines: async (machineIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/machines/admin/bulk-restore", {
+        machineIds: machineIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedMachines: [] });
+      await get().fetchMachines();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore machines",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
   // Utility actions
   setLoading: (loading: boolean) => set({ loading }),
   setError: (error: string | null) => set({ error }),
   clearError: () => set({ error: null }),
+  setShowArchived: (showArchived: boolean) => {
+    set({ showArchived, currentPage: 1 });
+    get().fetchMachines();
+  },
 }));

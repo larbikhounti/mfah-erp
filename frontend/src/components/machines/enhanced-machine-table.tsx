@@ -21,7 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash2, Edit, Plus } from "lucide-react";
+import { MoreHorizontal, Trash2, Edit, Plus, RotateCcw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useMachinesStore, type Machine } from "@/stores/machines-store";
 import { toast } from "sonner";
 import PaginationTable from "@/components/pagination-table";
@@ -43,22 +45,29 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     currentPage,
     pageSize,
     totalPages,
+    showArchived,
     fetchMachines,
     deleteMachine,
     bulkDeleteMachines,
+    restoreMachine,
+    bulkRestoreMachines,
     selectMachine,
     clearSelection,
     clearError,
     setPage,
     setPageSize,
+    setShowArchived,
   } = useMachinesStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [editingMachine, setEditingMachine] = useState<Machine | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkRestoreDialogOpen, setBulkRestoreDialogOpen] = useState(false);
   const [machineToDelete, setMachineToDelete] = useState<number | null>(null);
+  const [machineToRestore, setMachineToRestore] = useState<number | null>(null);
   const [chairsDialogOpen, setChairsDialogOpen] = useState(false);
   const [selectedMachineForChairs, setSelectedMachineForChairs] =
     useState<Machine | null>(null);
@@ -115,7 +124,32 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     setIsCreateDialogOpen(false);
   };
 
-  const columns: TableColumn<Machine>[] = [
+  const handleRestoreMachine = async (id: number) => {
+    try {
+      await restoreMachine(id);
+      toast.success("Machine restored successfully");
+      setRestoreDialogOpen(false);
+      setMachineToRestore(null);
+    } catch (error) {
+      toast.error("Failed to restore machine");
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    try {
+      await bulkRestoreMachines(selectedMachines);
+      toast.success(`${selectedMachines.length} machines restored successfully`);
+      setBulkRestoreDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to restore machines");
+    }
+  };
+
+  const selectedDeletedMachines = machines.filter(m => selectedMachines.includes(m.id) && m.deletedAt);
+  const selectedActiveMachines = machines.filter(m => selectedMachines.includes(m.id) && !m.deletedAt);
+
+  // Define base columns that are always visible
+  const baseColumns: TableColumn<Machine>[] = [
     {
       key: "select",
       label: "Select",
@@ -170,6 +204,7 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
     {
       key: "chairsCount",
       label: "Chairs",
+       sortable: true,
       render: (machine) => (
         <Badge
           variant="secondary"
@@ -196,47 +231,93 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
         </Badge>
       ),
     },
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (machine) => {
-        const date = new Date(machine.createdAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  ];
+
+  // Created column (shown when NOT in archive mode)
+  const createdColumn: TableColumn<Machine> = {
+    key: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (machine) => {
+      const date = new Date(machine.createdAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (machine) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <EditMachineDialog machine={machine} />
-            </DropdownMenuItem>
+  };
+
+  // Deleted column (shown when in archive mode)
+  const deletedColumn: TableColumn<Machine> = {
+    key: "deletedAt",
+    label: "Deleted",
+    sortable: true,
+    render: (machine) => {
+      if (!machine.deletedAt) {
+        return <div className="text-sm text-muted-foreground">-</div>;
+      }
+      const date = new Date(machine.deletedAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
+    },
+  };
+
+  // Actions column
+  const actionsColumn: TableColumn<Machine> = {
+    key: "actions",
+    label: "Actions",
+    render: (machine) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {!machine.deletedAt && (
+            <>
+              <DropdownMenuItem asChild>
+                <EditMachineDialog machine={machine} />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setMachineToDelete(machine.id);
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+          {machine.deletedAt && (
             <DropdownMenuItem
               onClick={() => {
-                setMachineToDelete(machine.id);
-                setDeleteDialogOpen(true);
+                setMachineToRestore(machine.id);
+                setRestoreDialogOpen(true);
               }}
-              className="text-destructive"
+              className="text-green-600"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Restore
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  };
+
+  // Build the final columns array based on showArchived state
+  const columns: TableColumn<Machine>[] = [
+    ...baseColumns,
+    ...(showArchived ? [deletedColumn] : [createdColumn]),
+    actionsColumn,
   ];
 
   return (
@@ -250,16 +331,41 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
         emptyMessage="No machines found"
         showCount={true}
         customHeader={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                className="data-[state=checked]:bg-red-600"
+              />
+              <Label htmlFor="show-archived" className="text-sm font-medium">
+                Archive
+              </Label>
+            </div>
             {selectedMachines.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setBulkDeleteDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedMachines.length})
-              </Button>
+              <>
+                {selectedActiveMachines.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setBulkDeleteDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedActiveMachines.length})
+                  </Button>
+                )}
+                {selectedDeletedMachines.length > 0 && (
+                  <Button
+                    variant="default"
+                    onClick={() => setBulkRestoreDialogOpen(true)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore Selected ({selectedDeletedMachines.length})
+                  </Button>
+                )}
+              </>
             )}
             <CreateMachineDialog />
           </div>
@@ -271,8 +377,7 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              machine and all its associated chairs.
+              This will archive the machine. You can restore it later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -282,7 +387,28 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
                 machineToDelete && handleDeleteMachine(machineToDelete)
               }
             >
-              Delete
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Single Restore Dialog */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore machine?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the machine and make it active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => machineToRestore && handleRestoreMachine(machineToRestore)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -296,17 +422,42 @@ export function EnhancedMachineTable({}: EnhancedMachineTableProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {selectedMachines.length} machines?
+              Archive {selectedActiveMachines.length} machines?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              selected machines and all their associated chairs.
+              This will archive the selected machines. You can restore them later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete}>
-              Delete All
+              Archive All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Restore Dialog */}
+      <AlertDialog
+        open={bulkRestoreDialogOpen}
+        onOpenChange={setBulkRestoreDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Restore {selectedDeletedMachines.length} machines?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the selected machines and make them active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkRestore}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -9,6 +9,7 @@ export interface User {
   dom: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }
 
 export interface CreateUserPayload {
@@ -32,6 +33,7 @@ export interface FilterParams {
   limit?: number;
   search?: string;
   userId?: number;
+  showArchived?: boolean;
 }
 
 export interface UsersResponse {
@@ -45,7 +47,8 @@ interface UsersStore {
   loading: boolean;
   error: string | null;
   selectedUsers: number[];
-  
+  showArchived: boolean;
+
   // Pagination state
   currentPage: number;
   pageSize: number;
@@ -57,11 +60,16 @@ interface UsersStore {
   updateUser: (id: number, userData: UpdateUserPayload) => Promise<void>;
   deleteUser: (id: number) => Promise<void>;
   bulkDeleteUsers: (userIds: number[]) => Promise<void>;
+  restoreUser: (id: number) => Promise<void>;
+  bulkRestoreUsers: (userIds: number[]) => Promise<void>;
   getUserById: (id: number) => Promise<User | null>;
 
   // Pagination actions
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
+
+  // Archive actions
+  setShowArchived: (show: boolean) => void;
 
   // Selection actions
   selectUser: (id: number) => void;
@@ -80,7 +88,8 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
   loading: false,
   error: null,
   selectedUsers: [],
-  
+  showArchived: false,
+
   // Pagination state
   currentPage: 1,
   pageSize: 13,
@@ -91,19 +100,20 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize } = get();
+      const { currentPage, pageSize, showArchived } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       // Always send default values to ensure integers
       const finalOffset = Math.max(0, Math.floor(params.offset ?? offset));
       const finalLimit = Math.max(1, Math.floor(params.limit ?? pageSize));
-      
+
       // Use axios params instead of URLSearchParams for better type handling
       const apiParams: any = {
         offset: finalOffset,
         limit: finalLimit,
+        showArchived: params.showArchived ?? showArchived,
       };
-      
+
       if (params.search && params.search.trim()) {
         apiParams.search = params.search.trim();
       }
@@ -178,12 +188,10 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
 
       await axiosInstance.delete(`/users/admin/${id}`);
 
-      // Remove user from local state
-      const { users } = get();
-      set({
-        users: users.filter((user) => user.id !== id),
-        loading: false,
-      });
+      // Refresh the users list
+      await get().fetchUsers();
+
+      set({ loading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to delete user",
@@ -196,26 +204,63 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
   // Bulk delete users (admin only)
   bulkDeleteUsers: async (userIds: number[]) => {
     try {
-
-      console.log("Bulk deleting users:", userIds);
       set({ loading: true, error: null });
 
-      const response = await axiosInstance.delete("/users/admin/bulk", {
+      await axiosInstance.delete("/users/admin/bulk", {
         data: { userIds },
       });
 
-      // Remove deleted users from local state
-      const { users } = get();
-      set({
-        users: users.filter((user) => !userIds.includes(user.id)),
-        selectedUsers: [],
-        loading: false,
-      });
+      // Clear selection and refresh
+      set({ selectedUsers: [] });
+      await get().fetchUsers();
 
-      return response.data;
+      set({ loading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to delete users",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Restore user (admin only)
+  restoreUser: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/users/admin/${id}/restore`);
+
+      // Refresh the users list
+      await get().fetchUsers();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore user",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore users (admin only)
+  bulkRestoreUsers: async (userIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/users/admin/bulk-restore", {
+        userIds: userIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedUsers: [] });
+      await get().fetchUsers();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore users",
         loading: false,
       });
       throw error;
@@ -244,6 +289,12 @@ export const useUsersStore = create<UsersStore>((set, get) => ({
     const validPageSize = Math.max(1, Math.floor(pageSize));
     set({ pageSize: validPageSize, currentPage: 1 });
     get().fetchUsers();
+  },
+
+  // Archive actions
+  setShowArchived: (show: boolean) => {
+    set({ showArchived: show, currentPage: 1 });
+    get().fetchUsers({ showArchived: show });
   },
 
   // Selection management

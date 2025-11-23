@@ -21,7 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash2, Edit, Building, MapPin } from "lucide-react";
+import { MoreHorizontal, Trash2, Edit, Building, MapPin, RotateCcw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useDomsStore, type Dom } from "@/stores/doms-store";
 import { toast } from "sonner";
 import { CreateDomDialog } from "@/components/doms/create-dom-dialog";
@@ -42,22 +44,29 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
     currentPage,
     pageSize,
     totalPages,
+    showArchived,
     fetchDoms,
     deleteDom,
     bulkDeleteDoms,
+    restoreDom,
+    bulkRestoreDoms,
     selectDom,
     clearSelection,
     clearError,
     setPage,
     setPageSize,
+    setShowArchived,
   } = useDomsStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [editingDom, setEditingDom] = useState<Dom | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkRestoreDialogOpen, setBulkRestoreDialogOpen] = useState(false);
   const [domToDelete, setDomToDelete] = useState<number | null>(null);
+  const [domToRestore, setDomToRestore] = useState<number | null>(null);
 
   // Fetch doms on component mount
   useEffect(() => {
@@ -93,8 +102,32 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
     }
   };
 
+  const handleRestoreDom = async (id: number) => {
+    try {
+      await restoreDom(id);
+      toast.success("DOM restored successfully");
+      setRestoreDialogOpen(false);
+      setDomToRestore(null);
+    } catch (error) {
+      toast.error("Failed to restore DOM");
+    }
+  };
 
-  const columns: TableColumn<Dom>[] = [
+  const handleBulkRestore = async () => {
+    try {
+      await bulkRestoreDoms(selectedDoms);
+      toast.success(`${selectedDoms.length} DOMs restored successfully`);
+      setBulkRestoreDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to restore DOMs");
+    }
+  };
+
+  const selectedDeletedDoms = doms.filter(d => selectedDoms.includes(d.id) && d.deletedAt);
+  const selectedActiveDoms = doms.filter(d => selectedDoms.includes(d.id) && !d.deletedAt);
+
+  // Define base columns that are always visible
+  const baseColumns: TableColumn<Dom>[] = [
     {
       key: "select",
       label: "Select",
@@ -139,6 +172,7 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
     {
       key: "stats",
       label: "Statistics",
+       sortable: true,
       render: (dom) => (
         <div className="flex flex-wrap gap-1">
           {dom._count && (
@@ -160,47 +194,93 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
         </div>
       ),
     },
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (dom) => {
-        const date = new Date(dom.createdAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  ];
+
+  // Created column (shown when NOT in archive mode)
+  const createdColumn: TableColumn<Dom> = {
+    key: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (dom) => {
+      const date = new Date(dom.createdAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (dom) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <EditDomDialog dom={dom} />
-            </DropdownMenuItem>
+  };
+
+  // Deleted column (shown when in archive mode)
+  const deletedColumn: TableColumn<Dom> = {
+    key: "deletedAt",
+    label: "Deleted",
+    sortable: true,
+    render: (dom) => {
+      if (!dom.deletedAt) {
+        return <div className="text-sm text-muted-foreground">-</div>;
+      }
+      const date = new Date(dom.deletedAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
+    },
+  };
+
+  // Actions column
+  const actionsColumn: TableColumn<Dom> = {
+    key: "actions",
+    label: "Actions",
+    render: (dom) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {!dom.deletedAt && (
+            <>
+              <DropdownMenuItem asChild>
+                <EditDomDialog dom={dom} />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setDomToDelete(dom.id);
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+          {dom.deletedAt && (
             <DropdownMenuItem
               onClick={() => {
-                setDomToDelete(dom.id);
-                setDeleteDialogOpen(true);
+                setDomToRestore(dom.id);
+                setRestoreDialogOpen(true);
               }}
-              className="text-destructive"
+              className="text-green-600"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Restore
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  };
+
+  // Build the final columns array based on showArchived state
+  const columns: TableColumn<Dom>[] = [
+    ...baseColumns,
+    ...(showArchived ? [deletedColumn] : [createdColumn]),
+    actionsColumn,
   ];
 
   return (
@@ -214,16 +294,41 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
         emptyMessage="No Stores found"
         showCount={true}
         customHeader={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                className="data-[state=checked]:bg-red-600"
+              />
+              <Label htmlFor="show-archived" className="text-sm font-medium">
+                Archive
+              </Label>
+            </div>
             {selectedDoms.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setBulkDeleteDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedDoms.length})
-              </Button>
+              <>
+                {selectedActiveDoms.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setBulkDeleteDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedActiveDoms.length})
+                  </Button>
+                )}
+                {selectedDeletedDoms.length > 0 && (
+                  <Button
+                    variant="default"
+                    onClick={() => setBulkRestoreDialogOpen(true)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore Selected ({selectedDeletedDoms.length})
+                  </Button>
+                )}
+              </>
             )}
             <CreateDomDialog />
           </div>
@@ -236,8 +341,7 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              Store and all associated data.
+              This will archive the Store. You can restore it later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -245,7 +349,28 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
             <AlertDialogAction
               onClick={() => domToDelete && handleDeleteDom(domToDelete)}
             >
-              Delete
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Single Restore Dialog */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore Store?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the Store and make it active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => domToRestore && handleRestoreDom(domToRestore)}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -259,17 +384,42 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {selectedDoms.length} DOMs?
+              Archive {selectedActiveDoms.length} Stores?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              selected Stores and all associated data.
+              This will archive the selected Stores. You can restore them later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete}>
-              Delete All
+              Archive All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Restore Dialog */}
+      <AlertDialog
+        open={bulkRestoreDialogOpen}
+        onOpenChange={setBulkRestoreDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Restore {selectedDeletedDoms.length} Stores?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the selected Stores and make them active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkRestore}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

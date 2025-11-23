@@ -1,6 +1,6 @@
-import { IsOptional, IsString, IsNumber } from 'class-validator';
-import { Type, } from 'class-transformer';
-import {ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 
 export class FilterParamsDto {
@@ -27,9 +27,15 @@ export class FilterParamsDto {
   status?: string;
 
   @ApiPropertyOptional({ description: 'Filter by user ID' })
+  @Type(() => Number)
   @IsOptional()
   @IsNumber()
-  userId: number;
+  userId?: number;
 
+  @ApiPropertyOptional({ description: 'Show archived users' })
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsOptional()
+  @IsBoolean()
+  showArchived?: boolean;
 
 }

@@ -11,6 +11,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import { CreateCouponDto } from '../dtos/create-coupon.dto';
 import { UpdateCouponDto } from '../dtos/update-coupon.dto';
@@ -161,5 +162,34 @@ export class CouponsController {
   @ApiResponse({ status: 403, description: 'Admin access required' })
   getAllCouponsAdmin(@Query() filterParams: FilterCouponsDto) {
     return this.couponsService.findAll(filterParams);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Patch('admin/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore deleted coupon (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Coupon restored successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Coupon not found' })
+  restoreCoupon(@Param('id', ParseIntPipe) id: number) {
+    return this.couponsService.restore(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Post('admin/bulk-restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore multiple coupons (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  bulkRestoreCoupons(@Body() body: { couponIds: number[] }) {
+    return this.couponsService.bulkRestore(body.couponIds);
   }
 }

@@ -1,5 +1,5 @@
-import { IsOptional, IsString, IsNumber } from 'class-validator';
-import { Type } from 'class-transformer';
+import { IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class FilterMachineTypesDto {
@@ -30,4 +30,17 @@ export class FilterMachineTypesDto {
   @IsOptional()
   @IsNumber()
   machineTypeId?: number;
+
+  @ApiPropertyOptional({
+    description: 'Show archived/deleted items',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  showArchived?: boolean;
 }

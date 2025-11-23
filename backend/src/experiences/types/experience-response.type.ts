@@ -22,6 +22,20 @@ export interface TicketSummary {
   recentTickets: TicketInfo[];
 }
 
+export interface CouponUsed {
+  id: number;
+  code: string;
+  discount: number;
+  usageCount: number;
+}
+
+export interface CommentUsed {
+  id: number;
+  content: string;
+  createdAt: string;
+  usageCount: number;
+}
+
 export interface ExperienceResponse {
   id: number;
   machineId: number;
@@ -42,4 +56,6 @@ export interface ExperienceResponse {
   domeAddress: string;
   ticketCount: number;
   ticketSummary: TicketSummary;
+  couponsUsed: CouponUsed[];
+  commentsUsed: CommentUsed[];
 }

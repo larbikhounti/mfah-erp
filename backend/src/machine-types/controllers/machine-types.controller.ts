@@ -5,6 +5,7 @@ import {
   Get,
   Put,
   Delete,
+  Patch,
   Query,
   Param,
   ParseIntPipe,
@@ -179,5 +180,34 @@ export class MachineTypesController {
   @ApiResponse({ status: 404, description: 'Machine type not found' })
   deleteMachineTypeByAdmin(@Param('id', ParseIntPipe) id: number) {
     return this.machineTypesService.deleteMachineTypeByAdmin(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Patch('admin/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore deleted machine type (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Machine type restored successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Machine type not found' })
+  restoreMachineType(@Param('id', ParseIntPipe) id: number) {
+    return this.machineTypesService.restore(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Post('admin/bulk-restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore multiple machine types (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  bulkRestoreMachineTypes(@Body() body: { machineTypeIds: number[] }) {
+    return this.machineTypesService.bulkRestore(body.machineTypeIds);
   }
 }

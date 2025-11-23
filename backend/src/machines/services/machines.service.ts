@@ -24,12 +24,19 @@ export class MachinesService {
         machineId,
         machineTypeId,
         domeId,
+        showArchived,
       } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {
-        deletedAt: null, // Only get non-deleted machines
+            const where: any = {
+        
       };
+
+      if (!showArchived) {
+        where.deletedAt = null;
+      }else {
+        where.deletedAt = { not: null };
+      }
 
       if (search) {
         where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
@@ -66,6 +73,7 @@ export class MachinesService {
             domeId: true,
             createdAt: true,
             updatedAt: true,
+            deletedAt: true,
             machineTypes: {
               select: {
                 id: true,
@@ -113,6 +121,7 @@ export class MachinesService {
         chairs: machine.machineChairs,
         createdAt: machine.createdAt.toISOString(),
         updatedAt: machine.updatedAt.toISOString(),
+        deletedAt: machine.deletedAt?.toISOString() || null,
       }));
 
       return {
@@ -610,6 +619,90 @@ export class MachinesService {
       this.logger.error('Error bulk deleting machines:', error);
       throw new HttpException(
         'Error bulk deleting machines',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async restore(id: number): Promise<{ message: string }> {
+    try {
+      const machine = await this.prisma.machines.findUnique({
+        where: { id },
+      });
+
+      if (!machine) {
+        throw new HttpException('Machine not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (!machine.deletedAt) {
+        throw new HttpException(
+          'Machine is not deleted',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.prisma.machines.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return { message: 'Machine restored successfully' };
+    } catch (error) {
+      this.logger.error(`Error restoring machine with id ${id}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error restoring machine',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async bulkRestore(machineIds: number[]): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingMachines = await this.prisma.machines.findMany({
+        where: { id: { in: machineIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingMachineIds = existingMachines.map((machine) => machine.id);
+      const notFoundIds = machineIds.filter(
+        (id) => !existingMachineIds.includes(id),
+      );
+
+      const notDeletedMachines = existingMachines.filter(
+        (machine) => machine.deletedAt === null,
+      );
+      const notDeletedIds = notDeletedMachines.map((machine) => machine.id);
+
+      const restorableIds = existingMachineIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      const restoreResult = await this.prisma.machines.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} machines restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring machines:', error);
+      throw new HttpException(
+        'Error bulk restoring machines',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

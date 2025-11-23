@@ -11,6 +11,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import { CreateDomDto } from '../dtos/create-dom.dto';
 import { UpdateDomDto } from '../dtos/update-dom.dto';
@@ -151,5 +152,34 @@ export class DomsController {
   @ApiResponse({ status: 403, description: 'Admin access required' })
   getAllDomsAdmin(@Query() filterParams: FilterDomsDto) {
     return this.domsService.findAll(filterParams);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Patch('admin/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore deleted DOM (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'DOM restored successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'DOM not found' })
+  restoreDom(@Param('id', ParseIntPipe) id: number) {
+    return this.domsService.restore(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Post('admin/bulk-restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore multiple DOMs (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  bulkRestoreDoms(@Body() body: { domIds: number[] }) {
+    return this.domsService.bulkRestore(body.domIds);
   }
 }

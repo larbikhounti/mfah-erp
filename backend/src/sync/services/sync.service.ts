@@ -24,7 +24,7 @@ export class SyncService {
       const dome = await this.prisma.doms.findFirst({
         where: {
           id: domeId,
-          deletedAt: null,
+         // deletedAt: null,
         },
       });
 
@@ -49,31 +49,31 @@ export class SyncService {
           this.prisma.gameTypes.findMany({
             where: {
               updatedAt: { gt: lastSync },
-              deletedAt: null,
+             // deletedAt: null,
             },
           }),
           this.prisma.machineTypes.findMany({
             where: {
               updatedAt: { gt: lastSync },
-              deletedAt: null,
+             // deletedAt: null,
             },
           }),
           this.prisma.roles.findMany({
             where: {
               updatedAt: { gt: lastSync },
-              deletedAt: null,
+             // deletedAt: null,
             },
           }),
           this.prisma.coupons.findMany({
             where: {
               updatedAt: { gt: lastSync },
-              deletedAt: null,
+                 // deletedAt: null,
             },
           }),
           this.prisma.comments.findMany({
             where: {
               updatedAt: { gt: lastSync },
-              deletedAt: null,
+             // deletedAt: null,
             },
           }),
         ]);
@@ -84,14 +84,14 @@ export class SyncService {
           where: {
             id: domeId,
             updatedAt: { gt: lastSync },
-            deletedAt: null,
+           // deletedAt: null,
           },
         }),
         this.prisma.machines.findMany({
           where: {
             domeId,
             updatedAt: { gt: lastSync },
-            deletedAt: null,
+            // deletedAt: null,
           },
           include: {
             machineTypes: true,
@@ -110,7 +110,7 @@ export class SyncService {
           where: {
             updatedAt: { gt: lastSync },
             domeGames: { some: { domeId } },
-            deletedAt: null,
+         //   deletedAt: null,
           },
           include: {
             gameTypes: {
@@ -127,12 +127,13 @@ export class SyncService {
         where: {
           machineId: { in: machineIds },
           updatedAt: { gt: lastSync },
-          deletedAt: null,
+         // deletedAt: null,
         },
       });
 
       // Prepare response
       const response = {
+        data :{
         globalData: {
           gameTypes,
           machineTypes,
@@ -148,7 +149,7 @@ export class SyncService {
           games: domeGames,
         },
         serverTime: new Date(),
-      };
+      }};
 
       // Calculate total data count
       const dataCount =
@@ -203,7 +204,7 @@ export class SyncService {
       const dome = await this.prisma.doms.findFirst({
         where: {
           id: domId,
-          deletedAt: null,
+         // deletedAt: null,
         },
       });
 

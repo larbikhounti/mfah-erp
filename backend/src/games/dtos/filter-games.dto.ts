@@ -110,4 +110,17 @@ export class FilterGamesDto {
   @Type(() => Number)
   @Min(1)
   limit?: number;
+
+  @ApiPropertyOptional({
+    description: 'Show archived/deleted items',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  @Transform(({ value }) => {
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+    return value;
+  })
+  showArchived?: boolean;
 }

@@ -2,6 +2,9 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  HttpException,
+  HttpStatus,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
@@ -14,6 +17,8 @@ import { GameResponse, PaginatedGamesResponse } from '../types';
 
 @Injectable()
 export class GamesService {
+  private readonly logger = new Logger(GamesService.name);
+
   constructor(private prisma: PrismaService) {}
 
   async create(createGameDto: CreateGameDto): Promise<GameResponse> {
@@ -115,8 +120,9 @@ export class GamesService {
     const skip = (page - 1) * limit;
 
     const where: any = {
-      deletedAt: null,
+      deletedAt: filters.showArchived ? { not: null } : null,
     };
+
 
     // Apply filters
     if (filters.name) {
@@ -384,11 +390,11 @@ export class GamesService {
       },
     });
 
-    if (activeExperiences > 0) {
-      throw new ConflictException(
-        `Cannot delete game with ID ${id} because it has ${activeExperiences} active experiences`,
-      );
-    }
+   // if (activeExperiences > 0) {
+     // throw new ConflictException(
+       // `Cannot delete game with ID ${id} because it has ${activeExperiences} active experiences`,
+      //);
+   // }
 
     // Soft delete
     await this.prisma.games.update({
@@ -464,6 +470,79 @@ export class GamesService {
     };
   }
 
+  async restore(id: number): Promise<{ message: string }> {
+    try {
+      const game = await this.prisma.games.findUnique({
+        where: { id },
+      });
+
+      if (!game) {
+        throw new ConflictException('Game not found');
+      }
+
+      if (!game.deletedAt) {
+        throw new ConflictException('Game is not deleted');
+      }
+
+      await this.prisma.games.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return { message: 'Game restored successfully' };
+    } catch (error) {
+      this.logger.error(`Error restoring game with id ${id}:`, error);
+      if (error instanceof ConflictException) {
+        throw error;
+      }
+      throw new ConflictException('Error restoring game');
+    }
+  }
+
+  async bulkRestore(gameIds: number[]): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingGames = await this.prisma.games.findMany({
+        where: { id: { in: gameIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingGameIds = existingGames.map((game) => game.id);
+      const notFoundIds = gameIds.filter((id) => !existingGameIds.includes(id));
+
+      // Filter out games that are not deleted
+      const notDeletedGames = existingGames.filter((game) => game.deletedAt === null);
+      const notDeletedIds = notDeletedGames.map((game) => game.id);
+
+      const restorableIds = existingGameIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      // Restore games
+      const restoreResult = await this.prisma.games.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} games restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring games:', error);
+      throw new ConflictException('Error bulk restoring games');
+    }
+  }
+
   private mapToGameResponse(game: any): GameResponse {
     return {
       id: game.id,
@@ -475,6 +554,7 @@ export class GamesService {
       isFavored: game.isFavored || false,
       createdAt: game.createdAt,
       updatedAt: game.updatedAt,
+      deletedAt: game.deletedAt,
       gameType: game.gameTypes
         ? {
             id: game.gameTypes.id,

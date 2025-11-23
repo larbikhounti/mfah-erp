@@ -5,6 +5,7 @@ import { UpdateCommentDto } from '../dtos/update-comment.dto';
 import { BulkDeleteCommentsDto } from '../dtos/bulk-delete-comments.dto';
 import { FilterCommentsDto } from '../dtos/filter-comments.dto';
 import { CommentResponse } from '../types/comment-response.type';
+import e from 'express';
 
 @Injectable()
 export class CommentsService {
@@ -46,10 +47,18 @@ export class CommentsService {
     filterParams: FilterCommentsDto,
   ): Promise<{ data: CommentResponse[]; total: number }> {
     try {
-      const { offset = 0, limit = 10, search, startDate, endDate } = filterParams;
+      const { offset = 0, limit = 10, search, startDate, endDate, showArchived } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {};
+      const where: any = {
+        
+      };
+
+      if (!showArchived) {
+        where.deletedAt = null;
+      }else {
+        where.deletedAt = { not: null };
+      }
 
       // Search in content
       if (search) {
@@ -173,29 +182,24 @@ export class CommentsService {
     try {
       const comment = await this.prisma.comments.findUnique({
         where: { id },
-        include: {
-          _count: {
-            select: {
-              ticketComments: true,
-            },
-          },
-        },
       });
 
       if (!comment) {
         throw new HttpException('Comment not found', HttpStatus.NOT_FOUND);
       }
 
-      // Check if comment has related tickets
-      if (comment._count && comment._count.ticketComments > 0) {
+      // Check if already deleted
+      if (comment.deletedAt) {
         throw new HttpException(
-          'Cannot delete comment with related tickets',
+          'Comment is already deleted',
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      await this.prisma.comments.delete({
+      // Soft delete the comment
+      await this.prisma.comments.update({
         where: { id },
+        data: { deletedAt: new Date() },
       });
 
       return { message: 'Comment deleted successfully' };
@@ -217,59 +221,132 @@ export class CommentsService {
     message: string;
     deletedCount: number;
     notFound: number[];
-    hasRelatedRecords: number[];
+    alreadyDeleted: number[];
   }> {
     try {
       const { commentIds } = bulkDeleteDto;
-      let deletedCount = 0;
-      const notFound: number[] = [];
-      const hasRelatedRecords: number[] = [];
 
-      for (const commentId of commentIds) {
-        try {
-          const comment = await this.prisma.comments.findUnique({
-            where: { id: commentId },
-            include: {
-              _count: {
-                select: {
-                  ticketComments: true,
-                },
-              },
-            },
-          });
+      // Check which comments exist
+      const existingComments = await this.prisma.comments.findMany({
+        where: { id: { in: commentIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
 
-          if (!comment) {
-            notFound.push(commentId);
-            continue;
-          }
+      const existingCommentIds = existingComments.map((comment) => comment.id);
+      const notFoundIds = commentIds.filter((id) => !existingCommentIds.includes(id));
 
-          // Check if comment has related tickets
-          if (comment._count && comment._count.ticketComments > 0) {
-            hasRelatedRecords.push(commentId);
-            continue;
-          }
+      // Filter out comments that are already deleted
+      const alreadyDeletedComments = existingComments.filter((comment) => comment.deletedAt !== null);
+      const alreadyDeletedIds = alreadyDeletedComments.map((comment) => comment.id);
 
-          await this.prisma.comments.delete({
-            where: { id: commentId },
-          });
+      const deletableIds = existingCommentIds.filter(
+        (id) => !alreadyDeletedIds.includes(id),
+      );
 
-          deletedCount++;
-        } catch (error) {
-          this.logger.error(`Error deleting comment ${commentId}:`, error);
-          // Continue with next comment instead of failing the entire operation
-        }
-      }
+      // Soft delete comments
+      const deleteResult = await this.prisma.comments.updateMany({
+        where: { id: { in: deletableIds } },
+        data: { deletedAt: new Date() },
+      });
 
       return {
-        message: `Bulk delete completed. ${deletedCount} comments deleted.`,
-        deletedCount,
-        notFound,
-        hasRelatedRecords,
+        message: `Bulk delete completed. ${deleteResult.count} comments deleted.`,
+        deletedCount: deleteResult.count,
+        notFound: notFoundIds,
+        alreadyDeleted: alreadyDeletedIds,
       };
     } catch (error) {
       this.logger.error('Error in bulk delete comments:', error);
       throw new HttpException(
         'Error in bulk delete operation',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async restore(id: number): Promise<{ message: string }> {
+    try {
+      const comment = await this.prisma.comments.findUnique({
+        where: { id },
+      });
+
+      if (!comment) {
+        throw new HttpException('Comment not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (!comment.deletedAt) {
+        throw new HttpException(
+          'Comment is not deleted',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.prisma.comments.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return { message: 'Comment restored successfully' };
+    } catch (error) {
+      this.logger.error(`Error restoring comment with id ${id}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error restoring comment',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async bulkRestore(
+    commentIds: number[],
+  ): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingComments = await this.prisma.comments.findMany({
+        where: { id: { in: commentIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingCommentIds = existingComments.map((comment) => comment.id);
+      const notFoundIds = commentIds.filter((id) => !existingCommentIds.includes(id));
+
+      const notDeletedComments = existingComments.filter((comment) => comment.deletedAt === null);
+      const notDeletedIds = notDeletedComments.map((comment) => comment.id);
+
+      const restorableIds = existingCommentIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      const restoreResult = await this.prisma.comments.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} comments restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring comments:', error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error bulk restoring comments',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

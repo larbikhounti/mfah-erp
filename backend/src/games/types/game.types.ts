@@ -46,6 +46,7 @@ export interface GameResponse {
   isFavored?: boolean;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date | null;
   gameType?: {
     id: number;
     name: string;

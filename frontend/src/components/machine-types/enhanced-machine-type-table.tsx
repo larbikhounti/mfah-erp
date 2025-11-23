@@ -21,7 +21,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash2, Edit, Plus } from "lucide-react";
+import { MoreHorizontal, Trash2, Edit, Plus, RotateCcw } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   useMachineTypesStore,
   type MachineType,
@@ -45,23 +47,32 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
     currentPage,
     pageSize,
     totalPages,
+    showArchived,
     fetchMachineTypes,
     deleteMachineType,
     bulkDeleteMachineTypes,
+    restoreMachineType,
+    bulkRestoreMachineTypes,
     selectMachineType,
     clearSelection,
     clearError,
     setPage,
     setPageSize,
+    setShowArchived,
   } = useMachineTypesStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [editingMachineType, setEditingMachineType] =
     useState<MachineType | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkRestoreDialogOpen, setBulkRestoreDialogOpen] = useState(false);
   const [machineTypeToDelete, setMachineTypeToDelete] = useState<number | null>(
+    null
+  );
+  const [machineTypeToRestore, setMachineTypeToRestore] = useState<number | null>(
     null
   );
 
@@ -119,7 +130,34 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
     setIsCreateDialogOpen(false);
   };
 
-  const columns: TableColumn<MachineType>[] = [
+  const handleRestoreMachineType = async (id: number) => {
+    try {
+      await restoreMachineType(id);
+      toast.success("Machine type restored successfully");
+      setRestoreDialogOpen(false);
+      setMachineTypeToRestore(null);
+    } catch (error) {
+      toast.error("Failed to restore machine type");
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    try {
+      await bulkRestoreMachineTypes(selectedMachineTypes);
+      toast.success(
+        `${selectedMachineTypes.length} machine types restored successfully`
+      );
+      setBulkRestoreDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to restore machine types");
+    }
+  };
+
+  const selectedDeletedMachineTypes = machineTypes.filter(mt => selectedMachineTypes.includes(mt.id) && mt.deletedAt);
+  const selectedActiveMachineTypes = machineTypes.filter(mt => selectedMachineTypes.includes(mt.id) && !mt.deletedAt);
+
+  // Define base columns that are always visible
+  const baseColumns: TableColumn<MachineType>[] = [
     {
       key: "select",
       label: "Select",
@@ -150,51 +188,98 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
     {
       key: "machinesCount",
       label: "Machines Count",
+       sortable: true,
       render: (machineType) => (
         <Badge variant="secondary">{machineType.machinesCount} machines</Badge>
       ),
     },
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (machineType) => {
-        const date = new Date(machineType.createdAt);
-        return (
-          <div className="text-sm text-muted-foreground">
-            {date.toLocaleDateString()}
-          </div>
-        );
-      },
+  ];
+
+  // Created column (shown when NOT in archive mode)
+  const createdColumn: TableColumn<MachineType> = {
+    key: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (machineType) => {
+      const date = new Date(machineType.createdAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
     },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (machineType) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem asChild>
-              <EditMachineTypeDialog machineType={machineType} />
-            </DropdownMenuItem>
+  };
+
+  // Deleted column (shown when in archive mode)
+  const deletedColumn: TableColumn<MachineType> = {
+    key: "deletedAt",
+    label: "Deleted",
+    sortable: true,
+    render: (machineType) => {
+      if (!machineType.deletedAt) {
+        return <div className="text-sm text-muted-foreground">-</div>;
+      }
+      const date = new Date(machineType.deletedAt);
+      return (
+        <div className="text-sm text-muted-foreground">
+          {date.toLocaleDateString()}
+        </div>
+      );
+    },
+  };
+
+  // Actions column
+  const actionsColumn: TableColumn<MachineType> = {
+    key: "actions",
+    label: "Actions",
+    render: (machineType) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <span className="sr-only">Open menu</span>
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {!machineType.deletedAt && (
+            <>
+              <DropdownMenuItem asChild>
+                <EditMachineTypeDialog machineType={machineType} />
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => {
+                  setMachineTypeToDelete(machineType.id);
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Delete
+              </DropdownMenuItem>
+            </>
+          )}
+          {machineType.deletedAt && (
             <DropdownMenuItem
               onClick={() => {
-                setMachineTypeToDelete(machineType.id);
-                setDeleteDialogOpen(true);
+                setMachineTypeToRestore(machineType.id);
+                setRestoreDialogOpen(true);
               }}
-              className="text-destructive"
+              className="text-green-600"
             >
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
+              <RotateCcw className="mr-2 h-4 w-4" />
+              Restore
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  };
+
+  // Build the final columns array based on showArchived state
+  const columns: TableColumn<MachineType>[] = [
+    ...baseColumns,
+    ...(showArchived ? [deletedColumn] : [createdColumn]),
+    actionsColumn,
   ];
 
   return (
@@ -208,16 +293,41 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
         emptyMessage="No machine types found"
         showCount={true}
         customHeader={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center space-x-2">
+              <Switch
+                id="show-archived"
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+                className="data-[state=checked]:bg-red-600"
+              />
+              <Label htmlFor="show-archived" className="text-sm font-medium">
+                Archive
+              </Label>
+            </div>
             {selectedMachineTypes.length > 0 && (
-              <Button
-                variant="destructive"
-                onClick={() => setBulkDeleteDialogOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Selected ({selectedMachineTypes.length})
-              </Button>
+              <>
+                {selectedActiveMachineTypes.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setBulkDeleteDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Selected ({selectedActiveMachineTypes.length})
+                  </Button>
+                )}
+                {selectedDeletedMachineTypes.length > 0 && (
+                  <Button
+                    variant="default"
+                    onClick={() => setBulkRestoreDialogOpen(true)}
+                    className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    Restore Selected ({selectedDeletedMachineTypes.length})
+                  </Button>
+                )}
+              </>
             )}
             <CreateMachineTypeDialog />
           </div>
@@ -229,8 +339,7 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              machine type.
+              This will archive the machine type. You can restore it later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -241,7 +350,31 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
                 handleDeleteMachineType(machineTypeToDelete)
               }
             >
-              Delete
+              Archive
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Single Restore Dialog */}
+      <AlertDialog open={restoreDialogOpen} onOpenChange={setRestoreDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore machine type?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the machine type and make it active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() =>
+                machineTypeToRestore &&
+                handleRestoreMachineType(machineTypeToRestore)
+              }
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -255,17 +388,42 @@ export function EnhancedMachineTypeTable({}: EnhancedMachineTypeTableProps) {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Delete {selectedMachineTypes.length} machine types?
+              Archive {selectedActiveMachineTypes.length} machine types?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              selected machine types.
+              This will archive the selected machine types. You can restore them later from the archived view.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleBulkDelete}>
-              Delete All
+              Archive All
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Bulk Restore Dialog */}
+      <AlertDialog
+        open={bulkRestoreDialogOpen}
+        onOpenChange={setBulkRestoreDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Restore {selectedDeletedMachineTypes.length} machine types?
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              This will restore the selected machine types and make them active again.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleBulkRestore}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              Restore All
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

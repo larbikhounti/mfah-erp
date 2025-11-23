@@ -11,6 +11,7 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import { CreateCommentDto } from '../dtos/create-comment.dto';
 import { UpdateCommentDto } from '../dtos/update-comment.dto';
@@ -123,5 +124,34 @@ export class CommentsController {
   @ApiResponse({ status: 400, description: 'Invalid request body' })
   bulkDeleteComments(@Body() bulkDeleteDto: BulkDeleteCommentsDto) {
     return this.commentsService.bulkDelete(bulkDeleteDto);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Patch('admin/:id/restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore deleted comment (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Comment restored successfully',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  @ApiResponse({ status: 404, description: 'Comment not found' })
+  restoreComment(@Param('id', ParseIntPipe) id: number) {
+    return this.commentsService.restore(id);
+  }
+
+  @ApiBearerAuth('access-token')
+  @UseGuards(AuthGuard, AdminRoleGuard)
+  @Post('admin/bulk-restore')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Restore multiple comments (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Bulk restore completed',
+  })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  bulkRestoreComments(@Body() body: { commentIds: number[] }) {
+    return this.commentsService.bulkRestore(body.commentIds);
   }
 }

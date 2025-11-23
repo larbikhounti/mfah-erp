@@ -22,12 +22,19 @@ export class GameTypesService {
         search,
         status,
         gameTypeId,
+        showArchived,
       } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {
-        deletedAt: null, // Only get non-deleted game types
+            const where: any = {
+        
       };
+
+      if (!showArchived) {
+        where.deletedAt = null;
+      }else {
+        where.deletedAt = { not: null };
+      }
 
       if (search) {
         where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
@@ -48,6 +55,7 @@ export class GameTypesService {
             name: true,
             createdAt: true,
             updatedAt: true,
+            deletedAt: true,
             _count: {
               select: {
                 games: {
@@ -72,6 +80,7 @@ export class GameTypesService {
         gamesCount: gameType._count.games,
         createdAt: gameType.createdAt.toISOString(),
         updatedAt: gameType.updatedAt.toISOString(),
+        deletedAt: gameType.deletedAt?.toISOString() || null,
       }));
 
       return {
@@ -348,6 +357,90 @@ export class GameTypesService {
       this.logger.error('Error bulk deleting game types:', error);
       throw new HttpException(
         'Error bulk deleting game types',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async restore(id: number): Promise<{ message: string }> {
+    try {
+      const gameType = await this.prisma.gameTypes.findUnique({
+        where: { id },
+      });
+
+      if (!gameType) {
+        throw new HttpException('Game type not found', HttpStatus.NOT_FOUND);
+      }
+
+      if (!gameType.deletedAt) {
+        throw new HttpException(
+          'Game type is not deleted',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      await this.prisma.gameTypes.update({
+        where: { id },
+        data: { deletedAt: null },
+      });
+
+      return { message: 'Game type restored successfully' };
+    } catch (error) {
+      this.logger.error(`Error restoring game type with id ${id}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error restoring game type',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async bulkRestore(gameTypeIds: number[]): Promise<{
+    message: string;
+    restoredCount: number;
+    notFound: number[];
+    notDeleted: number[];
+  }> {
+    try {
+      const existingGameTypes = await this.prisma.gameTypes.findMany({
+        where: { id: { in: gameTypeIds } },
+        select: {
+          id: true,
+          deletedAt: true,
+        },
+      });
+
+      const existingGameTypeIds = existingGameTypes.map((gt) => gt.id);
+      const notFoundIds = gameTypeIds.filter(
+        (id) => !existingGameTypeIds.includes(id),
+      );
+
+      const notDeletedGameTypes = existingGameTypes.filter(
+        (gt) => gt.deletedAt === null,
+      );
+      const notDeletedIds = notDeletedGameTypes.map((gt) => gt.id);
+
+      const restorableIds = existingGameTypeIds.filter(
+        (id) => !notDeletedIds.includes(id),
+      );
+
+      const restoreResult = await this.prisma.gameTypes.updateMany({
+        where: { id: { in: restorableIds } },
+        data: { deletedAt: null },
+      });
+
+      return {
+        message: `Bulk restore completed. ${restoreResult.count} game types restored successfully.`,
+        restoredCount: restoreResult.count,
+        notFound: notFoundIds,
+        notDeleted: notDeletedIds,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring game types:', error);
+      throw new HttpException(
+        'Error bulk restoring game types',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

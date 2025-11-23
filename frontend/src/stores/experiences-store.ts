@@ -8,6 +8,20 @@ export interface MachineChair {
   ticketCount: number;
 }
 
+export interface CouponUsed {
+  id: number;
+  code: string;
+  discount: number;
+  usageCount: number;
+}
+
+export interface CommentUsed {
+  id: number;
+  content: string;
+  createdAt: string;
+  usageCount: number;
+}
+
 export interface Experience {
   id: number;
   machineId: number;
@@ -18,6 +32,7 @@ export interface Experience {
   dome: string;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
   // Extended information
   machineType: string;
   machineChairs: MachineChair[];
@@ -34,6 +49,8 @@ export interface Experience {
     unpaidCount: number;
     totalRevenue: number;
   };
+  couponsUsed?: CouponUsed[];
+  commentsUsed?: CommentUsed[];
 }
 
 export interface FilterParams {
@@ -46,6 +63,7 @@ export interface FilterParams {
   domeId?: number;
   startDate?: string;
   endDate?: string;
+  showArchived?: boolean;
 }
 
 export interface ExperiencesResponse {
@@ -58,6 +76,8 @@ interface ExperiencesStore {
   total: number;
   loading: boolean;
   error: string | null;
+  selectedExperiences: number[];
+  showArchived: boolean;
 
   // Pagination state
   currentPage: number;
@@ -66,11 +86,23 @@ interface ExperiencesStore {
 
   // Actions
   fetchExperiences: (params?: FilterParams) => Promise<void>;
+  deleteExperience: (id: number) => Promise<void>;
+  bulkDeleteExperiences: (experienceIds: number[]) => Promise<void>;
+  restoreExperience: (id: number) => Promise<void>;
+  bulkRestoreExperiences: (experienceIds: number[]) => Promise<void>;
   getExperienceById: (id: number) => Promise<Experience | null>;
 
   // Pagination actions
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
+
+  // Archive actions
+  setShowArchived: (show: boolean) => void;
+
+  // Selection actions
+  selectExperience: (id: number) => void;
+  selectAllExperiences: () => void;
+  clearSelection: () => void;
 
   // Utility actions
   setLoading: (loading: boolean) => void;
@@ -83,6 +115,8 @@ export const useExperiencesStore = create<ExperiencesStore>((set, get) => ({
   total: 0,
   loading: false,
   error: null,
+  selectedExperiences: [],
+  showArchived: false,
 
   // Pagination state
   currentPage: 1,
@@ -94,7 +128,7 @@ export const useExperiencesStore = create<ExperiencesStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize } = get();
+      const { currentPage, pageSize, showArchived } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       // Always send default values to ensure integers
@@ -105,6 +139,7 @@ export const useExperiencesStore = create<ExperiencesStore>((set, get) => ({
       const apiParams: any = {
         offset: finalOffset,
         limit: finalLimit,
+        showArchived: params.showArchived ?? showArchived,
       };
 
       if (params.search && params.search.trim()) {
@@ -153,6 +188,92 @@ export const useExperiencesStore = create<ExperiencesStore>((set, get) => ({
     }
   },
 
+  // Delete experience (admin only)
+  deleteExperience: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.delete(`/experiences/admin/${id}`);
+
+      // Refresh the experiences list
+      await get().fetchExperiences();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to delete experience",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk delete experiences (admin only)
+  bulkDeleteExperiences: async (experienceIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.delete("/experiences/admin/bulk", {
+        data: { experienceIds },
+      });
+
+      // Clear selection and refresh
+      set({ selectedExperiences: [] });
+      await get().fetchExperiences();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to delete experiences",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Restore experience (admin only)
+  restoreExperience: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/experiences/admin/${id}/restore`);
+
+      // Refresh the experiences list
+      await get().fetchExperiences();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore experience",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore experiences (admin only)
+  bulkRestoreExperiences: async (experienceIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/experiences/admin/bulk-restore", {
+        experienceIds: experienceIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedExperiences: [] });
+      await get().fetchExperiences();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore experiences",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
   // Get experience by ID
   getExperienceById: async (id: number): Promise<Experience | null> => {
     try {
@@ -180,6 +301,33 @@ export const useExperiencesStore = create<ExperiencesStore>((set, get) => ({
 
   setPageSize: (pageSize: number) => {
     set({ pageSize: Math.max(1, pageSize), currentPage: 1 });
+  },
+
+  // Archive actions
+  setShowArchived: (show: boolean) => {
+    set({ showArchived: show, currentPage: 1 });
+    get().fetchExperiences({ showArchived: show });
+  },
+
+  // Selection management
+  selectExperience: (id: number) => {
+    const { selectedExperiences } = get();
+    const isSelected = selectedExperiences.includes(id);
+
+    if (isSelected) {
+      set({ selectedExperiences: selectedExperiences.filter((experienceId) => experienceId !== id) });
+    } else {
+      set({ selectedExperiences: [...selectedExperiences, id] });
+    }
+  },
+
+  selectAllExperiences: () => {
+    const { experiences } = get();
+    set({ selectedExperiences: experiences.map((experience) => experience.id) });
+  },
+
+  clearSelection: () => {
+    set({ selectedExperiences: [] });
   },
 
   // Utility actions

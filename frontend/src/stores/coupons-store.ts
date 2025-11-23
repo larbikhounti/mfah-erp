@@ -32,6 +32,7 @@ export interface FilterParams {
   search?: string;
   isActive?: boolean;
   couponId?: number;
+  showArchived?: boolean;
 }
 
 export interface CouponsResponse {
@@ -45,6 +46,7 @@ interface CouponsStore {
   loading: boolean;
   error: string | null;
   selectedCoupons: number[];
+  showArchived: boolean;
 
   // Pagination state
   currentPage: number;
@@ -63,12 +65,17 @@ interface CouponsStore {
   updateCoupon: (id: number, couponData: UpdateCouponPayload) => Promise<void>;
   deleteCoupon: (id: number) => Promise<void>;
   bulkDeleteCoupons: (couponIds: number[]) => Promise<void>;
+  restoreCoupon: (id: number) => Promise<void>;
+  bulkRestoreCoupons: (couponIds: number[]) => Promise<void>;
   getCouponById: (id: number) => Promise<Coupon | null>;
   getCouponByCode: (code: string) => Promise<Coupon | null>;
 
   // Pagination actions
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
+
+  // Archive actions
+  setShowArchived: (show: boolean) => void;
 
   // Search actions
   setSearch: (query: string) => void;
@@ -93,6 +100,7 @@ export const useCouponsStore = create<CouponsStore>((set, get) => ({
   loading: false,
   error: null,
   selectedCoupons: [],
+  showArchived: false,
 
   // Pagination state
   currentPage: 1,
@@ -110,7 +118,7 @@ export const useCouponsStore = create<CouponsStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize, searchQuery, activeFilter } = get();
+      const { currentPage, pageSize, searchQuery, activeFilter, showArchived } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       // Always send default values to ensure integers
@@ -118,9 +126,10 @@ export const useCouponsStore = create<CouponsStore>((set, get) => ({
       const finalLimit = Math.max(1, Math.floor(params.limit ?? pageSize));
 
       // Use axios params instead of URLSearchParams for better type handling
-      const apiParams: { offset: number; limit: number; search?: string; isActive?: boolean; couponId?: number } = {
+      const apiParams: { offset: number; limit: number; search?: string; isActive?: boolean; couponId?: number; showArchived?: boolean } = {
         offset: finalOffset,
         limit: finalLimit,
+        showArchived: params.showArchived ?? showArchived,
       };
 
       // Use search from params or store state
@@ -206,12 +215,10 @@ export const useCouponsStore = create<CouponsStore>((set, get) => ({
 
       await axiosInstance.delete(`/coupons/admin/${id}`);
 
-      // Remove coupon from local state
-      const { coupons } = get();
-      set({
-        coupons: coupons.filter((coupon) => coupon.id !== id),
-        loading: false,
-      });
+      // Refresh the coupons list
+      await get().fetchCoupons();
+
+      set({ loading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to delete coupon",
@@ -226,22 +233,61 @@ export const useCouponsStore = create<CouponsStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const response = await axiosInstance.delete("/coupons/admin/bulk", {
+      await axiosInstance.delete("/coupons/admin/bulk", {
         data: { couponIds },
       });
 
-      // Remove deleted coupons from local state
-      const { coupons } = get();
-      set({
-        coupons: coupons.filter((coupon) => !couponIds.includes(coupon.id)),
-        selectedCoupons: [],
-        loading: false,
-      });
+      // Clear selection and refresh
+      set({ selectedCoupons: [] });
+      await get().fetchCoupons();
 
-      return response.data;
+      set({ loading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to delete coupons",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Restore coupon (admin only)
+  restoreCoupon: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/coupons/admin/${id}/restore`);
+
+      // Refresh the coupons list
+      await get().fetchCoupons();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore coupon",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore coupons (admin only)
+  bulkRestoreCoupons: async (couponIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/coupons/admin/bulk-restore", {
+        couponIds: couponIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedCoupons: [] });
+      await get().fetchCoupons();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore coupons",
         loading: false,
       });
       throw error;
@@ -281,6 +327,12 @@ export const useCouponsStore = create<CouponsStore>((set, get) => ({
     const validPageSize = Math.max(1, Math.floor(pageSize));
     set({ pageSize: validPageSize, currentPage: 1 });
     get().fetchCoupons();
+  },
+
+  // Archive actions
+  setShowArchived: (show: boolean) => {
+    set({ showArchived: show, currentPage: 1 });
+    get().fetchCoupons({ showArchived: show });
   },
 
   // Search actions

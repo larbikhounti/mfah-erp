@@ -5,6 +5,7 @@ import {
   Get,
   Put,
   Delete,
+  Patch,
   Query,
   Param,
   ParseIntPipe,
@@ -170,5 +171,37 @@ export class UserController {
   @ApiResponse({ status: 403, description: 'Admin access required' })
   getAllRoles() {
     return this.usersService.getAllRoles();
+  }
+
+  @Patch('admin/:id/restore')
+  @UseGuards(AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Restore a deleted user (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'User restored successfully',
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  async restore(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+    return this.usersService.restoreUser(id);
+  }
+
+  @Post('admin/bulk-restore')
+  @UseGuards(AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Restore multiple users (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Users restored successfully',
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Admin access required' })
+  async bulkRestore(@Body() body: { userIds: number[] }): Promise<{
+    message: string;
+    restoredCount: number;
+  }> {
+    return this.usersService.bulkRestoreUsers(body.userIds);
   }
 }

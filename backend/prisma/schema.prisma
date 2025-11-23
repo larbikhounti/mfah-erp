@@ -14,6 +14,7 @@ model Users {
   password    String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  deletedAt   DateTime?
   dom_id      Int?
   jwtToken    String?
   role_id     Int?

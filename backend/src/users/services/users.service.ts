@@ -38,10 +38,12 @@ export class UsersService {
     filterParams: FilterParamsDto,
   ): Promise<{ data: any[]; total: number }> {
     try {
-      const { offset = 0, limit = 10, search, status, userId } = filterParams;
+      const { offset = 0, limit = 10, search, status, userId, showArchived } = filterParams;
 
       // Build the where clause based on filter parameters
-      const where: any = {};
+      const where: any = {
+        deletedAt: showArchived ? { not: null } : null,
+      };
 
       if (search) {
         where.OR = [
@@ -66,6 +68,7 @@ export class UsersService {
             name: true,
             createdAt: true,
             updatedAt: true,
+            deletedAt: true,
             dom_id: true,
             role_id: true,
             doms: {
@@ -98,6 +101,7 @@ export class UsersService {
         dom: user.doms?.name || null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
+        deletedAt: user.deletedAt?.toISOString() || null,
       }));
 
       return { data: formattedData, total };
@@ -241,8 +245,12 @@ export class UsersService {
         throw new HttpException('User not found', HttpStatus.NOT_FOUND);
       }
 
-      await this.prisma.users.delete({
+      // Soft delete
+      await this.prisma.users.update({
         where: { id },
+        data: {
+          deletedAt: new Date(),
+        },
       });
 
       return { message: 'User deleted successfully' };
@@ -302,9 +310,12 @@ export class UsersService {
       const existingUserIds = existingUsers.map((user) => user.id);
       const notFoundIds = userIds.filter((id) => !existingUserIds.includes(id));
 
-      // Delete existing users
-      const deleteResult = await this.prisma.users.deleteMany({
+      // Soft delete existing users
+      const deleteResult = await this.prisma.users.updateMany({
         where: { id: { in: existingUserIds } },
+        data: {
+          deletedAt: new Date(),
+        },
       });
 
       return {
@@ -319,6 +330,60 @@ export class UsersService {
       }
       throw new HttpException(
         'Error bulk deleting users',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async restoreUser(id: number): Promise<{ message: string }> {
+    try {
+      const user = await this.prisma.users.findUnique({
+        where: { id },
+      });
+
+      if (!user) {
+        throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+      }
+
+      await this.prisma.users.update({
+        where: { id },
+        data: {
+          deletedAt: null,
+        },
+      });
+
+      return { message: 'User restored successfully' };
+    } catch (error) {
+      this.logger.error(`Error restoring user with id ${id}:`, error);
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        'Error restoring user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async bulkRestoreUsers(
+    userIds: number[],
+  ): Promise<{ message: string; restoredCount: number }> {
+    try {
+      const result = await this.prisma.users.updateMany({
+        where: { id: { in: userIds } },
+        data: {
+          deletedAt: null,
+        },
+      });
+
+      return {
+        message: `${result.count} users restored successfully`,
+        restoredCount: result.count,
+      };
+    } catch (error) {
+      this.logger.error('Error bulk restoring users:', error);
+      throw new HttpException(
+        'Error bulk restoring users',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

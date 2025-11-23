@@ -10,6 +10,8 @@ import {
 } from '@prisma/client';
 
 export class SyncResponseDto {
+ data:{
+
   globalData: {
     gameTypes: gameTypes[];
     machineTypes: machineTypes[];
@@ -22,4 +24,4 @@ export class SyncResponseDto {
     users: Users[];
   };
   serverTime: Date;
-}
+}}

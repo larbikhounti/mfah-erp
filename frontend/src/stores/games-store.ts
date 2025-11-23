@@ -10,6 +10,7 @@ export interface Game {
   isFavored?: boolean;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
   gameType?: {
     id: number;
     name: string;
@@ -59,6 +60,7 @@ export interface FilterParams {
   minPlayTime?: number;
   maxPlayTime?: number;
   isFavored?: boolean;
+  showArchived?: boolean;
 }
 
 export interface GamesResponse {
@@ -75,6 +77,7 @@ interface GamesStore {
   loading: boolean;
   error: string | null;
   selectedGames: number[];
+  showArchived: boolean;
 
   // Pagination state
   currentPage: number;
@@ -87,12 +90,17 @@ interface GamesStore {
   updateGame: (id: number, gameData: UpdateGamePayload) => Promise<void>;
   deleteGame: (id: number) => Promise<void>;
   bulkDeleteGames: (gameIds: number[]) => Promise<void>;
+  restoreGame: (id: number) => Promise<void>;
+  bulkRestoreGames: (gameIds: number[]) => Promise<void>;
   getGameById: (id: number) => Promise<Game | null>;
   toggleFavorite: (id: number) => Promise<void>;
 
   // Pagination actions
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
+
+  // Archive actions
+  setShowArchived: (show: boolean) => void;
 
   // Selection actions
   selectGame: (id: number) => void;
@@ -111,6 +119,7 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
   loading: false,
   error: null,
   selectedGames: [],
+  showArchived: false,
 
   // Pagination state
   currentPage: 1,
@@ -122,12 +131,13 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize } = get();
+      const { currentPage, pageSize, showArchived } = get();
 
       // Use the backend pagination format
       const apiParams: any = {
         page: params.page ?? currentPage,
         limit: params.limit ?? pageSize,
+        showArchived: params.showArchived ?? showArchived,
       };
 
       if (params.name && params.name.trim()) {
@@ -257,6 +267,49 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
     }
   },
 
+  // Restore game (admin only)
+  restoreGame: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/games/admin/${id}/restore`);
+
+      // Refresh the games list
+      await get().fetchGames();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore game",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore games (admin only)
+  bulkRestoreGames: async (gameIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/games/admin/bulk-restore", {
+        gameIds: gameIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedGames: [] });
+      await get().fetchGames();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore games",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
   // Get game by ID
   getGameById: async (id: number) => {
     try {
@@ -307,6 +360,12 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
   setPageSize: (pageSize: number) => {
     set({ pageSize, currentPage: 1 });
     get().fetchGames({ page: 1, limit: pageSize });
+  },
+
+  // Archive actions
+  setShowArchived: (show: boolean) => {
+    set({ showArchived: show, currentPage: 1 });
+    get().fetchGames({ showArchived: show, page: 1 });
   },
 
   // Selection actions

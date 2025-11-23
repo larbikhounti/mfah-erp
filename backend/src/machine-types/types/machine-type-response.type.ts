@@ -4,4 +4,5 @@ export interface MachineTypeResponse {
   machinesCount: number;
   createdAt: string;
   updatedAt: string;
+  deletedAt?: string | null;
 }

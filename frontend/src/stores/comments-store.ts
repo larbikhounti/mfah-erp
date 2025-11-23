@@ -26,6 +26,7 @@ export interface FilterParams {
   search?: string;
   startDate?: string;
   endDate?: string;
+  showArchived?: boolean;
 }
 
 export interface CommentsResponse {
@@ -44,6 +45,7 @@ interface CommentsStore {
   loading: boolean;
   error: string | null;
   selectedComments: number[];
+  showArchived: boolean;
 
   // Pagination state
   currentPage: number;
@@ -62,11 +64,16 @@ interface CommentsStore {
   updateComment: (id: number, commentData: UpdateCommentPayload) => Promise<void>;
   deleteComment: (id: number) => Promise<void>;
   bulkDeleteComments: (commentIds: number[]) => Promise<void>;
+  restoreComment: (id: number) => Promise<void>;
+  bulkRestoreComments: (commentIds: number[]) => Promise<void>;
   getCommentById: (id: number) => Promise<Comment | null>;
 
   // Pagination actions
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
+
+  // Archive actions
+  setShowArchived: (show: boolean) => void;
 
   // Search actions
   setSearch: (query: string) => void;
@@ -92,6 +99,7 @@ export const useCommentsStore = create<CommentsStore>((set, get) => ({
   loading: false,
   error: null,
   selectedComments: [],
+  showArchived: false,
 
   // Pagination state
   currentPage: 1,
@@ -109,7 +117,7 @@ export const useCommentsStore = create<CommentsStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize, searchQuery, dateRange } = get();
+      const { currentPage, pageSize, searchQuery, dateRange, showArchived } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       // Always send default values to ensure integers
@@ -123,9 +131,11 @@ export const useCommentsStore = create<CommentsStore>((set, get) => ({
         search?: string;
         startDate?: string;
         endDate?: string;
+        showArchived?: boolean;
       } = {
         offset: finalOffset,
         limit: finalLimit,
+        showArchived: params.showArchived ?? showArchived,
       };
 
       // Use search from params or store state
@@ -212,12 +222,10 @@ export const useCommentsStore = create<CommentsStore>((set, get) => ({
 
       await axiosInstance.delete(`/comments/admin/${id}`);
 
-      // Remove comment from local state
-      const { comments } = get();
-      set({
-        comments: comments.filter((comment) => comment.id !== id),
-        loading: false,
-      });
+      // Refresh the comments list
+      await get().fetchComments();
+
+      set({ loading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to delete comment",
@@ -232,22 +240,61 @@ export const useCommentsStore = create<CommentsStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const response = await axiosInstance.delete("/comments/admin/bulk", {
+      await axiosInstance.delete("/comments/admin/bulk", {
         data: { commentIds },
       });
 
-      // Remove deleted comments from local state
-      const { comments } = get();
-      set({
-        comments: comments.filter((comment) => !commentIds.includes(comment.id)),
-        selectedComments: [],
-        loading: false,
-      });
+      // Clear selection and refresh
+      set({ selectedComments: [] });
+      await get().fetchComments();
 
-      return response.data;
+      set({ loading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to delete comments",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Restore comment (admin only)
+  restoreComment: async (id: number) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.patch(`/comments/admin/${id}/restore`);
+
+      // Refresh the comments list
+      await get().fetchComments();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore comment",
+        loading: false,
+      });
+      throw error;
+    }
+  },
+
+  // Bulk restore comments (admin only)
+  bulkRestoreComments: async (commentIds: number[]) => {
+    try {
+      set({ loading: true, error: null });
+
+      await axiosInstance.post("/comments/admin/bulk-restore", {
+        commentIds: commentIds,
+      });
+
+      // Clear selection and refresh
+      set({ selectedComments: [] });
+      await get().fetchComments();
+
+      set({ loading: false });
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.message || "Failed to restore comments",
         loading: false,
       });
       throw error;
@@ -276,6 +323,12 @@ export const useCommentsStore = create<CommentsStore>((set, get) => ({
     const validPageSize = Math.max(1, Math.floor(pageSize));
     set({ pageSize: validPageSize, currentPage: 1 });
     get().fetchComments();
+  },
+
+  // Archive actions
+  setShowArchived: (show: boolean) => {
+    set({ showArchived: show, currentPage: 1 });
+    get().fetchComments({ showArchived: show });
   },
 
   // Search actions
