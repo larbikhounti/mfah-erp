@@ -22,6 +22,38 @@ export interface CommentUsed {
   usageCount: number;
 }
 
+export interface ParentTicket {
+  id: number;
+  alias: string;
+  chairName: string;
+  machineName: string;
+  machineAlias: string;
+  gameName: string;
+  gamePrice: number;
+}
+
+export interface DetailedTicket {
+  id: number;
+  alias: string;
+  isPaid: boolean;
+  paidWith: number | null;
+  price: number | null;
+  notes: string | null;
+  chairId: number | null;
+  chairName: string;
+  createdAt: string;
+  coupon: {
+    id: number;
+    code: string;
+    discount: number;
+  } | null;
+  comments: Array<{
+    id: number;
+    content: string;
+  }>;
+  parentTicket: ParentTicket | null;
+}
+
 export interface Experience {
   id: number;
   machineId: number;
@@ -51,6 +83,15 @@ export interface Experience {
   };
   couponsUsed?: CouponUsed[];
   commentsUsed?: CommentUsed[];
+  // Timing fields
+  startedAt?: string | null;
+  endedAt?: string | null;
+  isNext?: boolean;
+  isStarted?: boolean;
+  isEnded?: boolean;
+  isFractioned?: boolean;
+  // Detailed tickets
+  tickets?: DetailedTicket[];
 }
 
 export interface FilterParams {

@@ -255,82 +255,98 @@ export class SyncService {
           ),
         );
 
-        // Upsert tickets
-        const savedTickets = await Promise.all(
-          tickets.map(async (ticket) => {
-            const savedTicket = await prisma.tickets.upsert({
-              where: {
-                domeId_id: {
-                  domeId: ticket.domeId,
-                  id: ticket.id,
-                },
-              },
-              update: {
-                userId: ticket.userId,
-                experienceId: ticket.experienceId,
-                alias: ticket.alias,
-                isPaid: ticket.isPaid,
-                chairId: ticket.chairId,
-                couponId: ticket.couponId,
-                notes: ticket.notes,
-                domeId: ticket.domeId,
-                paidWith: ticket.paidWith,
-                price: ticket.price,
-                updatedAt: ticket.updatedAt,
-                deletedAt: ticket.deletedAt,
-                parentTicketId: ticket.parentTicketId,
-              },
-              create: {
-                id: ticket.id,
-                userId: ticket.userId,
-                experienceId: ticket.experienceId,
-                alias: ticket.alias,
-                isPaid: ticket.isPaid,
-                chairId: ticket.chairId,
-                couponId: ticket.couponId,
-                notes: ticket.notes,
-                paidWith: ticket.paidWith,
-                price: ticket.price,
-                createdAt: ticket.createdAt,
-                updatedAt: ticket.updatedAt,
-                deletedAt: ticket.deletedAt,
-                domeId: ticket.domeId,
-                parentTicketId: ticket.parentTicketId,
-              },
-            });
+        // Separate parent and child tickets to respect foreign key constraints
+        // Parent tickets (no parentTicketId) must be upserted before child tickets
+        const parentTickets = tickets.filter((t) => t.parentTicketId === null);
+        const childTickets = tickets.filter((t) => t.parentTicketId !== null);
 
-            // Upsert ticket comments (many-to-many relationship)
-            if (ticket.ticketComments && ticket.ticketComments.length > 0) {
-              await Promise.all(
-                ticket.ticketComments.map((ticketComment) =>
-                  prisma.ticketComments.upsert({
-                    where: {
-                      domeId_id: {
-                        domeId: ticketComment.domeId,
-                        id: ticketComment.id,
-                      },
-                    },
-                    update: {
-                      ticketId: ticketComment.ticketId,
-                      commentId: ticketComment.commentId,
+        // Helper function to upsert a ticket with its comments
+        const upsertTicket = async (ticket: any) => {
+          const savedTicket = await prisma.tickets.upsert({
+            where: {
+              domeId_id: {
+                domeId: ticket.domeId,
+                id: ticket.id,
+              },
+            },
+            update: {
+              userId: ticket.userId,
+              experienceId: ticket.experienceId,
+              alias: ticket.alias,
+              isPaid: ticket.isPaid,
+              chairId: ticket.chairId,
+              couponId: ticket.couponId,
+              notes: ticket.notes,
+              domeId: ticket.domeId,
+              paidWith: ticket.paidWith,
+              price: ticket.price,
+              updatedAt: ticket.updatedAt,
+              deletedAt: ticket.deletedAt,
+              parentTicketId: ticket.parentTicketId,
+            },
+            create: {
+              id: ticket.id,
+              userId: ticket.userId,
+              experienceId: ticket.experienceId,
+              alias: ticket.alias,
+              isPaid: ticket.isPaid,
+              chairId: ticket.chairId,
+              couponId: ticket.couponId,
+              notes: ticket.notes,
+              paidWith: ticket.paidWith,
+              price: ticket.price,
+              createdAt: ticket.createdAt,
+              updatedAt: ticket.updatedAt,
+              deletedAt: ticket.deletedAt,
+              domeId: ticket.domeId,
+              parentTicketId: ticket.parentTicketId,
+            },
+          });
+
+          // Upsert ticket comments (many-to-many relationship)
+          if (ticket.ticketComments && ticket.ticketComments.length > 0) {
+            await Promise.all(
+              ticket.ticketComments.map((ticketComment) =>
+                prisma.ticketComments.upsert({
+                  where: {
+                    domeId_id: {
                       domeId: ticketComment.domeId,
-                      updatedAt: ticketComment.updatedAt,
-                    },
-                    create: {
                       id: ticketComment.id,
-                      ticketId: ticketComment.ticketId,
-                      commentId: ticketComment.commentId,
-                      domeId: ticketComment.domeId,
-                      createdAt: ticketComment.createdAt,
-                      updatedAt: ticketComment.updatedAt,
                     },
-                  }),
-                ),
-              );
-            }
-            return savedTicket;
-          }),
+                  },
+                  update: {
+                    ticketId: ticketComment.ticketId,
+                    commentId: ticketComment.commentId,
+                    domeId: ticketComment.domeId,
+                    updatedAt: ticketComment.updatedAt,
+                  },
+                  create: {
+                    id: ticketComment.id,
+                    ticketId: ticketComment.ticketId,
+                    commentId: ticketComment.commentId,
+                    domeId: ticketComment.domeId,
+                    createdAt: ticketComment.createdAt,
+                    updatedAt: ticketComment.updatedAt,
+                  },
+                }),
+              ),
+            );
+          }
+          return savedTicket;
+        };
+
+        // Phase 1: Upsert parent tickets first (parallel within group)
+        const savedParentTickets = await Promise.all(
+          parentTickets.map((ticket) => upsertTicket(ticket)),
         );
+
+        // Phase 2: Upsert child/fractioned tickets after parents exist (parallel within group)
+        const savedChildTickets = await Promise.all(
+          childTickets.map((ticket) => upsertTicket(ticket)),
+        );
+
+        // Combine all saved tickets
+        const savedTickets = [...savedParentTickets, ...savedChildTickets];
 
         return {
           experiencesCount: savedExperiences.length,

@@ -145,6 +145,18 @@ export class ExperiencesService {
                     comments: true,
                   },
                 },
+                machineChairs: true,
+                parentTicket: {
+                  include: {
+                    machineChairs: true,
+                    experiences: {
+                      include: {
+                        games: true,
+                        machines: true,
+                      },
+                    },
+                  },
+                },
               },
             },
           },
@@ -232,6 +244,46 @@ export class ExperiencesService {
           });
           const commentsUsed = Array.from(commentsMap.values());
 
+          // Map detailed tickets
+          const detailedTickets = tickets.map((ticket) => ({
+            id: ticket.id,
+            alias: ticket.alias,
+            isPaid: ticket.isPaid,
+            paidWith: ticket.paidWith,
+            price: ticket.price,
+            notes: ticket.notes,
+            chairId: ticket.chairId,
+            chairName: ticket.machineChairs?.name || 'Unknown',
+            createdAt: ticket.createdAt.toISOString(),
+            coupon: ticket.coupons
+              ? {
+                  id: ticket.coupons.id,
+                  code: ticket.coupons.code,
+                  discount: ticket.coupons.discount,
+                }
+              : null,
+            comments:
+              ticket.ticketComments?.map((tc) => ({
+                id: tc.comments.id,
+                content: tc.comments.content,
+              })) || [],
+            parentTicket: ticket.parentTicket
+              ? {
+                  id: ticket.parentTicket.id,
+                  alias: ticket.parentTicket.alias,
+                  chairName: ticket.parentTicket.machineChairs?.name || 'Unknown',
+                  machineName:
+                    ticket.parentTicket.experiences?.machines?.name || 'Unknown',
+                  machineAlias:
+                    ticket.parentTicket.experiences?.machines?.alias || 'Unknown',
+                  gameName:
+                    ticket.parentTicket.experiences?.games?.name || 'Unknown',
+                  gamePrice:
+                    ticket.parentTicket.experiences?.games?.price || 0,
+                }
+              : null,
+          }));
+
           return {
             id: experience.id,
             machineId: experience.machineId,
@@ -269,6 +321,17 @@ export class ExperiencesService {
             ticketSummary,
             couponsUsed,
             commentsUsed,
+            // Timing fields
+            startedAt: experience.startedAt
+              ? experience.startedAt.toISOString()
+              : null,
+            endedAt: experience.endedAt ? experience.endedAt.toISOString() : null,
+            isNext: experience.isNext,
+            isStarted: experience.isStarted,
+            isEnded: experience.isEnded,
+            isFractioned: experience.isFractioned,
+            // Detailed tickets
+            tickets: detailedTickets,
           };
         },
       );
@@ -328,6 +391,18 @@ export class ExperiencesService {
               ticketComments: {
                 include: {
                   comments: true,
+                },
+              },
+              machineChairs: true,
+              parentTicket: {
+                include: {
+                  machineChairs: true,
+                  experiences: {
+                    include: {
+                      games: true,
+                      machines: true,
+                    },
+                  },
                 },
               },
             },
@@ -411,6 +486,46 @@ export class ExperiencesService {
       });
       const commentsUsed = Array.from(commentsMap.values());
 
+      // Map detailed tickets
+      const detailedTickets = tickets.map((ticket) => ({
+        id: ticket.id,
+        alias: ticket.alias,
+        isPaid: ticket.isPaid,
+        paidWith: ticket.paidWith,
+        price: ticket.price,
+        notes: ticket.notes,
+        chairId: ticket.chairId,
+        chairName: ticket.machineChairs?.name || 'Unknown',
+        createdAt: ticket.createdAt.toISOString(),
+        coupon: ticket.coupons
+          ? {
+              id: ticket.coupons.id,
+              code: ticket.coupons.code,
+              discount: ticket.coupons.discount,
+            }
+          : null,
+        comments:
+          ticket.ticketComments?.map((tc) => ({
+            id: tc.comments.id,
+            content: tc.comments.content,
+          })) || [],
+        parentTicket: ticket.parentTicket
+          ? {
+              id: ticket.parentTicket.id,
+              alias: ticket.parentTicket.alias,
+              chairName: ticket.parentTicket.machineChairs?.name || 'Unknown',
+              machineName:
+                ticket.parentTicket.experiences?.machines?.name || 'Unknown',
+              machineAlias:
+                ticket.parentTicket.experiences?.machines?.alias || 'Unknown',
+              gameName:
+                ticket.parentTicket.experiences?.games?.name || 'Unknown',
+              gamePrice:
+                ticket.parentTicket.experiences?.games?.price || 0,
+            }
+          : null,
+      }));
+
       return {
         id: experience.id,
         machineId: experience.machineId,
@@ -447,6 +562,17 @@ export class ExperiencesService {
         ticketSummary,
         couponsUsed,
         commentsUsed,
+        // Timing fields
+        startedAt: experience.startedAt
+          ? experience.startedAt.toISOString()
+          : null,
+        endedAt: experience.endedAt ? experience.endedAt.toISOString() : null,
+        isNext: experience.isNext,
+        isStarted: experience.isStarted,
+        isEnded: experience.isEnded,
+        isFractioned: experience.isFractioned,
+        // Detailed tickets
+        tickets: detailedTickets,
       };
     } catch (error) {
       if (error instanceof HttpException) {
