@@ -46,7 +46,8 @@ export interface DataTableProps<T> {
   filters?: FilterOption<T>[];
   onRowClick?: (item: T) => void;
   actions?: (item: T) => ReactNode;
-  
+  getRowKey?: (item: T, index: number) => string;
+
   showCount?: boolean;
   emptyMessage?: string;
   className?: string;
@@ -62,6 +63,7 @@ export function DataTable<T extends object>({
   filters = [],
   onRowClick,
   actions,
+  getRowKey,
   showCount = true,
   emptyMessage,
   className = "",
@@ -272,8 +274,10 @@ export function DataTable<T extends object>({
                 filteredData.map((item, index) => (
                   <TableRow
                     key={
-                      ("id" in item ? String((item as any).id) : undefined) ||
-                      `row-${index}`
+                      getRowKey
+                        ? getRowKey(item, index)
+                        : ("id" in item ? String((item as any).id) : undefined) ||
+                          `row-${index}`
                     }
                     className={
                       onRowClick ? "cursor-pointer hover:bg-muted/50" : ""

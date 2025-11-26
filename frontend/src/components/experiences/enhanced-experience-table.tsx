@@ -164,7 +164,7 @@ const formatDate = (dateString: string) => {
                       {paidTickets.length} Sold
                     </span>
                     <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm font-medium rounded-full dark:bg-blue-900/50 dark:text-blue-200">
-                      {unpaidTickets.length} Available
+                      {unpaidTickets.length} Unsold
                     </span>
                   </>
                 ) : (
@@ -221,7 +221,7 @@ const formatDate = (dateString: string) => {
                               </div>
                             ) : (
                               <div className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full dark:bg-blue-900/50 dark:text-blue-200">
-                                AVAILABLE
+                                Unsold
                               </div>
                             )}
                           </div>
@@ -766,6 +766,10 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
         searchKeys={["machine", "game", "dome"]}
         searchPlaceholder="Search experiences..."
         filters={[]}
+        getRowKey={(item, index) => {
+          const exp = item as Experience;
+          return `${exp.domeId}-${exp.id}`;
+        }}
         showCount={true}
         emptyMessage={
           loading ? "Loading experiences..." : "No experiences found"
