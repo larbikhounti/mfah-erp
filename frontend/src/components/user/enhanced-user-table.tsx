@@ -193,9 +193,9 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
     },
     {
       key: "dom",
-      label: "DOM",
+      label: "Store",
        sortable: true,
-      render: (user) => <div className="text-sm">{user.dom || "No DOM"}</div>,
+      render: (user) => <div className="text-sm">{user.dom || "No Store"}</div>,
     },
   ];
 
@@ -293,7 +293,7 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
         data={users}
         columns={columns}
         searchKeys={["name", "email", "role", "dom"]}
-        searchPlaceholder="Search users by name, email, role, or DOM..."
+        searchPlaceholder="Search users by name, email, role, or Store..."
         emptyMessage="No users found"
         showCount={true}
         customHeader={

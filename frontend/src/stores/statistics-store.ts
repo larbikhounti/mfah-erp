@@ -9,6 +9,10 @@ export interface DomStatistics {
   unsoldTickets: number;
   moneyMade: number;
   potentialRevenue: number;
+  cashRevenue: number;
+  cashTicketsCount: number;
+  cardRevenue: number;
+  cardTicketsCount: number;
   domId?: number;
   domName?: string;
 }

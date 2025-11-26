@@ -1,6 +1,6 @@
 "use client";
 
-import { IconActivity, IconTicket, IconCoin, IconTrendingUp } from "@tabler/icons-react";
+import { IconActivity, IconCoin, IconTrendingUp, IconCash, IconCreditCard } from "@tabler/icons-react";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -94,11 +94,34 @@ export function SectionCards() {
             </Badge>
           </CardAction>
         </CardHeader>
-        <CardFooter className="flex-col items-start gap-1.5 text-sm">
-          <div className="line-clamp-1 flex gap-2 font-medium">
-            From {statistics.soldTickets} paid tickets
+        <CardFooter className="grid grid-cols-2 divide-x p-0">
+          {/* Cash Section */}
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <IconCash className="size-4 text-amber-600" />
+              <span className="text-xs font-medium text-muted-foreground">Cash</span>
+            </div>
+            <div className="text-lg font-semibold tabular-nums">
+              €{statistics.cashRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {statistics.cashTicketsCount} tickets
+            </div>
           </div>
-          <div className="text-muted-foreground">Revenue collected</div>
+
+          {/* Card Section */}
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-2 mb-1.5">
+              <IconCreditCard className="size-4 text-blue-600" />
+              <span className="text-xs font-medium text-muted-foreground">Card</span>
+            </div>
+            <div className="text-lg font-semibold tabular-nums">
+              €{statistics.cardRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="text-xs text-muted-foreground mt-0.5">
+              {statistics.cardTicketsCount} tickets
+            </div>
+          </div>
         </CardFooter>
       </Card>
 

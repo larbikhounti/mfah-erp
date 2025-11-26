@@ -145,6 +145,28 @@ export class StatisticsService {
       return sum + price;
     }, 0);
 
+    // Calculate cash revenue and ticket count (paidWith = 0)
+    const cashTickets = paidTickets.filter((ticket) => ticket.paidWith === 0);
+    const cashRevenue = cashTickets.reduce((sum, ticket) => {
+      let price = ticket.price ?? ticket.experiences.games?.price ?? 0;
+      if (ticket.coupons) {
+        const discountAmount = (price * ticket.coupons.discount) / 100;
+        price = price - discountAmount;
+      }
+      return sum + price;
+    }, 0);
+
+    // Calculate card revenue and ticket count (paidWith = 1)
+    const cardTickets = paidTickets.filter((ticket) => ticket.paidWith === 1);
+    const cardRevenue = cardTickets.reduce((sum, ticket) => {
+      let price = ticket.price ?? ticket.experiences.games?.price ?? 0;
+      if (ticket.coupons) {
+        const discountAmount = (price * ticket.coupons.discount) / 100;
+        price = price - discountAmount;
+      }
+      return sum + price;
+    }, 0);
+
     // Get DOM name if specific DOM
     let domName: string | undefined;
     if (!isAllDoms && domIdNumber) {
@@ -164,6 +186,10 @@ export class StatisticsService {
       unsoldTickets,
       moneyMade: Math.round(moneyMade * 100) / 100, // Round to 2 decimals
       potentialRevenue: Math.round(potentialRevenue * 100) / 100,
+      cashRevenue: Math.round(cashRevenue * 100) / 100,
+      cashTicketsCount: cashTickets.length,
+      cardRevenue: Math.round(cardRevenue * 100) / 100,
+      cardTicketsCount: cardTickets.length,
       domId: isAllDoms ? undefined : domIdNumber,
       domName,
     };
