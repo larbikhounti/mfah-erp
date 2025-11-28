@@ -15,7 +15,7 @@ async function main() {
 
   try {
     // // Seed roles first (users depend on roles)
-   //  await seedRoles(prisma);
+    //  await seedRoles(prisma);
 
     // // // Seed DOMs (users can be assigned to DOMs)
     // await seedDoms(prisma);
