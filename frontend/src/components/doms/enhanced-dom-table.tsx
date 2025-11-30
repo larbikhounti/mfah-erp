@@ -21,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash2, Edit, Building, MapPin, RotateCcw } from "lucide-react";
+import { MoreHorizontal, Trash2, Edit, Building, MapPin, RotateCcw, Copy } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useDomsStore, type Dom } from "@/stores/doms-store";
@@ -120,6 +120,19 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
       setBulkRestoreDialogOpen(false);
     } catch (error) {
       toast.error("Failed to restore DOMs");
+    }
+  };
+
+  const handleCopyInstallCommand = async (domId: number) => {
+    const command = `iex "& { $(irm https://api.mydomhub.store/api/install.ps1) } -domeId '${domId}'"`;
+    try {
+      await navigator.clipboard.writeText(command);
+      toast.success("Installation command copied!", {
+        description: "You can now paste it in PowerShell.",
+      });
+    } catch (error) {
+      toast.error("Failed to copy to clipboard");
+      console.error("Copy error:", error);
     }
   };
 
@@ -244,6 +257,12 @@ export function EnhancedDomTable({}: EnhancedDomTableProps) {
         <DropdownMenuContent align="end">
           {!dom.deletedAt && (
             <>
+              <DropdownMenuItem
+                onClick={() => handleCopyInstallCommand(dom.id)}
+              >
+                <Copy className="mr-2 h-4 w-4" />
+                Copy Install
+              </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <EditDomDialog dom={dom} />
               </DropdownMenuItem>
