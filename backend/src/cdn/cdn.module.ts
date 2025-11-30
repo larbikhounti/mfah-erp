@@ -5,5 +5,6 @@ import { CdnService } from './cdn.service';
 @Module({
   controllers: [CdnController],
   providers: [CdnService],
+  exports: [CdnService],
 })
 export class CdnModule {}
