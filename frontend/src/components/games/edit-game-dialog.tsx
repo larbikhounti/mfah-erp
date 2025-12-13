@@ -253,7 +253,7 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="price">Price ($)</Label>
+            <Label htmlFor="price">Price (€)</Label>
             <Input
               id="price"
               type="number"
@@ -310,7 +310,7 @@ export function EditGameDialog({ game, trigger }: EditGameDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="domes">Domes *</Label>
+            <Label htmlFor="domes">Stores *</Label>
             <MultiSelect
               options={doms.map((dom) => ({
                 label: dom.name,

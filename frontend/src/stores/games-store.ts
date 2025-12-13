@@ -328,26 +328,24 @@ export const useGamesStore = create<GamesStore>((set, get) => ({
     try {
       const { games } = get();
       const game = games.find((g) => g.id === id);
-      
+
       if (!game) {
         set({ error: "Game not found" });
         return;
       }
 
-      await axiosInstance.patch(`/games/${id}`, {
+      // Use the dedicated favorite endpoint
+      await axiosInstance.patch(`/games/${id}/favorite`, {
         isFavored: !game.isFavored,
       });
 
-      // Update the game in the local state
-      set({
-        games: games.map((g) =>
-          g.id === id ? { ...g, isFavored: !g.isFavored } : g
-        ),
-      });
+      // Refresh the games list from the server to get updated data (including updatedAt)
+      await get().fetchGames();
     } catch (error: any) {
       set({
         error: error.response?.data?.message || "Failed to toggle favorite",
       });
+      throw error;
     }
   },
 

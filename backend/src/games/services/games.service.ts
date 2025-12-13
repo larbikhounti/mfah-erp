@@ -304,18 +304,31 @@ export class GamesService {
       }
     }
 
+    // Build data object with only defined fields to ensure updatedAt is triggered
+    const updateData: any = {};
+
+    if (updateGameDto.gameTypeId !== undefined) {
+      updateData.gameTypeId = updateGameDto.gameTypeId;
+    }
+    if (updateGameDto.name !== undefined) {
+      updateData.name = updateGameDto.name;
+    }
+    if (updateGameDto.price !== undefined) {
+      updateData.price = updateGameDto.price;
+    }
+    if (updateGameDto.playTime !== undefined) {
+      updateData.playTime = updateGameDto.playTime;
+    }
+    if (updateGameDto.age !== undefined) {
+      updateData.age = updateGameDto.age;
+    }
+    if (updateGameDto.isFavored !== undefined) {
+      updateData.isFavored = updateGameDto.isFavored;
+    }
+
     const updatedGame = await this.prisma.games.update({
       where: { id },
-      data: {
-        gameTypeId: updateGameDto.gameTypeId,
-        name: updateGameDto.name,
-        price: updateGameDto.price,
-        playTime: updateGameDto.playTime,
-        age: updateGameDto.age,
-        ...(updateGameDto.isFavored !== undefined && {
-          isFavored: updateGameDto.isFavored,
-        }),
-      },
+      data: updateData,
       include: {
         gameTypes: true,
         gameMachineTypes: {
@@ -468,6 +481,54 @@ export class GamesService {
       message: `Successfully deleted ${result.count} games`,
       deletedCount: result.count,
     };
+  }
+
+  async toggleFavorite(
+    id: number,
+    isFavored: boolean,
+  ): Promise<GameResponse> {
+    // Check if game exists
+    const existingGame = await this.prisma.games.findFirst({
+      where: {
+        id,
+        deletedAt: null,
+      },
+    });
+
+    if (!existingGame) {
+      throw new NotFoundException(`Game with ID ${id} not found`);
+    }
+
+    // Update only the isFavored field
+    const updatedGame = await this.prisma.games.update({
+      where: { id },
+      data: {
+        isFavored,
+      },
+      include: {
+        gameTypes: true,
+        gameMachineTypes: {
+          include: {
+            machineTypes: true,
+          },
+        },
+        domeGames: {
+          where: {
+            deletedAt: null,
+          },
+          include: {
+            doms: true,
+          },
+        },
+        _count: {
+          select: {
+            experiences: true,
+          },
+        },
+      },
+    });
+
+    return this.mapToGameResponse(updatedGame);
   }
 
   async restore(id: number): Promise<{ message: string }> {

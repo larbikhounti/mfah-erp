@@ -24,6 +24,7 @@ import {
   UpdateGameDto,
   FilterGamesDto,
   BulkDeleteGamesDto,
+  ToggleFavoriteGameDto,
 } from '../dtos';
 import { GameResponse, PaginatedGamesResponse } from '../types';
 import { AuthGuard } from '../../auth/guards/auth.guard';
@@ -149,6 +150,28 @@ export class GamesController {
   ): Promise<GameResponse> {
     return this.gamesService.update(id, updateGameDto);
   }
+
+  @Patch(':id/favorite')
+  @UseGuards(AdminRoleGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Toggle game favorite status' })
+  @ApiParam({ name: 'id', description: 'Game ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Game favorite status updated successfully',
+    type: Object,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Game not found',
+  })
+  async toggleFavorite(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() toggleFavoriteDto: ToggleFavoriteGameDto,
+  ): Promise<GameResponse> {
+    return this.gamesService.toggleFavorite(id, toggleFavoriteDto.isFavored);
+  }
+
   @Delete('/admin/bulk')
   @UseGuards(AdminRoleGuard)
   @ApiBearerAuth()

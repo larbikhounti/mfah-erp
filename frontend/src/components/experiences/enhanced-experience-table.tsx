@@ -252,7 +252,7 @@ const formatDate = (dateString: string) => {
                           {ticket.isPaid && paymentMethod && (
                             <div className="text-center text-sm">
                               <span className="px-2 py-1 bg-muted rounded text-xs">
-                                Paid with {paymentMethod}
+                                Paid with {effectivePrice === 0 ? "coupon" : paymentMethod}
                               </span>
                             </div>
                           )}
@@ -563,7 +563,12 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
     {
       key: "tickets",
       label: "Tickets",
-       sortable: true,
+      sortable: true,
+      sortFunction: (a, b) => {
+        const aSoldCount = a.tickets?.filter(t => t.isPaid).length || 0;
+        const bSoldCount = b.tickets?.filter(t => t.isPaid).length || 0;
+        return aSoldCount - bSoldCount;
+      },
       render: (experience) => {
         const soldCount = experience.tickets?.filter(t => t.isPaid).length || 0;
         const totalCount = experience.ticketCount || 0;
@@ -587,7 +592,29 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
     {
       key: "price",
       label: "Price",
-       sortable: true,
+      sortable: true,
+      sortFunction: (a, b) => {
+        const getEffectivePrice = (ticket: any, gamePrice: number) => {
+          if (ticket.price !== null && ticket.price !== undefined) {
+            return ticket.price;
+          }
+          if (ticket.coupon) {
+            const discountMultiplier = 1 - ticket.coupon.discount / 100;
+            return Math.max(0, Math.round(gamePrice * discountMultiplier * 100) / 100);
+          }
+          return gamePrice;
+        };
+
+        const aRevenue = (a.tickets?.filter(t => t.isPaid) || []).reduce((sum, ticket) => {
+          return sum + getEffectivePrice(ticket, a.gamePrice);
+        }, 0);
+
+        const bRevenue = (b.tickets?.filter(t => t.isPaid) || []).reduce((sum, ticket) => {
+          return sum + getEffectivePrice(ticket, b.gamePrice);
+        }, 0);
+
+        return aRevenue - bRevenue;
+      },
       render: (experience) => {
         const getEffectivePrice = (ticket: any) => {
           // Use ticket price if available (already discounted)
@@ -624,7 +651,18 @@ export function EnhancedExperienceTable({}: EnhancedExperienceTableProps) {
     {
       key: "waitingTime",
       label: "Waiting Time",
-       sortable: true,
+      sortable: true,
+      sortFunction: (a, b) => {
+        // Experiences without startedAt should be sorted last
+        if (!a.startedAt && !b.startedAt) return 0;
+        if (!a.startedAt) return 1;
+        if (!b.startedAt) return -1;
+
+        const aTime = new Date(a.startedAt).getTime() - new Date(a.createdAt).getTime();
+        const bTime = new Date(b.startedAt).getTime() - new Date(b.createdAt).getTime();
+
+        return aTime - bTime;
+      },
       render: (experience) => {
         if (!experience.startedAt) {
           return (
