@@ -24,7 +24,6 @@ import {
 import { Plus, User } from "lucide-react";
 import { useUsersStore, type CreateUserPayload } from "@/stores/users-store";
 import { useRolesStore } from "@/stores/roles-store";
-import { useDomsStore } from "@/stores/doms-store";
 import { toast } from "sonner";
 import { Loader } from "../loader";
 
@@ -41,7 +40,6 @@ export function CreateUserDialog({
 }: CreateUserDialogProps) {
   const { createUser, loading } = useUsersStore();
   const { roles, fetchRoles, loading: rolesLoading } = useRolesStore();
-  const { doms, fetchDoms, loading: domsLoading } = useDomsStore();
   const [internalIsOpen, setInternalIsOpen] = useState(false);
 
   // Use external state if provided, otherwise use internal state
@@ -57,15 +55,13 @@ export function CreateUserDialog({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("");
-  const [dom, setDom] = useState("");
 
-  // Fetch roles and DOMs when dialog opens
+  // Fetch roles when dialog opens
   useEffect(() => {
     if (isDialogOpen) {
       fetchRoles();
-      fetchDoms();
     }
-  }, [isDialogOpen, fetchRoles, fetchDoms]);
+  }, [isDialogOpen, fetchRoles]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,7 +77,6 @@ export function CreateUserDialog({
         email,
         password,
         role_id: role ? parseInt(role) : undefined,
-        dom_id: dom ? parseInt(dom) : undefined,
       };
 
       await createUser(userData);
@@ -92,7 +87,6 @@ export function CreateUserDialog({
       setEmail("");
       setPassword("");
       setRole("");
-      setDom("");
       setIsDialogOpen(false);
     } catch (error) {
       // Error is handled in the store
@@ -150,57 +144,30 @@ export function CreateUserDialog({
                 required
               />
             </div>
-            <div className="w-full grid md:grid-cols-2 gap-4">
-              <div className="grid gap-2 w-full">
-                <Label htmlFor="role">Role</Label>
-                <Select value={role} onValueChange={(value) => setRole(value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {rolesLoading ? (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        Loading roles...
-                      </div>
-                    ) : roles.length > 0 ? (
-                      roles.map((roleItem) => (
-                        <SelectItem key={roleItem.id} value={roleItem.id.toString()}>
-                          {roleItem.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        No roles available
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2 w-full">
-                <Label htmlFor="doms">DOMs</Label>
-                <Select value={dom} onValueChange={(value) => setDom(value)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Store" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {domsLoading ? (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        Loading Stores...
-                      </div>
-                    ) : doms.length > 0 ? (
-                      doms.map((domItem) => (
-                        <SelectItem key={domItem.id} value={domItem.id.toString()}>
-                          {domItem.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                        No Stores available
-                      </div>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="grid gap-2">
+              <Label htmlFor="role">Role</Label>
+              <Select value={role} onValueChange={(value) => setRole(value)}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rolesLoading ? (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      Loading roles...
+                    </div>
+                  ) : roles.length > 0 ? (
+                    roles.map((roleItem) => (
+                      <SelectItem key={roleItem.id} value={roleItem.id.toString()}>
+                        {roleItem.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                      No roles available
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter className="mt-8">
@@ -213,7 +180,7 @@ export function CreateUserDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? 
+              {loading ?
               <span className="flex items-center">
                  <Loader size={16} />
                   <span className="ml-2">Creating...</span>

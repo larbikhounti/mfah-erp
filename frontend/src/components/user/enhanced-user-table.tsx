@@ -191,12 +191,6 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
         </Badge>
       ),
     },
-    {
-      key: "dom",
-      label: "Store",
-       sortable: true,
-      render: (user) => <div className="text-sm">{user.dom || "No Store"}</div>,
-    },
   ];
 
   // Created column (shown when NOT in archive mode)
@@ -292,8 +286,8 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
         title="User Management"
         data={users}
         columns={columns}
-        searchKeys={["name", "email", "role", "dom"]}
-        searchPlaceholder="Search users by name, email, role, or Store..."
+        searchKeys={["name", "email", "role"]}
+        searchPlaceholder="Search users by name, email, or role..."
         emptyMessage="No users found"
         showCount={true}
         customHeader={

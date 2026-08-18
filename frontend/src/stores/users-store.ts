@@ -6,7 +6,6 @@ export interface User {
   name: string;
   email: string;
   role: string;
-  dom: string;
   createdAt: string;
   updatedAt: string;
   deletedAt?: string | null;
@@ -17,7 +16,6 @@ export interface CreateUserPayload {
   email: string;
   password: string;
   role_id?: number;
-  dom_id?: number;
 }
 
 export interface UpdateUserPayload {
@@ -25,7 +23,6 @@ export interface UpdateUserPayload {
   email?: string;
   password?: string;
   role_id?: number;
-  dom_id?: number;
 }
 
 export interface FilterParams {
