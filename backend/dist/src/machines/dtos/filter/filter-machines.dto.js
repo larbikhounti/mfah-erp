@@ -37,9 +37,13 @@ __decorate([
     __metadata("design:type", String)
 ], FilterMachinesDto.prototype, "search", void 0);
 __decorate([
-    (0, swagger_1.ApiPropertyOptional)({ description: 'Filter by status' }),
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Filter by status',
+        enum: ['active', 'inactive']
+    }),
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(['active', 'inactive']),
     __metadata("design:type", String)
 ], FilterMachinesDto.prototype, "status", void 0);
 __decorate([
@@ -63,4 +67,20 @@ __decorate([
     (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], FilterMachinesDto.prototype, "domeId", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Show archived/deleted items',
+        example: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === 'true')
+            return true;
+        if (value === 'false')
+            return false;
+        return value;
+    }),
+    __metadata("design:type", Boolean)
+], FilterMachinesDto.prototype, "showArchived", void 0);
 //# sourceMappingURL=filter-machines.dto.js.map

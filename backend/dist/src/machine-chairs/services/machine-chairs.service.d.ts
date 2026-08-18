@@ -18,4 +18,11 @@ export declare class MachineChairsService {
     remove(id: number): Promise<string | Error>;
     bulkDelete(data: BulkDeleteMachineChairsDto): Promise<string | Error>;
     findByMachineId(machineId: number): Promise<machineChairs[]>;
+    restore(id: number): Promise<string | Error>;
+    bulkRestore(ids: number[]): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
+    }>;
 }

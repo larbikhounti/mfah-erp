@@ -19,6 +19,48 @@ export interface TicketSummary {
     averagePrice: number;
     recentTickets: TicketInfo[];
 }
+export interface CouponUsed {
+    id: number;
+    code: string;
+    discount: number;
+    usageCount: number;
+}
+export interface CommentUsed {
+    id: number;
+    content: string;
+    createdAt: string;
+    usageCount: number;
+}
+export interface ParentTicket {
+    id: number;
+    alias: string;
+    chairName: string;
+    machineName: string;
+    machineAlias: string;
+    gameName: string;
+    gamePrice: number;
+}
+export interface DetailedTicket {
+    id: number;
+    alias: string;
+    isPaid: boolean;
+    paidWith: number | null;
+    price: number | null;
+    notes: string | null;
+    chairId: number | null;
+    chairName: string;
+    createdAt: string;
+    coupon: {
+        id: number;
+        code: string;
+        discount: number;
+    } | null;
+    comments: Array<{
+        id: number;
+        content: string;
+    }>;
+    parentTicket: ParentTicket | null;
+}
 export interface ExperienceResponse {
     id: number;
     machineId: number;
@@ -38,4 +80,13 @@ export interface ExperienceResponse {
     domeAddress: string;
     ticketCount: number;
     ticketSummary: TicketSummary;
+    couponsUsed: CouponUsed[];
+    commentsUsed: CommentUsed[];
+    startedAt: string | null;
+    endedAt: string | null;
+    isNext: boolean;
+    isStarted: boolean;
+    isEnded: boolean;
+    isFractioned: boolean;
+    tickets: DetailedTicket[];
 }

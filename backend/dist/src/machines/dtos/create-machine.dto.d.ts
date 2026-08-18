@@ -3,4 +3,6 @@ export declare class CreateMachineDto {
     machineTypeId?: number;
     domeId?: number;
     chairsNumber?: number;
+    alias: string;
+    status?: string;
 }

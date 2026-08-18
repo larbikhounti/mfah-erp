@@ -4,4 +4,5 @@ export interface GameTypeResponse {
     gamesCount: number;
     createdAt: string;
     updatedAt: string;
+    deletedAt?: string | null;
 }

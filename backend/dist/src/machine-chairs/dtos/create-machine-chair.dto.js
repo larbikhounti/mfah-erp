@@ -26,7 +26,7 @@ __decorate([
 ], CreateMachineChairDto.prototype, "name", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'The status of the machine chair (0: available, 1: occupied, 2: maintenance)',
+        description: 'The status of the machine chair (0: available, 1: maintenance)',
         example: 0,
     }),
     (0, class_validator_1.IsNotEmpty)(),

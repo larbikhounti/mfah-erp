@@ -20,10 +20,14 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
     }
     async findAll(filterParams) {
         try {
-            const { offset = 0, limit = 10, search, machineTypeId } = filterParams;
-            const where = {
-                deletedAt: null,
-            };
+            const { offset = 0, limit = 10, search, machineTypeId, showArchived } = filterParams;
+            const where = {};
+            if (!showArchived) {
+                where.deletedAt = null;
+            }
+            else {
+                where.deletedAt = { not: null };
+            }
             if (search) {
                 where.name = { contains: search, mode: 'insensitive' };
             }
@@ -40,6 +44,16 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
                         name: true,
                         createdAt: true,
                         updatedAt: true,
+                        deletedAt: true,
+                        _count: {
+                            select: {
+                                machines: {
+                                    where: {
+                                        deletedAt: null,
+                                    },
+                                },
+                            },
+                        },
                     },
                     orderBy: {
                         createdAt: 'desc',
@@ -47,12 +61,17 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
                 }),
                 this.prisma.machineTypes.count({ where }),
             ]);
-            const formattedData = machineTypes.map((machineType) => ({
-                id: machineType.id,
-                name: machineType.name,
-                createdAt: machineType.createdAt.toISOString(),
-                updatedAt: machineType.updatedAt.toISOString(),
-            }));
+            const formattedData = machineTypes.map((machineType) => {
+                var _a;
+                return ({
+                    id: machineType.id,
+                    name: machineType.name,
+                    machinesCount: machineType._count.machines,
+                    createdAt: machineType.createdAt.toISOString(),
+                    updatedAt: machineType.updatedAt.toISOString(),
+                    deletedAt: ((_a = machineType.deletedAt) === null || _a === void 0 ? void 0 : _a.toISOString()) || null,
+                });
+            });
             return {
                 data: formattedData,
                 total,
@@ -83,11 +102,21 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
                         name: true,
                         createdAt: true,
                         updatedAt: true,
+                        _count: {
+                            select: {
+                                machines: {
+                                    where: {
+                                        deletedAt: null,
+                                    },
+                                },
+                            },
+                        },
                     },
                 });
                 return {
                     id: updatedMachineType.id,
                     name: updatedMachineType.name,
+                    machinesCount: updatedMachineType._count.machines,
                     createdAt: updatedMachineType.createdAt.toISOString(),
                     updatedAt: updatedMachineType.updatedAt.toISOString(),
                 };
@@ -101,11 +130,21 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
                     name: true,
                     createdAt: true,
                     updatedAt: true,
+                    _count: {
+                        select: {
+                            machines: {
+                                where: {
+                                    deletedAt: null,
+                                },
+                            },
+                        },
+                    },
                 },
             });
             return {
                 id: machineType.id,
                 name: machineType.name,
+                machinesCount: machineType._count.machines,
                 createdAt: machineType.createdAt.toISOString(),
                 updatedAt: machineType.updatedAt.toISOString(),
             };
@@ -130,6 +169,15 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
                     name: true,
                     createdAt: true,
                     updatedAt: true,
+                    _count: {
+                        select: {
+                            machines: {
+                                where: {
+                                    deletedAt: null,
+                                },
+                            },
+                        },
+                    },
                 },
             });
             if (!machineType) {
@@ -138,6 +186,7 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
             return {
                 id: machineType.id,
                 name: machineType.name,
+                machinesCount: machineType._count.machines,
                 createdAt: machineType.createdAt.toISOString(),
                 updatedAt: machineType.updatedAt.toISOString(),
             };
@@ -181,11 +230,21 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
                     name: true,
                     createdAt: true,
                     updatedAt: true,
+                    _count: {
+                        select: {
+                            machines: {
+                                where: {
+                                    deletedAt: null,
+                                },
+                            },
+                        },
+                    },
                 },
             });
             return {
                 id: updatedMachineType.id,
                 name: updatedMachineType.name,
+                machinesCount: updatedMachineType._count.machines,
                 createdAt: updatedMachineType.createdAt.toISOString(),
                 updatedAt: updatedMachineType.updatedAt.toISOString(),
             };
@@ -256,6 +315,61 @@ let MachineTypesService = MachineTypesService_1 = class MachineTypesService {
         catch (error) {
             this.logger.error('Error bulk deleting machine types:', error);
             throw new common_1.HttpException('Error bulk deleting machine types', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async restore(id) {
+        try {
+            const machineType = await this.prisma.machineTypes.findUnique({
+                where: { id },
+            });
+            if (!machineType) {
+                throw new common_1.HttpException('Machine type not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            if (!machineType.deletedAt) {
+                throw new common_1.HttpException('Machine type is not deleted', common_1.HttpStatus.BAD_REQUEST);
+            }
+            await this.prisma.machineTypes.update({
+                where: { id },
+                data: { deletedAt: null },
+            });
+            return { message: 'Machine type restored successfully' };
+        }
+        catch (error) {
+            this.logger.error(`Error restoring machine type with id ${id}:`, error);
+            if (error instanceof common_1.HttpException) {
+                throw error;
+            }
+            throw new common_1.HttpException('Error restoring machine type', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async bulkRestore(machineTypeIds) {
+        try {
+            const existingMachineTypes = await this.prisma.machineTypes.findMany({
+                where: { id: { in: machineTypeIds } },
+                select: {
+                    id: true,
+                    deletedAt: true,
+                },
+            });
+            const existingMachineTypeIds = existingMachineTypes.map((mt) => mt.id);
+            const notFoundIds = machineTypeIds.filter((id) => !existingMachineTypeIds.includes(id));
+            const notDeletedMachineTypes = existingMachineTypes.filter((mt) => mt.deletedAt === null);
+            const notDeletedIds = notDeletedMachineTypes.map((mt) => mt.id);
+            const restorableIds = existingMachineTypeIds.filter((id) => !notDeletedIds.includes(id));
+            const restoreResult = await this.prisma.machineTypes.updateMany({
+                where: { id: { in: restorableIds } },
+                data: { deletedAt: null },
+            });
+            return {
+                message: `Bulk restore completed. ${restoreResult.count} machine types restored successfully.`,
+                restoredCount: restoreResult.count,
+                notFound: notFoundIds,
+                notDeleted: notDeletedIds,
+            };
+        }
+        catch (error) {
+            this.logger.error('Error bulk restoring machine types:', error);
+            throw new common_1.HttpException('Error bulk restoring machine types', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 };

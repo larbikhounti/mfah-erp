@@ -23,4 +23,13 @@ export declare class MachineTypesService {
         deletedCount: number;
         notFound: number[];
     }>;
+    restore(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestore(machineTypeIds: number[]): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
+    }>;
 }

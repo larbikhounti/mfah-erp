@@ -17,10 +17,10 @@ async function bootstrap() {
         transform: true,
     }));
     const swaggerConfig = new swagger_1.DocumentBuilder()
-        .setTitle('Vr Api')
-        .setDescription('The Vr API description')
+        .setTitle('MFAH Api')
+        .setDescription('The MFAH API description')
         .setVersion('1.0')
-        .addTag('vr')
+        .addTag('mfah')
         .addBearerAuth({
         type: 'http',
         scheme: 'bearer',
@@ -33,7 +33,7 @@ async function bootstrap() {
     const documentFactory = () => swagger_1.SwaggerModule.createDocument(app, swaggerConfig);
     const options = {
         explorer: true,
-        customSiteTitle: 'Vr Api ',
+        customSiteTitle: 'MFAH Api ',
     };
     swagger_1.SwaggerModule.setup('api/docs', app, documentFactory, options);
     const port = 8459;

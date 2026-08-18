@@ -24,4 +24,13 @@ export declare class UserController {
         message: string;
     }>;
     getAllRoles(): Promise<any[]>;
+    restore(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestore(body: {
+        userIds: number[];
+    }): Promise<{
+        message: string;
+        restoredCount: number;
+    }>;
 }

@@ -18,4 +18,5 @@ __exportStar(require("./create-game.dto"), exports);
 __exportStar(require("./update-game.dto"), exports);
 __exportStar(require("./filter-games.dto"), exports);
 __exportStar(require("./bulk-delete-games.dto"), exports);
+__exportStar(require("./toggle-favorite-game.dto"), exports);
 //# sourceMappingURL=index.js.map

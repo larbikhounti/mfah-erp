@@ -16,6 +16,7 @@ exports.SyncController = void 0;
 const common_1 = require("@nestjs/common");
 const sync_service_1 = require("../services/sync.service");
 const SyncRequest_dto_1 = require("../dtos/SyncRequest.dto");
+const upload_data_dto_1 = require("../dtos/upload-data.dto");
 const public_decorator_1 = require("../../decorator/public.decorator");
 let SyncController = class SyncController {
     constructor(syncService) {
@@ -29,6 +30,14 @@ let SyncController = class SyncController {
             throw new common_1.HttpException(`Sync failed: ${error.message}`, common_1.HttpStatus.BAD_REQUEST);
         }
     }
+    async upload(uploadData) {
+        try {
+            return await this.syncService.uploadData(uploadData);
+        }
+        catch (error) {
+            throw new common_1.HttpException(`Upload failed: ${error.message}`, common_1.HttpStatus.BAD_REQUEST);
+        }
+    }
 };
 exports.SyncController = SyncController;
 __decorate([
@@ -39,6 +48,14 @@ __decorate([
     __metadata("design:paramtypes", [SyncRequest_dto_1.SyncRequestDto]),
     __metadata("design:returntype", Promise)
 ], SyncController.prototype, "sync", null);
+__decorate([
+    (0, public_decorator_1.Public)(),
+    (0, common_1.Post)('upload'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [upload_data_dto_1.UploadDataDto]),
+    __metadata("design:returntype", Promise)
+], SyncController.prototype, "upload", null);
 exports.SyncController = SyncController = __decorate([
     (0, common_1.Controller)('sync'),
     __metadata("design:paramtypes", [sync_service_1.SyncService])

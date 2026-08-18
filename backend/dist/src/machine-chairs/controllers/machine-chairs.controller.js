@@ -47,6 +47,12 @@ let MachineChairsController = class MachineChairsController {
     async findByMachineId(machineId) {
         return this.machineChairsService.findByMachineId(machineId);
     }
+    restoreMachineChair(id) {
+        return this.machineChairsService.restore(id);
+    }
+    bulkRestoreMachineChairs(body) {
+        return this.machineChairsService.bulkRestore(body.ids);
+    }
 };
 exports.MachineChairsController = MachineChairsController;
 __decorate([
@@ -226,6 +232,39 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], MachineChairsController.prototype, "findByMachineId", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Patch)('admin/:id/restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted machine chair (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Machine chair restored successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Machine chair not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], MachineChairsController.prototype, "restoreMachineChair", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Post)('admin/bulk-restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore multiple machine chairs (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Bulk restore completed',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], MachineChairsController.prototype, "bulkRestoreMachineChairs", null);
 exports.MachineChairsController = MachineChairsController = __decorate([
     (0, swagger_1.ApiTags)('machine-chairs'),
     (0, common_1.Controller)({

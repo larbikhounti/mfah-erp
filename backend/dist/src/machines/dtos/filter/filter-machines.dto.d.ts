@@ -6,4 +6,5 @@ export declare class FilterMachinesDto {
     machineId?: number;
     machineTypeId?: number;
     domeId?: number;
+    showArchived?: boolean;
 }

@@ -58,4 +58,25 @@ __decorate([
     (0, class_validator_1.Max)(20),
     __metadata("design:type", Number)
 ], CreateMachineDto.prototype, "chairsNumber", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'The alias for the machine',
+        example: 'A',
+    }),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateMachineDto.prototype, "alias", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'The status of the machine',
+        example: 'active',
+        enum: ['active', 'inactive'],
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(['active', 'inactive']),
+    __metadata("design:type", String)
+], CreateMachineDto.prototype, "status", void 0);
 //# sourceMappingURL=create-machine.dto.js.map

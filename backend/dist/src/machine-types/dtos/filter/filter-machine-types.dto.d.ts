@@ -4,4 +4,5 @@ export declare class FilterMachineTypesDto {
     search?: string;
     status?: string;
     machineTypeId?: number;
+    showArchived?: boolean;
 }

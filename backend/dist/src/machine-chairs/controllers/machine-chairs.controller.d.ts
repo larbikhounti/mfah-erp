@@ -16,8 +16,8 @@ export declare class MachineChairsController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        machineId: number;
         status: number;
+        machineId: number;
     }>;
     create(createMachineChairDto: CreateMachineChairDto): Promise<string | Error>;
     update(id: number, updateMachineChairDto: UpdateMachineChairDto): Promise<string | Error>;
@@ -29,7 +29,16 @@ export declare class MachineChairsController {
         createdAt: Date;
         updatedAt: Date;
         deletedAt: Date | null;
-        machineId: number;
         status: number;
+        machineId: number;
     }[]>;
+    restoreMachineChair(id: number): Promise<string | Error>;
+    bulkRestoreMachineChairs(body: {
+        ids: number[];
+    }): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
+    }>;
 }

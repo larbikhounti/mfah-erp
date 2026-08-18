@@ -51,6 +51,12 @@ let DomsController = class DomsController {
     getAllDomsAdmin(filterParams) {
         return this.domsService.findAll(filterParams);
     }
+    restoreDom(id) {
+        return this.domsService.restore(id);
+    }
+    bulkRestoreDoms(body) {
+        return this.domsService.bulkRestore(body.domIds);
+    }
 };
 exports.DomsController = DomsController;
 __decorate([
@@ -181,6 +187,39 @@ __decorate([
     __metadata("design:paramtypes", [filter_doms_dto_1.FilterDomsDto]),
     __metadata("design:returntype", void 0)
 ], DomsController.prototype, "getAllDomsAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Patch)('admin/:id/restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted DOM (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'DOM restored successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'DOM not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], DomsController.prototype, "restoreDom", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Post)('admin/bulk-restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore multiple DOMs (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Bulk restore completed',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], DomsController.prototype, "bulkRestoreDoms", null);
 exports.DomsController = DomsController = __decorate([
     (0, swagger_1.ApiTags)('doms'),
     (0, common_1.Controller)({

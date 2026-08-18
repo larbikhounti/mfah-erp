@@ -18,7 +18,7 @@ export declare class DomsController {
         message: string;
         deletedCount: number;
         notFound: number[];
-        hasRelatedRecords: number[];
+        alreadyDeleted: number[];
     }>;
     deleteDom(id: number): Promise<{
         message: string;
@@ -26,5 +26,16 @@ export declare class DomsController {
     getAllDomsAdmin(filterParams: FilterDomsDto): Promise<{
         data: import("../types/dom-response.type").DomResponse[];
         total: number;
+    }>;
+    restoreDom(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestoreDoms(body: {
+        domIds: number[];
+    }): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
     }>;
 }

@@ -29,99 +29,108 @@ async function seedMachines(prisma) {
     });
     const machines = [
         {
-            name: 'VR Station Alpha',
-            machineTypeId: (vrHeadset === null || vrHeadset === void 0 ? void 0 : vrHeadset.id) || null,
-            domeId: (vrCenter === null || vrCenter === void 0 ? void 0 : vrCenter.id) || null,
+            name: 'Alpha',
+            machineTypeId: vrHeadset.id,
+            domeId: vrCenter.id,
+            alias: 'A',
             chairsNumber: 1,
         },
         {
-            name: 'VR Station Beta',
-            machineTypeId: (vrHeadset === null || vrHeadset === void 0 ? void 0 : vrHeadset.id) || null,
-            domeId: (vrCenter === null || vrCenter === void 0 ? void 0 : vrCenter.id) || null,
+            name: 'Beta',
+            machineTypeId: vrHeadset.id,
+            domeId: vrCenter.id,
+            alias: 'B',
             chairsNumber: 1,
         },
         {
-            name: 'Gaming Console Pro 1',
-            machineTypeId: (gamingConsole === null || gamingConsole === void 0 ? void 0 : gamingConsole.id) || null,
-            domeId: (gamingHub === null || gamingHub === void 0 ? void 0 : gamingHub.id) || null,
+            name: 'Pro 1',
+            machineTypeId: gamingConsole.id,
+            domeId: gamingHub === null || gamingHub === void 0 ? void 0 : gamingHub.id,
+            alias: 'C',
             chairsNumber: 4,
         },
         {
-            name: 'Gaming Console Pro 2',
-            machineTypeId: (gamingConsole === null || gamingConsole === void 0 ? void 0 : gamingConsole.id) || null,
-            domeId: (gamingHub === null || gamingHub === void 0 ? void 0 : gamingHub.id) || null,
+            name: 'Pro 2',
+            machineTypeId: gamingConsole.id,
+            domeId: gamingHub === null || gamingHub === void 0 ? void 0 : gamingHub.id,
+            alias: 'D',
             chairsNumber: 4,
         },
         {
-            name: 'Racing Simulator Elite',
-            machineTypeId: (racingSimulator === null || racingSimulator === void 0 ? void 0 : racingSimulator.id) || null,
-            domeId: (gamingHub === null || gamingHub === void 0 ? void 0 : gamingHub.id) || null,
+            name: 'Elite',
+            machineTypeId: racingSimulator.id,
+            domeId: gamingHub.id,
+            alias: 'E',
             chairsNumber: 2,
         },
         {
-            name: 'Motion Platform X1',
-            machineTypeId: (motionPlatform === null || motionPlatform === void 0 ? void 0 : motionPlatform.id) || null,
-            domeId: (entertainmentComplex === null || entertainmentComplex === void 0 ? void 0 : entertainmentComplex.id) || null,
+            name: 'X1',
+            machineTypeId: motionPlatform.id,
+            domeId: entertainmentComplex.id,
+            alias: 'F',
             chairsNumber: 6,
         },
         {
-            name: 'Arcade Fighter 1',
-            machineTypeId: (arcadeCabinet === null || arcadeCabinet === void 0 ? void 0 : arcadeCabinet.id) || null,
-            domeId: (entertainmentComplex === null || entertainmentComplex === void 0 ? void 0 : entertainmentComplex.id) || null,
+            name: 'Fighter 1',
+            machineTypeId: arcadeCabinet.id,
+            domeId: entertainmentComplex.id,
+            alias: 'G',
             chairsNumber: 2,
         },
         {
-            name: 'Arcade Fighter 2',
-            machineTypeId: (arcadeCabinet === null || arcadeCabinet === void 0 ? void 0 : arcadeCabinet.id) || null,
-            domeId: (entertainmentComplex === null || entertainmentComplex === void 0 ? void 0 : entertainmentComplex.id) || null,
+            name: 'Fighter 2',
+            machineTypeId: arcadeCabinet.id,
+            domeId: entertainmentComplex.id,
+            alias: 'H',
             chairsNumber: 2,
         },
         {
-            name: 'VR Station Gamma',
-            machineTypeId: (vrHeadset === null || vrHeadset === void 0 ? void 0 : vrHeadset.id) || null,
-            domeId: (entertainmentComplex === null || entertainmentComplex === void 0 ? void 0 : entertainmentComplex.id) || null,
+            name: 'Gamma',
+            machineTypeId: vrHeadset.id,
+            domeId: entertainmentComplex.id,
+            alias: 'I',
             chairsNumber: 1,
         },
         {
-            name: 'Racing Simulator Standard',
-            machineTypeId: (racingSimulator === null || racingSimulator === void 0 ? void 0 : racingSimulator.id) || null,
-            domeId: (vrCenter === null || vrCenter === void 0 ? void 0 : vrCenter.id) || null,
+            name: 'Standard',
+            machineTypeId: racingSimulator.id,
+            domeId: vrCenter.id,
+            alias: 'J',
             chairsNumber: 1,
         },
     ];
     for (const machine of machines) {
-        const existingMachine = await prisma.machines.findFirst({
-            where: {
+        const upsertedMachine = await prisma.machines.upsert({
+            where: { alias: machine.alias },
+            update: {
                 name: machine.name,
-                deletedAt: null,
+                machineTypeId: machine.machineTypeId,
+                domeId: machine.domeId,
+            },
+            create: {
+                name: machine.name,
+                machineTypeId: machine.machineTypeId,
+                domeId: machine.domeId,
+                alias: machine.alias,
             },
         });
-        if (!existingMachine) {
-            const createdMachine = await prisma.machines.create({
-                data: {
-                    name: machine.name,
-                    machineTypeId: machine.machineTypeId,
-                    domeId: machine.domeId,
-                },
-            });
-            console.log(`Machine created: ${createdMachine.name}`);
-            if (machine.chairsNumber && machine.chairsNumber > 0) {
-                const chairsToCreate = [];
-                for (let i = 1; i <= machine.chairsNumber; i++) {
-                    chairsToCreate.push({
-                        name: `${createdMachine.name} - Chair ${i}`,
-                        status: 0,
-                        machineId: createdMachine.id,
-                    });
-                }
-                await prisma.machineChairs.createMany({
-                    data: chairsToCreate,
+        console.log(`Machine upserted: ${upsertedMachine.name}`);
+        await prisma.machineChairs.deleteMany({
+            where: { machineId: upsertedMachine.id },
+        });
+        if (machine.chairsNumber && machine.chairsNumber > 0) {
+            const chairsToCreate = [];
+            for (let i = 1; i <= machine.chairsNumber; i++) {
+                chairsToCreate.push({
+                    name: `${upsertedMachine.name} - Chair ${i}`,
+                    status: 0,
+                    machineId: upsertedMachine.id,
                 });
-                console.log(`Created ${machine.chairsNumber} chairs for ${createdMachine.name}`);
             }
-        }
-        else {
-            console.log(`Machine already exists: ${machine.name}`);
+            await prisma.machineChairs.createMany({
+                data: chairsToCreate,
+            });
+            console.log(`Created ${machine.chairsNumber} chairs for ${upsertedMachine.name}`);
         }
     }
     console.log('Machines seeded successfully!');

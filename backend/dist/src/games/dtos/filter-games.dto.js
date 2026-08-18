@@ -38,15 +38,15 @@ __decorate([
 ], FilterGamesDto.prototype, "gameTypeId", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
-        description: 'Filter by machine type ID',
-        example: 1,
+        description: 'Filter by machine type IDs',
+        example: [1, 2],
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
+    (0, class_validator_1.IsInt)({ each: true }),
     (0, class_transformer_1.Type)(() => Number),
-    (0, class_validator_1.Min)(1),
-    __metadata("design:type", Number)
-], FilterGamesDto.prototype, "machineTypeId", void 0);
+    (0, class_validator_1.Min)(1, { each: true }),
+    __metadata("design:type", Array)
+], FilterGamesDto.prototype, "machineTypeIds", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
         description: 'Filter by minimum price',
@@ -93,6 +93,22 @@ __decorate([
 ], FilterGamesDto.prototype, "maxPlayTime", void 0);
 __decorate([
     (0, swagger_1.ApiPropertyOptional)({
+        description: 'Filter by favored status',
+        example: true,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === 'true')
+            return true;
+        if (value === 'false')
+            return false;
+        return value;
+    }),
+    __metadata("design:type", Boolean)
+], FilterGamesDto.prototype, "isFavored", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
         description: 'Page number for pagination',
         example: 1,
     }),
@@ -113,4 +129,20 @@ __decorate([
     (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], FilterGamesDto.prototype, "limit", void 0);
+__decorate([
+    (0, swagger_1.ApiPropertyOptional)({
+        description: 'Show archived/deleted items',
+        example: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    (0, class_transformer_1.Transform)(({ value }) => {
+        if (value === 'true')
+            return true;
+        if (value === 'false')
+            return false;
+        return value;
+    }),
+    __metadata("design:type", Boolean)
+], FilterGamesDto.prototype, "showArchived", void 0);
 //# sourceMappingURL=filter-games.dto.js.map

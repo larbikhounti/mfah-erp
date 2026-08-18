@@ -8,10 +8,10 @@ async function seedRoles(prisma) {
             name: 'ADMIN',
         },
         {
-            name: 'USER',
+            name: 'front office',
         },
         {
-            name: 'MANAGER',
+            name: 'back office',
         },
     ];
     for (const role of roles) {

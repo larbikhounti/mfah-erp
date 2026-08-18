@@ -26,4 +26,15 @@ export declare class GameTypesController {
     deleteGameTypeByAdmin(id: number): Promise<{
         message: string;
     }>;
+    restoreGameType(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestoreGameTypes(body: {
+        gameTypeIds: number[];
+    }): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
+    }>;
 }

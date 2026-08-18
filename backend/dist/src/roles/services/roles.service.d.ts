@@ -22,6 +22,15 @@ export declare class RolesService {
         message: string;
         deletedCount: number;
         notFound: number[];
-        hasRelatedRecords: number[];
+        alreadyDeleted: number[];
+    }>;
+    restore(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestore(roleIds: number[]): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
     }>;
 }

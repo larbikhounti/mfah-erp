@@ -23,4 +23,13 @@ export declare class GameTypesService {
         deletedCount: number;
         notFound: number[];
     }>;
+    restore(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestore(gameTypeIds: number[]): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
+    }>;
 }

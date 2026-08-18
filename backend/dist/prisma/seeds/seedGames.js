@@ -166,11 +166,6 @@ const gamesData = [
 async function seedGames(prisma) {
     console.log('Seeding games...');
     try {
-        const existingGames = await prisma.games.count();
-        if (existingGames > 0) {
-            console.log('Games already seeded, skipping...');
-            return;
-        }
         const gameTypes = await prisma.gameTypes.findMany({
             where: { deletedAt: null },
             select: { id: true },

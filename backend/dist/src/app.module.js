@@ -12,17 +12,10 @@ const app_controller_1 = require("./app.controller");
 const app_service_1 = require("./app.service");
 const prisma_module_1 = require("./prisma/prisma.module");
 const users_module_1 = require("./users/users.module");
-const doms_module_1 = require("./doms/doms.module");
 const roles_module_1 = require("./roles/roles.module");
-const machine_types_module_1 = require("./machine-types/machine-types.module");
-const machines_module_1 = require("./machines/machines.module");
-const machine_chairs_module_1 = require("./machine-chairs/machine-chairs.module");
-const game_types_module_1 = require("./game-types/game-types.module");
-const games_module_1 = require("./games/games.module");
-const experiences_module_1 = require("./experiences/experiences.module");
 const config_1 = require("@nestjs/config");
 const auth_module_1 = require("./auth/auth.module");
-const sync_module_1 = require("./sync/sync.module");
+const statistics_module_1 = require("./statistics/statistics.module");
 let AppModule = class AppModule {
 };
 exports.AppModule = AppModule;
@@ -32,16 +25,9 @@ exports.AppModule = AppModule = __decorate([
             config_1.ConfigModule.forRoot({ isGlobal: true }),
             prisma_module_1.PrismaModule,
             users_module_1.UsersModule,
-            doms_module_1.DomsModule,
             roles_module_1.RolesModule,
-            machine_types_module_1.MachineTypesModule,
-            machines_module_1.MachinesModule,
-            machine_chairs_module_1.MachineChairsModule,
-            game_types_module_1.GameTypesModule,
-            games_module_1.GamesModule,
-            experiences_module_1.ExperiencesModule,
             auth_module_1.AuthModule,
-            sync_module_1.SyncModule,
+            statistics_module_1.StatisticsModule,
         ],
         controllers: [app_controller_1.AppController],
         providers: [app_service_1.AppService],

@@ -1,6 +1,8 @@
 export interface MachineResponse {
     id: number;
     name: string;
+    alias: string;
+    status: string;
     machineTypeId: number | null;
     machineType: string | null;
     domeId: number | null;
@@ -13,4 +15,5 @@ export interface MachineResponse {
     }[];
     createdAt: string;
     updatedAt: string;
+    deletedAt?: string | null;
 }

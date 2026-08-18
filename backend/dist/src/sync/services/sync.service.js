@@ -25,7 +25,6 @@ let SyncService = SyncService_1 = class SyncService {
             const dome = await this.prisma.doms.findFirst({
                 where: {
                     id: domeId,
-                    deletedAt: null,
                 },
             });
             if (!dome) {
@@ -38,23 +37,30 @@ let SyncService = SyncService_1 = class SyncService {
                     wasSuccess: false,
                 },
             });
-            const [gameTypes, machineTypes, roles] = await Promise.all([
+            const [gameTypes, machineTypes, roles, coupons, comments] = await Promise.all([
                 this.prisma.gameTypes.findMany({
                     where: {
                         updatedAt: { gt: lastSync },
-                        deletedAt: null,
                     },
                 }),
                 this.prisma.machineTypes.findMany({
                     where: {
                         updatedAt: { gt: lastSync },
-                        deletedAt: null,
                     },
                 }),
                 this.prisma.roles.findMany({
                     where: {
                         updatedAt: { gt: lastSync },
-                        deletedAt: null,
+                    },
+                }),
+                this.prisma.coupons.findMany({
+                    where: {
+                        updatedAt: { gt: lastSync },
+                    },
+                }),
+                this.prisma.comments.findMany({
+                    where: {
+                        updatedAt: { gt: lastSync },
                     },
                 }),
             ]);
@@ -63,14 +69,12 @@ let SyncService = SyncService_1 = class SyncService {
                     where: {
                         id: domeId,
                         updatedAt: { gt: lastSync },
-                        deletedAt: null,
                     },
                 }),
                 this.prisma.machines.findMany({
                     where: {
                         domeId,
                         updatedAt: { gt: lastSync },
-                        deletedAt: null,
                     },
                     include: {
                         machineTypes: true,
@@ -89,15 +93,12 @@ let SyncService = SyncService_1 = class SyncService {
                     where: {
                         updatedAt: { gt: lastSync },
                         domeGames: { some: { domeId } },
-                        deletedAt: null,
                     },
                     include: {
                         gameTypes: {
                             select: { id: true },
                         },
-                        machineTypes: {
-                            select: { id: true },
-                        },
+                        gameMachineTypes: true,
                     },
                 }),
             ]);
@@ -106,27 +107,32 @@ let SyncService = SyncService_1 = class SyncService {
                 where: {
                     machineId: { in: machineIds },
                     updatedAt: { gt: lastSync },
-                    deletedAt: null,
                 },
             });
             const response = {
-                globalData: {
-                    gameTypes,
-                    machineTypes,
-                    roles,
+                data: {
+                    globalData: {
+                        gameTypes,
+                        machineTypes,
+                        roles,
+                        coupons,
+                        comments,
+                    },
+                    domeSpecificData: {
+                        doms,
+                        machines,
+                        machineChairs,
+                        users,
+                        games: domeGames,
+                    },
+                    serverTime: new Date(),
                 },
-                domeSpecificData: {
-                    doms,
-                    machines,
-                    machineChairs,
-                    users,
-                    games: domeGames,
-                },
-                serverTime: new Date(),
             };
             const dataCount = gameTypes.length +
                 machineTypes.length +
                 roles.length +
+                coupons.length +
+                comments.length +
                 doms.length +
                 machines.length +
                 machineChairs.length +
@@ -154,6 +160,146 @@ let SyncService = SyncService_1 = class SyncService {
                 });
             }
             throw error;
+        }
+    }
+    async uploadData(uploadData) {
+        const { domId, experiences, tickets } = uploadData;
+        try {
+            const dome = await this.prisma.doms.findFirst({
+                where: {
+                    id: domId,
+                },
+            });
+            if (!dome) {
+                throw new Error(`Dome with ID ${domId} not found or deleted`);
+            }
+            const result = await this.prisma.$transaction(async (prisma) => {
+                const savedExperiences = await Promise.all(experiences.map((experience) => prisma.experiences.upsert({
+                    where: {
+                        domeId_id: {
+                            domeId: experience.domeId,
+                            id: experience.id,
+                        },
+                    },
+                    update: {
+                        machineId: experience.machineId,
+                        gameId: experience.gameId,
+                        isFractioned: experience.isFractioned,
+                        isNext: experience.isNext,
+                        isStarted: experience.isStarted,
+                        isEnded: experience.isEnded,
+                        startedAt: experience.startedAt,
+                        endedAt: experience.endedAt,
+                        updatedAt: experience.updatedAt,
+                        deletedAt: experience.deletedAt,
+                    },
+                    create: {
+                        id: experience.id,
+                        machineId: experience.machineId,
+                        gameId: experience.gameId,
+                        isFractioned: experience.isFractioned,
+                        isNext: experience.isNext,
+                        isStarted: experience.isStarted,
+                        isEnded: experience.isEnded,
+                        startedAt: experience.startedAt,
+                        endedAt: experience.endedAt,
+                        createdAt: experience.createdAt,
+                        updatedAt: experience.updatedAt,
+                        deletedAt: experience.deletedAt,
+                        domeId: experience.domeId,
+                    },
+                })));
+                const parentTickets = tickets.filter((t) => t.parentTicketId === null);
+                const childTickets = tickets.filter((t) => t.parentTicketId !== null);
+                const upsertTicket = async (ticket) => {
+                    const savedTicket = await prisma.tickets.upsert({
+                        where: {
+                            domeId_id: {
+                                domeId: ticket.domeId,
+                                id: ticket.id,
+                            },
+                        },
+                        update: {
+                            userId: ticket.userId,
+                            experienceId: ticket.experienceId,
+                            alias: ticket.alias,
+                            isPaid: ticket.isPaid,
+                            chairId: ticket.chairId,
+                            couponId: ticket.couponId,
+                            notes: ticket.notes,
+                            domeId: ticket.domeId,
+                            paidWith: ticket.paidWith,
+                            price: ticket.price,
+                            updatedAt: ticket.updatedAt,
+                            deletedAt: ticket.deletedAt,
+                            parentTicketId: ticket.parentTicketId,
+                        },
+                        create: {
+                            id: ticket.id,
+                            userId: ticket.userId,
+                            experienceId: ticket.experienceId,
+                            alias: ticket.alias,
+                            isPaid: ticket.isPaid,
+                            chairId: ticket.chairId,
+                            couponId: ticket.couponId,
+                            notes: ticket.notes,
+                            paidWith: ticket.paidWith,
+                            price: ticket.price,
+                            createdAt: ticket.createdAt,
+                            updatedAt: ticket.updatedAt,
+                            deletedAt: ticket.deletedAt,
+                            domeId: ticket.domeId,
+                            parentTicketId: ticket.parentTicketId,
+                        },
+                    });
+                    if (ticket.ticketComments && ticket.ticketComments.length > 0) {
+                        await Promise.all(ticket.ticketComments.map((ticketComment) => prisma.ticketComments.upsert({
+                            where: {
+                                domeId_id: {
+                                    domeId: ticketComment.domeId,
+                                    id: ticketComment.id,
+                                },
+                            },
+                            update: {
+                                ticketId: ticketComment.ticketId,
+                                commentId: ticketComment.commentId,
+                                domeId: ticketComment.domeId,
+                                updatedAt: ticketComment.updatedAt,
+                            },
+                            create: {
+                                id: ticketComment.id,
+                                ticketId: ticketComment.ticketId,
+                                commentId: ticketComment.commentId,
+                                domeId: ticketComment.domeId,
+                                createdAt: ticketComment.createdAt,
+                                updatedAt: ticketComment.updatedAt,
+                            },
+                        })));
+                    }
+                    return savedTicket;
+                };
+                const savedParentTickets = await Promise.all(parentTickets.map((ticket) => upsertTicket(ticket)));
+                const savedChildTickets = await Promise.all(childTickets.map((ticket) => upsertTicket(ticket)));
+                const savedTickets = [...savedParentTickets, ...savedChildTickets];
+                return {
+                    experiencesCount: savedExperiences.length,
+                    ticketsCount: savedTickets.length,
+                };
+            });
+            this.logger.log(`Successfully uploaded data for dome ${domId}: ${result.experiencesCount} experiences, ${result.ticketsCount} tickets`);
+            return {
+                success: true,
+                message: 'Data uploaded successfully',
+                data: {
+                    domId,
+                    experiencesProcessed: result.experiencesCount,
+                    ticketsProcessed: result.ticketsCount,
+                },
+            };
+        }
+        catch (error) {
+            this.logger.error(`Upload failed for dome ${domId}: ${error.message}`, error.stack);
+            throw new common_1.HttpException(`Upload failed for dome ${domId}: ${error.message}`, common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 };

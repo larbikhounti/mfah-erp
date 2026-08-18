@@ -39,6 +39,21 @@ async function seedTickets(prisma) {
             },
             take: 20,
         });
+        const machineTicketCounters = new Map();
+        const generateTicketAlias = async (machineId, machineAlias) => {
+            let currentTicketNumber = machineTicketCounters.get(machineId);
+            if (currentTicketNumber === undefined) {
+                const machine = await prisma.machines.findUnique({
+                    where: { id: machineId },
+                    select: { ticketNumber: true },
+                });
+                currentTicketNumber = (machine === null || machine === void 0 ? void 0 : machine.ticketNumber) || 0;
+                machineTicketCounters.set(machineId, currentTicketNumber);
+            }
+            const nextTicketNumber = currentTicketNumber + 1;
+            machineTicketCounters.set(machineId, nextTicketNumber);
+            return `${machineAlias}${nextTicketNumber}`;
+        };
         const doms = await prisma.doms.findMany({
             where: { deletedAt: null },
         });
@@ -71,9 +86,11 @@ async function seedTickets(prisma) {
                 const randomHoursAgo = Math.floor(Math.random() * (7 * 24));
                 const createdAt = new Date();
                 createdAt.setHours(createdAt.getHours() - randomHoursAgo);
+                const ticketAlias = await generateTicketAlias(vrExp.machines.id, vrExp.machines.alias);
                 ticketsToCreate.push({
                     userId: user.id,
                     experienceId: vrExp.id,
+                    alias: ticketAlias,
                     isPaid,
                     chairId: (chair === null || chair === void 0 ? void 0 : chair.id) || null,
                     domeId: ((_a = vrExp.doms) === null || _a === void 0 ? void 0 : _a.id) || doms[0].id,
@@ -99,9 +116,11 @@ async function seedTickets(prisma) {
                 const randomHoursAgo = Math.floor(Math.random() * (14 * 24));
                 const createdAt = new Date();
                 createdAt.setHours(createdAt.getHours() - randomHoursAgo);
+                const ticketAlias = await generateTicketAlias(raceExp.machines.id, raceExp.machines.alias);
                 ticketsToCreate.push({
                     userId: user.id,
                     experienceId: raceExp.id,
+                    alias: ticketAlias,
                     isPaid,
                     chairId: (chair === null || chair === void 0 ? void 0 : chair.id) || null,
                     domeId: ((_b = raceExp.doms) === null || _b === void 0 ? void 0 : _b.id) || doms[0].id,
@@ -123,9 +142,11 @@ async function seedTickets(prisma) {
                 const randomHoursAgo = Math.floor(Math.random() * (5 * 24));
                 const createdAt = new Date();
                 createdAt.setHours(createdAt.getHours() - randomHoursAgo);
+                const ticketAlias = await generateTicketAlias(premExp.machines.id, premExp.machines.alias);
                 ticketsToCreate.push({
                     userId: user.id,
                     experienceId: premExp.id,
+                    alias: ticketAlias,
                     isPaid,
                     chairId: (chair === null || chair === void 0 ? void 0 : chair.id) || null,
                     domeId: ((_c = premExp.doms) === null || _c === void 0 ? void 0 : _c.id) || doms[0].id,
@@ -152,9 +173,11 @@ async function seedTickets(prisma) {
                 const randomHoursAgo = Math.floor(Math.random() * (21 * 24));
                 const createdAt = new Date();
                 createdAt.setHours(createdAt.getHours() - randomHoursAgo);
+                const ticketAlias = await generateTicketAlias(arcadeExp.machines.id, arcadeExp.machines.alias);
                 ticketsToCreate.push({
                     userId: user.id,
                     experienceId: arcadeExp.id,
+                    alias: ticketAlias,
                     isPaid,
                     chairId: (chair === null || chair === void 0 ? void 0 : chair.id) || null,
                     domeId: ((_d = arcadeExp.doms) === null || _d === void 0 ? void 0 : _d.id) || doms[0].id,
@@ -179,9 +202,11 @@ async function seedTickets(prisma) {
                 const randomHoursAgo = Math.floor(Math.random() * (30 * 24));
                 const createdAt = new Date();
                 createdAt.setHours(createdAt.getHours() - randomHoursAgo);
+                const ticketAlias = await generateTicketAlias(exp.machines.id, exp.machines.alias);
                 ticketsToCreate.push({
                     userId: user.id,
                     experienceId: exp.id,
+                    alias: ticketAlias,
                     isPaid,
                     chairId: (chair === null || chair === void 0 ? void 0 : chair.id) || null,
                     domeId: ((_e = exp.doms) === null || _e === void 0 ? void 0 : _e.id) || doms[0].id,
@@ -193,7 +218,7 @@ async function seedTickets(prisma) {
         const uniqueTickets = [];
         const seen = new Set();
         for (const ticket of ticketsToCreate) {
-            const key = `${ticket.userId}-${ticket.experienceId}-${ticket.chairId}-${ticket.createdAt.toDateString()}`;
+            const key = `${ticket.alias}-${ticket.createdAt.toDateString()}`;
             if (!seen.has(key)) {
                 seen.add(key);
                 uniqueTickets.push(ticket);
@@ -203,7 +228,14 @@ async function seedTickets(prisma) {
             data: uniqueTickets,
             skipDuplicates: true,
         });
+        for (const [machineId, ticketNumber] of machineTicketCounters.entries()) {
+            await prisma.machines.update({
+                where: { id: machineId },
+                data: { ticketNumber },
+            });
+        }
         console.log(`✅ Created ${uniqueTickets.length} tickets with realistic scenarios`);
+        console.log(`✅ Updated ticket numbers for ${machineTicketCounters.size} machines`);
         const totalTickets = await prisma.tickets.count({
             where: { deletedAt: null },
         });

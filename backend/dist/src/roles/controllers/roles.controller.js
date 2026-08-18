@@ -51,6 +51,12 @@ let RolesController = class RolesController {
     getAllRolesAdmin(filterParams) {
         return this.rolesService.findAll(filterParams);
     }
+    restoreRole(id) {
+        return this.rolesService.restore(id);
+    }
+    bulkRestoreRoles(body) {
+        return this.rolesService.bulkRestore(body.roleIds);
+    }
 };
 exports.RolesController = RolesController;
 __decorate([
@@ -181,6 +187,39 @@ __decorate([
     __metadata("design:paramtypes", [filter_roles_dto_1.FilterRolesDto]),
     __metadata("design:returntype", void 0)
 ], RolesController.prototype, "getAllRolesAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Patch)('admin/:id/restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted role (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Role restored successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Role not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], RolesController.prototype, "restoreRole", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Post)('admin/bulk-restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore multiple roles (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Bulk restore completed',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], RolesController.prototype, "bulkRestoreRoles", null);
 exports.RolesController = RolesController = __decorate([
     (0, swagger_1.ApiTags)('roles'),
     (0, common_1.Controller)({

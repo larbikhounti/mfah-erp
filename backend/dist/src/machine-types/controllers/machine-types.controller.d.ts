@@ -26,4 +26,15 @@ export declare class MachineTypesController {
     deleteMachineTypeByAdmin(id: number): Promise<{
         message: string;
     }>;
+    restoreMachineType(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestoreMachineTypes(body: {
+        machineTypeIds: number[];
+    }): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
+    }>;
 }

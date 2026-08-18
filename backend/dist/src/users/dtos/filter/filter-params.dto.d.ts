@@ -3,5 +3,6 @@ export declare class FilterParamsDto {
     limit?: number;
     search?: string;
     status?: string;
-    userId: number;
+    userId?: number;
+    showArchived?: boolean;
 }

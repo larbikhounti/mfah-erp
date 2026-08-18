@@ -20,10 +20,14 @@ let GameTypesService = GameTypesService_1 = class GameTypesService {
     }
     async findAll(filterParams) {
         try {
-            const { offset = 0, limit = 10, search, status, gameTypeId, } = filterParams;
-            const where = {
-                deletedAt: null,
-            };
+            const { offset = 0, limit = 10, search, status, gameTypeId, showArchived, } = filterParams;
+            const where = {};
+            if (!showArchived) {
+                where.deletedAt = null;
+            }
+            else {
+                where.deletedAt = { not: null };
+            }
             if (search) {
                 where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
             }
@@ -40,6 +44,7 @@ let GameTypesService = GameTypesService_1 = class GameTypesService {
                         name: true,
                         createdAt: true,
                         updatedAt: true,
+                        deletedAt: true,
                         _count: {
                             select: {
                                 games: {
@@ -56,13 +61,17 @@ let GameTypesService = GameTypesService_1 = class GameTypesService {
                 }),
                 this.prisma.gameTypes.count({ where }),
             ]);
-            const formattedData = gameTypes.map((gameType) => ({
-                id: gameType.id,
-                name: gameType.name,
-                gamesCount: gameType._count.games,
-                createdAt: gameType.createdAt.toISOString(),
-                updatedAt: gameType.updatedAt.toISOString(),
-            }));
+            const formattedData = gameTypes.map((gameType) => {
+                var _a;
+                return ({
+                    id: gameType.id,
+                    name: gameType.name,
+                    gamesCount: gameType._count.games,
+                    createdAt: gameType.createdAt.toISOString(),
+                    updatedAt: gameType.updatedAt.toISOString(),
+                    deletedAt: ((_a = gameType.deletedAt) === null || _a === void 0 ? void 0 : _a.toISOString()) || null,
+                });
+            });
             return {
                 data: formattedData,
                 total,
@@ -278,6 +287,61 @@ let GameTypesService = GameTypesService_1 = class GameTypesService {
             }
             this.logger.error('Error bulk deleting game types:', error);
             throw new common_1.HttpException('Error bulk deleting game types', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async restore(id) {
+        try {
+            const gameType = await this.prisma.gameTypes.findUnique({
+                where: { id },
+            });
+            if (!gameType) {
+                throw new common_1.HttpException('Game type not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            if (!gameType.deletedAt) {
+                throw new common_1.HttpException('Game type is not deleted', common_1.HttpStatus.BAD_REQUEST);
+            }
+            await this.prisma.gameTypes.update({
+                where: { id },
+                data: { deletedAt: null },
+            });
+            return { message: 'Game type restored successfully' };
+        }
+        catch (error) {
+            this.logger.error(`Error restoring game type with id ${id}:`, error);
+            if (error instanceof common_1.HttpException) {
+                throw error;
+            }
+            throw new common_1.HttpException('Error restoring game type', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async bulkRestore(gameTypeIds) {
+        try {
+            const existingGameTypes = await this.prisma.gameTypes.findMany({
+                where: { id: { in: gameTypeIds } },
+                select: {
+                    id: true,
+                    deletedAt: true,
+                },
+            });
+            const existingGameTypeIds = existingGameTypes.map((gt) => gt.id);
+            const notFoundIds = gameTypeIds.filter((id) => !existingGameTypeIds.includes(id));
+            const notDeletedGameTypes = existingGameTypes.filter((gt) => gt.deletedAt === null);
+            const notDeletedIds = notDeletedGameTypes.map((gt) => gt.id);
+            const restorableIds = existingGameTypeIds.filter((id) => !notDeletedIds.includes(id));
+            const restoreResult = await this.prisma.gameTypes.updateMany({
+                where: { id: { in: restorableIds } },
+                data: { deletedAt: null },
+            });
+            return {
+                message: `Bulk restore completed. ${restoreResult.count} game types restored successfully.`,
+                restoredCount: restoreResult.count,
+                notFound: notFoundIds,
+                notDeleted: notDeletedIds,
+            };
+        }
+        catch (error) {
+            this.logger.error('Error bulk restoring game types:', error);
+            throw new common_1.HttpException('Error bulk restoring game types', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 };

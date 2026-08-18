@@ -3,4 +3,5 @@ export declare class FilterRolesDto {
     limit?: number;
     search?: string;
     roleId?: number;
+    showArchived?: boolean;
 }

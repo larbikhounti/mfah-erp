@@ -3,7 +3,8 @@ export declare class CreateGameDto {
     price: number;
     playTime: number;
     gameTypeId?: number;
-    machineTypeId?: number;
+    machineTypeIds?: number[];
     age?: number;
+    isFavored?: boolean;
     domeId: number[];
 }

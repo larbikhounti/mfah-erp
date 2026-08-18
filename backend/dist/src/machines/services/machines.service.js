@@ -20,10 +20,14 @@ let MachinesService = MachinesService_1 = class MachinesService {
     }
     async findAll(filterParams) {
         try {
-            const { offset = 0, limit = 10, search, status, machineId, machineTypeId, domeId, } = filterParams;
-            const where = {
-                deletedAt: null,
-            };
+            const { offset = 0, limit = 10, search, status, machineId, machineTypeId, domeId, showArchived, } = filterParams;
+            const where = {};
+            if (!showArchived) {
+                where.deletedAt = null;
+            }
+            else {
+                where.deletedAt = { not: null };
+            }
             if (search) {
                 where.OR = [{ name: { contains: search, mode: 'insensitive' } }];
             }
@@ -36,6 +40,9 @@ let MachinesService = MachinesService_1 = class MachinesService {
             if (domeId) {
                 where.domeId = domeId;
             }
+            if (status) {
+                where.status = status;
+            }
             const [machines, total] = await Promise.all([
                 this.prisma.machines.findMany({
                     where,
@@ -44,10 +51,13 @@ let MachinesService = MachinesService_1 = class MachinesService {
                     select: {
                         id: true,
                         name: true,
+                        alias: true,
+                        status: true,
                         machineTypeId: true,
                         domeId: true,
                         createdAt: true,
                         updatedAt: true,
+                        deletedAt: true,
                         machineTypes: {
                             select: {
                                 id: true,
@@ -81,10 +91,12 @@ let MachinesService = MachinesService_1 = class MachinesService {
                 this.prisma.machines.count({ where }),
             ]);
             const formattedData = machines.map((machine) => {
-                var _a, _b;
+                var _a, _b, _c;
                 return ({
                     id: machine.id,
                     name: machine.name,
+                    alias: machine.alias,
+                    status: machine.status,
                     machineTypeId: machine.machineTypeId,
                     machineType: ((_a = machine.machineTypes) === null || _a === void 0 ? void 0 : _a.name) || null,
                     domeId: machine.domeId,
@@ -93,6 +105,7 @@ let MachinesService = MachinesService_1 = class MachinesService {
                     chairs: machine.machineChairs,
                     createdAt: machine.createdAt.toISOString(),
                     updatedAt: machine.updatedAt.toISOString(),
+                    deletedAt: ((_c = machine.deletedAt) === null || _c === void 0 ? void 0 : _c.toISOString()) || null,
                 });
             });
             return {
@@ -116,6 +129,15 @@ let MachinesService = MachinesService_1 = class MachinesService {
             });
             if (existingMachine) {
                 throw new common_1.HttpException('Machine with this name already exists', common_1.HttpStatus.CONFLICT);
+            }
+            const existingAlias = await this.prisma.machines.findFirst({
+                where: {
+                    alias: data.alias,
+                    deletedAt: null,
+                },
+            });
+            if (existingAlias) {
+                throw new common_1.HttpException('Machine with this alias already exists', common_1.HttpStatus.CONFLICT);
             }
             if (data.machineTypeId) {
                 const machineType = await this.prisma.machineTypes.findFirst({
@@ -142,7 +164,9 @@ let MachinesService = MachinesService_1 = class MachinesService {
             const machine = await this.prisma.machines.create({
                 data: {
                     name: data.name,
-                    machineTypeId: data.machineTypeId || null,
+                    alias: data.alias,
+                    status: data.status || 'active',
+                    machineTypeId: data.machineTypeId,
                     domeId: data.domeId || null,
                 },
                 include: {
@@ -202,6 +226,8 @@ let MachinesService = MachinesService_1 = class MachinesService {
                 return {
                     id: machine.id,
                     name: machine.name,
+                    alias: machine.alias,
+                    status: machine.status,
                     machineTypeId: machine.machineTypeId,
                     machineType: ((_a = machine.machineTypes) === null || _a === void 0 ? void 0 : _a.name) || null,
                     domeId: machine.domeId,
@@ -215,6 +241,8 @@ let MachinesService = MachinesService_1 = class MachinesService {
             return {
                 id: machine.id,
                 name: machine.name,
+                alias: machine.alias,
+                status: machine.status,
                 machineTypeId: machine.machineTypeId,
                 machineType: ((_c = machine.machineTypes) === null || _c === void 0 ? void 0 : _c.name) || null,
                 domeId: machine.domeId,
@@ -275,6 +303,8 @@ let MachinesService = MachinesService_1 = class MachinesService {
             return {
                 id: machine.id,
                 name: machine.name,
+                alias: machine.alias,
+                status: machine.status,
                 machineTypeId: machine.machineTypeId,
                 machineType: ((_a = machine.machineTypes) === null || _a === void 0 ? void 0 : _a.name) || null,
                 domeId: machine.domeId,
@@ -319,6 +349,20 @@ let MachinesService = MachinesService_1 = class MachinesService {
                     throw new common_1.HttpException('Machine name already taken by another machine', common_1.HttpStatus.CONFLICT);
                 }
             }
+            if (data.alias && data.alias !== existingMachine.alias) {
+                const aliasConflict = await this.prisma.machines.findFirst({
+                    where: {
+                        alias: data.alias,
+                        deletedAt: null,
+                        NOT: {
+                            id: id,
+                        },
+                    },
+                });
+                if (aliasConflict) {
+                    throw new common_1.HttpException('Machine alias already taken by another machine', common_1.HttpStatus.CONFLICT);
+                }
+            }
             if (data.machineTypeId) {
                 const machineType = await this.prisma.machineTypes.findFirst({
                     where: {
@@ -343,7 +387,7 @@ let MachinesService = MachinesService_1 = class MachinesService {
             }
             const machine = await this.prisma.machines.update({
                 where: { id },
-                data: Object.assign(Object.assign(Object.assign({}, (data.name && { name: data.name })), (data.machineTypeId !== undefined && {
+                data: Object.assign(Object.assign(Object.assign(Object.assign(Object.assign({}, (data.name && { name: data.name })), (data.alias && { alias: data.alias })), (data.status && { status: data.status })), (data.machineTypeId !== undefined && {
                     machineTypeId: data.machineTypeId,
                 })), (data.domeId !== undefined && { domeId: data.domeId })),
                 include: {
@@ -377,6 +421,8 @@ let MachinesService = MachinesService_1 = class MachinesService {
             return {
                 id: machine.id,
                 name: machine.name,
+                alias: machine.alias,
+                status: machine.status,
                 machineTypeId: machine.machineTypeId,
                 machineType: ((_a = machine.machineTypes) === null || _a === void 0 ? void 0 : _a.name) || null,
                 domeId: machine.domeId,
@@ -463,6 +509,61 @@ let MachinesService = MachinesService_1 = class MachinesService {
             }
             this.logger.error('Error bulk deleting machines:', error);
             throw new common_1.HttpException('Error bulk deleting machines', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async restore(id) {
+        try {
+            const machine = await this.prisma.machines.findUnique({
+                where: { id },
+            });
+            if (!machine) {
+                throw new common_1.HttpException('Machine not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            if (!machine.deletedAt) {
+                throw new common_1.HttpException('Machine is not deleted', common_1.HttpStatus.BAD_REQUEST);
+            }
+            await this.prisma.machines.update({
+                where: { id },
+                data: { deletedAt: null },
+            });
+            return { message: 'Machine restored successfully' };
+        }
+        catch (error) {
+            this.logger.error(`Error restoring machine with id ${id}:`, error);
+            if (error instanceof common_1.HttpException) {
+                throw error;
+            }
+            throw new common_1.HttpException('Error restoring machine', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async bulkRestore(machineIds) {
+        try {
+            const existingMachines = await this.prisma.machines.findMany({
+                where: { id: { in: machineIds } },
+                select: {
+                    id: true,
+                    deletedAt: true,
+                },
+            });
+            const existingMachineIds = existingMachines.map((machine) => machine.id);
+            const notFoundIds = machineIds.filter((id) => !existingMachineIds.includes(id));
+            const notDeletedMachines = existingMachines.filter((machine) => machine.deletedAt === null);
+            const notDeletedIds = notDeletedMachines.map((machine) => machine.id);
+            const restorableIds = existingMachineIds.filter((id) => !notDeletedIds.includes(id));
+            const restoreResult = await this.prisma.machines.updateMany({
+                where: { id: { in: restorableIds } },
+                data: { deletedAt: null },
+            });
+            return {
+                message: `Bulk restore completed. ${restoreResult.count} machines restored successfully.`,
+                restoredCount: restoreResult.count,
+                notFound: notFoundIds,
+                notDeleted: notDeletedIds,
+            };
+        }
+        catch (error) {
+            this.logger.error('Error bulk restoring machines:', error);
+            throw new common_1.HttpException('Error bulk restoring machines', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 };

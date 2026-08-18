@@ -36,11 +36,20 @@ let GamesController = class GamesController {
     async update(id, updateGameDto) {
         return this.gamesService.update(id, updateGameDto);
     }
+    async toggleFavorite(id, toggleFavoriteDto) {
+        return this.gamesService.toggleFavorite(id, toggleFavoriteDto.isFavored);
+    }
     async bulkDelete(bulkDeleteDto) {
         return this.gamesService.bulkDelete(bulkDeleteDto);
     }
     async remove(id) {
         return this.gamesService.remove(id);
+    }
+    async restore(id) {
+        return this.gamesService.restore(id);
+    }
+    async bulkRestore(body) {
+        return this.gamesService.bulkRestore(body.gameIds);
     }
 };
 exports.GamesController = GamesController;
@@ -87,9 +96,10 @@ __decorate([
         description: 'Filter by game type ID',
     }),
     (0, swagger_1.ApiQuery)({
-        name: 'machineTypeId',
+        name: 'machineTypeIds',
         required: false,
-        description: 'Filter by machine type ID',
+        description: 'Filter by machine type IDs',
+        type: [Number],
     }),
     (0, swagger_1.ApiQuery)({
         name: 'minPrice',
@@ -159,6 +169,27 @@ __decorate([
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "update", null);
 __decorate([
+    (0, common_1.Patch)(':id/favorite'),
+    (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Toggle game favorite status' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Game ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Game favorite status updated successfully',
+        type: Object,
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'Game not found',
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number, dtos_1.ToggleFavoriteGameDto]),
+    __metadata("design:returntype", Promise)
+], GamesController.prototype, "toggleFavorite", null);
+__decorate([
     (0, common_1.Delete)('/admin/bulk'),
     (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
     (0, swagger_1.ApiBearerAuth)(),
@@ -216,6 +247,58 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", Promise)
 ], GamesController.prototype, "remove", null);
+__decorate([
+    (0, common_1.Patch)('admin/:id/restore'),
+    (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore a deleted game' }),
+    (0, swagger_1.ApiParam)({ name: 'id', description: 'Game ID' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Game restored successfully',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string' },
+            },
+        },
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 404,
+        description: 'Game not found',
+    }),
+    (0, swagger_1.ApiResponse)({
+        status: 409,
+        description: 'Game is not deleted',
+    }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], GamesController.prototype, "restore", null);
+__decorate([
+    (0, common_1.Post)('admin/bulk-restore'),
+    (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore multiple deleted games' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Bulk restore completed',
+        schema: {
+            type: 'object',
+            properties: {
+                message: { type: 'string' },
+                restoredCount: { type: 'number' },
+                notFound: { type: 'array', items: { type: 'number' } },
+                notDeleted: { type: 'array', items: { type: 'number' } },
+            },
+        },
+    }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], GamesController.prototype, "bulkRestore", null);
 exports.GamesController = GamesController = __decorate([
     (0, swagger_1.ApiTags)('games'),
     (0, common_1.Controller)({

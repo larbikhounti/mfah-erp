@@ -27,5 +27,12 @@ export declare class UsersService {
         deletedCount: number;
         notFound: number[];
     }>;
+    restoreUser(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestoreUsers(userIds: number[]): Promise<{
+        message: string;
+        restoredCount: number;
+    }>;
     getAllRoles(): Promise<any[]>;
 }

@@ -1,4 +1,4 @@
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from "../../prisma/prisma.service";
 import { FilterExperiencesDto } from '../dtos/filter-experiences.dto';
 import { ExperienceResponse } from '../types/experience-response.type';
 export declare class ExperiencesService {

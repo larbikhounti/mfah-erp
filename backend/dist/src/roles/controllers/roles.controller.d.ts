@@ -18,7 +18,7 @@ export declare class RolesController {
         message: string;
         deletedCount: number;
         notFound: number[];
-        hasRelatedRecords: number[];
+        alreadyDeleted: number[];
     }>;
     deleteRole(id: number): Promise<{
         message: string;
@@ -26,5 +26,16 @@ export declare class RolesController {
     getAllRolesAdmin(filterParams: FilterRolesDto): Promise<{
         data: import("../types/role-response.type").RoleResponse[];
         total: number;
+    }>;
+    restoreRole(id: number): Promise<{
+        message: string;
+    }>;
+    bulkRestoreRoles(body: {
+        roleIds: number[];
+    }): Promise<{
+        message: string;
+        restoredCount: number;
+        notFound: number[];
+        notDeleted: number[];
     }>;
 }

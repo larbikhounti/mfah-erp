@@ -19,13 +19,15 @@ var __rest = (this && this.__rest) || function (s, e) {
         }
     return t;
 };
+var GamesService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GamesService = void 0;
 const common_1 = require("@nestjs/common");
 const prisma_service_1 = require("../../prisma/prisma.service");
-let GamesService = class GamesService {
+let GamesService = GamesService_1 = class GamesService {
     constructor(prisma) {
         this.prisma = prisma;
+        this.logger = new common_1.Logger(GamesService_1.name);
     }
     async create(createGameDto) {
         if (createGameDto.gameTypeId) {
@@ -39,29 +41,36 @@ let GamesService = class GamesService {
                 throw new common_1.NotFoundException(`Game type with ID ${createGameDto.gameTypeId} not found`);
             }
         }
-        if (createGameDto.machineTypeId) {
-            const machineType = await this.prisma.machineTypes.findFirst({
+        if (createGameDto.machineTypeIds &&
+            createGameDto.machineTypeIds.length > 0) {
+            const machineTypes = await this.prisma.machineTypes.findMany({
                 where: {
-                    id: createGameDto.machineTypeId,
+                    id: { in: createGameDto.machineTypeIds },
                     deletedAt: null,
                 },
             });
-            if (!machineType) {
-                throw new common_1.NotFoundException(`Machine type with ID ${createGameDto.machineTypeId} not found`);
+            if (machineTypes.length !== createGameDto.machineTypeIds.length) {
+                const foundIds = machineTypes.map((mt) => mt.id);
+                const notFoundIds = createGameDto.machineTypeIds.filter((id) => !foundIds.includes(id));
+                throw new common_1.NotFoundException(`Machine types with IDs ${notFoundIds.join(', ')} not found`);
             }
         }
         const game = await this.prisma.games.create({
             data: {
                 gameTypeId: createGameDto.gameTypeId,
-                machineTypeId: createGameDto.machineTypeId,
                 name: createGameDto.name,
                 price: createGameDto.price,
                 playTime: createGameDto.playTime,
                 age: createGameDto.age,
+                isFavored: createGameDto.isFavored || false,
             },
             include: {
                 gameTypes: true,
-                machineTypes: true,
+                gameMachineTypes: {
+                    include: {
+                        machineTypes: true,
+                    },
+                },
                 _count: {
                     select: {
                         experiences: true,
@@ -69,6 +78,16 @@ let GamesService = class GamesService {
                 },
             },
         });
+        if (createGameDto.machineTypeIds &&
+            createGameDto.machineTypeIds.length > 0) {
+            const gameMachineTypes = createGameDto.machineTypeIds.map((machineTypeId) => ({
+                gameId: game.id,
+                machineTypeId,
+            }));
+            await this.prisma.gameMachineTypes.createMany({
+                data: gameMachineTypes,
+            });
+        }
         if (createGameDto.domeId && createGameDto.domeId.length > 0) {
             const domeGames = createGameDto.domeId.map((domeId) => ({
                 domeId,
@@ -84,7 +103,7 @@ let GamesService = class GamesService {
         const { page = 1, limit = 10 } = filterDto, filters = __rest(filterDto, ["page", "limit"]);
         const skip = (page - 1) * limit;
         const where = {
-            deletedAt: null,
+            deletedAt: filters.showArchived ? { not: null } : null,
         };
         if (filters.name) {
             where.name = {
@@ -95,8 +114,12 @@ let GamesService = class GamesService {
         if (filters.gameTypeId) {
             where.gameTypeId = filters.gameTypeId;
         }
-        if (filters.machineTypeId) {
-            where.machineTypeId = filters.machineTypeId;
+        if (filters.machineTypeIds && filters.machineTypeIds.length > 0) {
+            where.gameMachineTypes = {
+                some: {
+                    machineTypeId: { in: filters.machineTypeIds },
+                },
+            };
         }
         if (filters.minPrice !== undefined || filters.maxPrice !== undefined) {
             where.price = {};
@@ -117,6 +140,9 @@ let GamesService = class GamesService {
                 where.playTime.lte = filters.maxPlayTime;
             }
         }
+        if (filters.isFavored !== undefined) {
+            where.isFavored = filters.isFavored;
+        }
         const [games, total] = await Promise.all([
             this.prisma.games.findMany({
                 where,
@@ -124,7 +150,11 @@ let GamesService = class GamesService {
                 take: limit,
                 include: {
                     gameTypes: true,
-                    machineTypes: true,
+                    gameMachineTypes: {
+                        include: {
+                            machineTypes: true,
+                        },
+                    },
                     domeGames: {
                         where: {
                             deletedAt: null,
@@ -162,7 +192,11 @@ let GamesService = class GamesService {
             },
             include: {
                 gameTypes: true,
-                machineTypes: true,
+                gameMachineTypes: {
+                    include: {
+                        machineTypes: true,
+                    },
+                },
                 domeGames: {
                     where: {
                         deletedAt: null,
@@ -204,30 +238,49 @@ let GamesService = class GamesService {
                 throw new common_1.NotFoundException(`Game type with ID ${updateGameDto.gameTypeId} not found`);
             }
         }
-        if (updateGameDto.machineTypeId) {
-            const machineType = await this.prisma.machineTypes.findFirst({
+        if (updateGameDto.machineTypeIds &&
+            updateGameDto.machineTypeIds.length > 0) {
+            const machineTypes = await this.prisma.machineTypes.findMany({
                 where: {
-                    id: updateGameDto.machineTypeId,
+                    id: { in: updateGameDto.machineTypeIds },
                     deletedAt: null,
                 },
             });
-            if (!machineType) {
-                throw new common_1.NotFoundException(`Machine type with ID ${updateGameDto.machineTypeId} not found`);
+            if (machineTypes.length !== updateGameDto.machineTypeIds.length) {
+                const foundIds = machineTypes.map((mt) => mt.id);
+                const notFoundIds = updateGameDto.machineTypeIds.filter((id) => !foundIds.includes(id));
+                throw new common_1.NotFoundException(`Machine types with IDs ${notFoundIds.join(', ')} not found`);
             }
+        }
+        const updateData = {};
+        if (updateGameDto.gameTypeId !== undefined) {
+            updateData.gameTypeId = updateGameDto.gameTypeId;
+        }
+        if (updateGameDto.name !== undefined) {
+            updateData.name = updateGameDto.name;
+        }
+        if (updateGameDto.price !== undefined) {
+            updateData.price = updateGameDto.price;
+        }
+        if (updateGameDto.playTime !== undefined) {
+            updateData.playTime = updateGameDto.playTime;
+        }
+        if (updateGameDto.age !== undefined) {
+            updateData.age = updateGameDto.age;
+        }
+        if (updateGameDto.isFavored !== undefined) {
+            updateData.isFavored = updateGameDto.isFavored;
         }
         const updatedGame = await this.prisma.games.update({
             where: { id },
-            data: {
-                gameTypeId: updateGameDto.gameTypeId,
-                machineTypeId: updateGameDto.machineTypeId,
-                name: updateGameDto.name,
-                price: updateGameDto.price,
-                playTime: updateGameDto.playTime,
-                age: updateGameDto.age,
-            },
+            data: updateData,
             include: {
                 gameTypes: true,
-                machineTypes: true,
+                gameMachineTypes: {
+                    include: {
+                        machineTypes: true,
+                    },
+                },
                 _count: {
                     select: {
                         experiences: true,
@@ -235,6 +288,20 @@ let GamesService = class GamesService {
                 },
             },
         });
+        if (updateGameDto.machineTypeIds !== undefined) {
+            await this.prisma.gameMachineTypes.deleteMany({
+                where: { gameId: id },
+            });
+            if (updateGameDto.machineTypeIds.length > 0) {
+                const gameMachineTypes = updateGameDto.machineTypeIds.map((machineTypeId) => ({
+                    gameId: id,
+                    machineTypeId,
+                }));
+                await this.prisma.gameMachineTypes.createMany({
+                    data: gameMachineTypes,
+                });
+            }
+        }
         await this.prisma.domeGames.deleteMany({
             where: { gameId: id },
         });
@@ -265,9 +332,6 @@ let GamesService = class GamesService {
                 deletedAt: null,
             },
         });
-        if (activeExperiences > 0) {
-            throw new common_1.ConflictException(`Cannot delete game with ID ${id} because it has ${activeExperiences} active experiences`);
-        }
         await this.prisma.games.update({
             where: { id },
             data: {
@@ -322,6 +386,100 @@ let GamesService = class GamesService {
             deletedCount: result.count,
         };
     }
+    async toggleFavorite(id, isFavored) {
+        const existingGame = await this.prisma.games.findFirst({
+            where: {
+                id,
+                deletedAt: null,
+            },
+        });
+        if (!existingGame) {
+            throw new common_1.NotFoundException(`Game with ID ${id} not found`);
+        }
+        const updatedGame = await this.prisma.games.update({
+            where: { id },
+            data: {
+                isFavored,
+            },
+            include: {
+                gameTypes: true,
+                gameMachineTypes: {
+                    include: {
+                        machineTypes: true,
+                    },
+                },
+                domeGames: {
+                    where: {
+                        deletedAt: null,
+                    },
+                    include: {
+                        doms: true,
+                    },
+                },
+                _count: {
+                    select: {
+                        experiences: true,
+                    },
+                },
+            },
+        });
+        return this.mapToGameResponse(updatedGame);
+    }
+    async restore(id) {
+        try {
+            const game = await this.prisma.games.findUnique({
+                where: { id },
+            });
+            if (!game) {
+                throw new common_1.ConflictException('Game not found');
+            }
+            if (!game.deletedAt) {
+                throw new common_1.ConflictException('Game is not deleted');
+            }
+            await this.prisma.games.update({
+                where: { id },
+                data: { deletedAt: null },
+            });
+            return { message: 'Game restored successfully' };
+        }
+        catch (error) {
+            this.logger.error(`Error restoring game with id ${id}:`, error);
+            if (error instanceof common_1.ConflictException) {
+                throw error;
+            }
+            throw new common_1.ConflictException('Error restoring game');
+        }
+    }
+    async bulkRestore(gameIds) {
+        try {
+            const existingGames = await this.prisma.games.findMany({
+                where: { id: { in: gameIds } },
+                select: {
+                    id: true,
+                    deletedAt: true,
+                },
+            });
+            const existingGameIds = existingGames.map((game) => game.id);
+            const notFoundIds = gameIds.filter((id) => !existingGameIds.includes(id));
+            const notDeletedGames = existingGames.filter((game) => game.deletedAt === null);
+            const notDeletedIds = notDeletedGames.map((game) => game.id);
+            const restorableIds = existingGameIds.filter((id) => !notDeletedIds.includes(id));
+            const restoreResult = await this.prisma.games.updateMany({
+                where: { id: { in: restorableIds } },
+                data: { deletedAt: null },
+            });
+            return {
+                message: `Bulk restore completed. ${restoreResult.count} games restored successfully.`,
+                restoredCount: restoreResult.count,
+                notFound: notFoundIds,
+                notDeleted: notDeletedIds,
+            };
+        }
+        catch (error) {
+            this.logger.error('Error bulk restoring games:', error);
+            throw new common_1.ConflictException('Error bulk restoring games');
+        }
+    }
     mapToGameResponse(game) {
         var _a;
         return {
@@ -331,21 +489,22 @@ let GamesService = class GamesService {
             playTime: game.playTime,
             age: game.age,
             gameTypeId: game.gameTypeId,
-            machineTypeId: game.machineTypeId,
+            isFavored: game.isFavored || false,
             createdAt: game.createdAt,
             updatedAt: game.updatedAt,
+            deletedAt: game.deletedAt,
             gameType: game.gameTypes
                 ? {
                     id: game.gameTypes.id,
                     name: game.gameTypes.name,
                 }
                 : null,
-            machineType: game.machineTypes
-                ? {
-                    id: game.machineTypes.id,
-                    name: game.machineTypes.name,
-                }
-                : null,
+            machineTypes: game.gameMachineTypes
+                ? game.gameMachineTypes.map((gmt) => ({
+                    id: gmt.machineTypes.id,
+                    name: gmt.machineTypes.name,
+                }))
+                : [],
             experiencesCount: ((_a = game._count) === null || _a === void 0 ? void 0 : _a.experiences) || 0,
             domes: game.domeGames
                 ? game.domeGames.map((domeGame) => ({
@@ -357,7 +516,7 @@ let GamesService = class GamesService {
     }
 };
 exports.GamesService = GamesService;
-exports.GamesService = GamesService = __decorate([
+exports.GamesService = GamesService = GamesService_1 = __decorate([
     (0, common_1.Injectable)(),
     __metadata("design:paramtypes", [prisma_service_1.PrismaService])
 ], GamesService);

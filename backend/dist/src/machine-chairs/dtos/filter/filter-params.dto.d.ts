@@ -4,4 +4,5 @@ export declare class FilterParamsDto {
     search?: string;
     status?: number;
     machineId?: number;
+    showArchived?: boolean;
 }

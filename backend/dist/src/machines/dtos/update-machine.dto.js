@@ -47,4 +47,26 @@ __decorate([
     (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], UpdateMachineDto.prototype, "domeId", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'The alias for the machine',
+        example: 'A',
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], UpdateMachineDto.prototype, "alias", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'The status of the machine',
+        example: 'active',
+        enum: ['active', 'inactive'],
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(['active', 'inactive']),
+    __metadata("design:type", String)
+], UpdateMachineDto.prototype, "status", void 0);
 //# sourceMappingURL=update-machine.dto.js.map

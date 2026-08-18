@@ -8,4 +8,5 @@ export declare class FilterExperiencesDto {
     domeId?: number;
     startDate?: string;
     endDate?: string;
+    showArchived?: boolean;
 }

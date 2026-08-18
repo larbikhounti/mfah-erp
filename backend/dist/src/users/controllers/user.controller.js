@@ -53,6 +53,12 @@ let UserController = class UserController {
     getAllRoles() {
         return this.usersService.getAllRoles();
     }
+    async restore(id) {
+        return this.usersService.restoreUser(id);
+    }
+    async bulkRestore(body) {
+        return this.usersService.bulkRestoreUsers(body.userIds);
+    }
 };
 exports.UserController = UserController;
 __decorate([
@@ -200,6 +206,39 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], UserController.prototype, "getAllRoles", null);
+__decorate([
+    (0, common_1.Patch)('admin/:id/restore'),
+    (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore a deleted user (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'User restored successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'User not found' }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "restore", null);
+__decorate([
+    (0, common_1.Post)('admin/bulk-restore'),
+    (0, common_1.UseGuards)(admin_role_guard_1.AdminRoleGuard),
+    (0, swagger_1.ApiBearerAuth)(),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore multiple users (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Users restored successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 401, description: 'Unauthorized' }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", Promise)
+], UserController.prototype, "bulkRestore", null);
 exports.UserController = UserController = __decorate([
     (0, swagger_1.ApiTags)('users'),
     (0, common_1.Controller)({

@@ -3,4 +3,5 @@ export declare class FilterDomsDto {
     limit?: number;
     search?: string;
     domId?: number;
+    showArchived?: boolean;
 }

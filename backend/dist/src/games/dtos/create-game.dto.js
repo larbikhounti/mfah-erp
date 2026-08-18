@@ -36,8 +36,8 @@ __decorate([
 ], CreateGameDto.prototype, "price", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'The play time of the game in minutes',
-        example: 30,
+        description: 'The play time of the game in seconds',
+        example: 1800,
     }),
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsInt)(),
@@ -57,15 +57,15 @@ __decorate([
 ], CreateGameDto.prototype, "gameTypeId", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
-        description: 'The machine type ID that can run this game',
-        example: 1,
+        description: 'The machine type IDs that can run this game',
+        example: [1, 2],
         required: false,
     }),
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
-    __metadata("design:type", Number)
-], CreateGameDto.prototype, "machineTypeId", void 0);
+    (0, class_validator_1.IsInt)({ each: true }),
+    (0, class_validator_1.Min)(1, { each: true }),
+    __metadata("design:type", Array)
+], CreateGameDto.prototype, "machineTypeIds", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'The recommended age for the game',
@@ -77,6 +77,16 @@ __decorate([
     (0, class_validator_1.Min)(0),
     __metadata("design:type", Number)
 ], CreateGameDto.prototype, "age", void 0);
+__decorate([
+    (0, swagger_1.ApiProperty)({
+        description: 'Whether the game is marked as favored',
+        example: false,
+        required: false,
+    }),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsBoolean)(),
+    __metadata("design:type", Boolean)
+], CreateGameDto.prototype, "isFavored", void 0);
 __decorate([
     (0, swagger_1.ApiProperty)({
         description: 'The dome ID where the game is available',

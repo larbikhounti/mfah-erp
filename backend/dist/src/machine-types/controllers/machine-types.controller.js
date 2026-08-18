@@ -51,6 +51,12 @@ let MachineTypesController = class MachineTypesController {
     deleteMachineTypeByAdmin(id) {
         return this.machineTypesService.deleteMachineTypeByAdmin(id);
     }
+    restoreMachineType(id) {
+        return this.machineTypesService.restore(id);
+    }
+    bulkRestoreMachineTypes(body) {
+        return this.machineTypesService.bulkRestore(body.machineTypeIds);
+    }
 };
 exports.MachineTypesController = MachineTypesController;
 __decorate([
@@ -200,6 +206,39 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], MachineTypesController.prototype, "deleteMachineTypeByAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Patch)('admin/:id/restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted machine type (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Machine type restored successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Machine type not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], MachineTypesController.prototype, "restoreMachineType", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Post)('admin/bulk-restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore multiple machine types (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Bulk restore completed',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], MachineTypesController.prototype, "bulkRestoreMachineTypes", null);
 exports.MachineTypesController = MachineTypesController = __decorate([
     (0, swagger_1.ApiTags)('machine-types'),
     (0, common_1.Controller)({

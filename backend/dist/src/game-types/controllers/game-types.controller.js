@@ -51,6 +51,12 @@ let GameTypesController = class GameTypesController {
     deleteGameTypeByAdmin(id) {
         return this.gameTypesService.deleteGameTypeByAdmin(id);
     }
+    restoreGameType(id) {
+        return this.gameTypesService.restore(id);
+    }
+    bulkRestoreGameTypes(body) {
+        return this.gameTypesService.bulkRestore(body.gameTypeIds);
+    }
 };
 exports.GameTypesController = GameTypesController;
 __decorate([
@@ -200,6 +206,39 @@ __decorate([
     __metadata("design:paramtypes", [Number]),
     __metadata("design:returntype", void 0)
 ], GameTypesController.prototype, "deleteGameTypeByAdmin", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Patch)('admin/:id/restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore deleted game type (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Game type restored successfully',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    (0, swagger_1.ApiResponse)({ status: 404, description: 'Game type not found' }),
+    __param(0, (0, common_1.Param)('id', common_1.ParseIntPipe)),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Number]),
+    __metadata("design:returntype", void 0)
+], GameTypesController.prototype, "restoreGameType", null);
+__decorate([
+    (0, swagger_1.ApiBearerAuth)('access-token'),
+    (0, common_1.UseGuards)(auth_guard_1.AuthGuard, admin_role_guard_1.AdminRoleGuard),
+    (0, common_1.Post)('admin/bulk-restore'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    (0, swagger_1.ApiOperation)({ summary: 'Restore multiple game types (Admin only)' }),
+    (0, swagger_1.ApiResponse)({
+        status: 200,
+        description: 'Bulk restore completed',
+    }),
+    (0, swagger_1.ApiResponse)({ status: 403, description: 'Admin access required' }),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object]),
+    __metadata("design:returntype", void 0)
+], GameTypesController.prototype, "bulkRestoreGameTypes", null);
 exports.GameTypesController = GameTypesController = __decorate([
     (0, swagger_1.ApiTags)('game-types'),
     (0, common_1.Controller)({

@@ -18,12 +18,12 @@ export interface Game {
     price: number;
     playTime: number;
     gameTypeId?: number | null;
-    machineTypeId?: number | null;
+    isFavored?: boolean;
     createdAt: Date;
     updatedAt: Date;
     deletedAt?: Date | null;
     gameType?: GameType | null;
-    machineType?: MachineType | null;
+    machineTypes?: MachineType[];
     _count?: {
         experiences?: number;
     };
@@ -31,7 +31,7 @@ export interface Game {
 }
 export interface GameWithRelations extends Game {
     gameType?: GameType | null;
-    machineType?: MachineType | null;
+    machineTypes?: MachineType[];
 }
 export interface GameResponse {
     id: number;
@@ -39,17 +39,18 @@ export interface GameResponse {
     price: number;
     playTime: number;
     gameTypeId?: number | null;
-    machineTypeId?: number | null;
+    isFavored?: boolean;
     createdAt: Date;
     updatedAt: Date;
+    deletedAt?: Date | null;
     gameType?: {
         id: number;
         name: string;
     } | null;
-    machineType?: {
+    machineTypes?: {
         id: number;
         name: string;
-    } | null;
+    }[];
     experiencesCount?: number;
     age?: number | null;
     domes?: {

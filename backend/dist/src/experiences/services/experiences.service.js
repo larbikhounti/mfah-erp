@@ -20,10 +20,14 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
     }
     async findAll(filterParams) {
         try {
-            const { offset = 0, limit = 25, search, experienceId, machineId, gameId, domeId, startDate, endDate, } = filterParams;
-            const where = {
-                deletedAt: null,
-            };
+            const { offset = 0, limit = 25, search, experienceId, machineId, gameId, domeId, startDate, endDate, showArchived, } = filterParams;
+            const where = {};
+            if (!showArchived) {
+                where.deletedAt = null;
+            }
+            else {
+                where.deletedAt = { not: null };
+            }
             if (experienceId) {
                 where.id = experienceId;
             }
@@ -100,13 +104,37 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                         games: {
                             include: {
                                 gameTypes: true,
-                                machineTypes: true,
+                                gameMachineTypes: {
+                                    include: {
+                                        machineTypes: true,
+                                    },
+                                },
                             },
                         },
                         doms: true,
                         tickets: {
                             where: {
                                 deletedAt: null,
+                            },
+                            include: {
+                                coupons: true,
+                                ticketComments: {
+                                    include: {
+                                        comments: true,
+                                    },
+                                },
+                                machineChairs: true,
+                                parentTicket: {
+                                    include: {
+                                        machineChairs: true,
+                                        experiences: {
+                                            include: {
+                                                games: true,
+                                                machines: true,
+                                            },
+                                        },
+                                    },
+                                },
                             },
                         },
                     },
@@ -117,7 +145,7 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                 this.prisma.experiences.count({ where }),
             ]);
             const formattedData = experiences.map((experience) => {
-                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
                 const tickets = experience.tickets || [];
                 const paidTickets = tickets.filter((t) => t.isPaid);
                 const unpaidTickets = tickets.filter((t) => !t.isPaid);
@@ -142,6 +170,82 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                     averagePrice,
                     recentTickets,
                 };
+                const couponsMap = new Map();
+                tickets.forEach((ticket) => {
+                    if (ticket.coupons) {
+                        const couponId = ticket.coupons.id;
+                        if (couponsMap.has(couponId)) {
+                            couponsMap.get(couponId).usageCount++;
+                        }
+                        else {
+                            couponsMap.set(couponId, {
+                                id: ticket.coupons.id,
+                                code: ticket.coupons.code,
+                                discount: ticket.coupons.discount,
+                                usageCount: 1,
+                            });
+                        }
+                    }
+                });
+                const couponsUsed = Array.from(couponsMap.values());
+                const commentsMap = new Map();
+                tickets.forEach((ticket) => {
+                    if (ticket.ticketComments && ticket.ticketComments.length > 0) {
+                        ticket.ticketComments.forEach((tc) => {
+                            if (tc.comments) {
+                                const commentId = tc.comments.id;
+                                if (commentsMap.has(commentId)) {
+                                    commentsMap.get(commentId).usageCount++;
+                                }
+                                else {
+                                    commentsMap.set(commentId, {
+                                        id: tc.comments.id,
+                                        content: tc.comments.content,
+                                        createdAt: tc.comments.createdAt.toISOString(),
+                                        usageCount: 1,
+                                    });
+                                }
+                            }
+                        });
+                    }
+                });
+                const commentsUsed = Array.from(commentsMap.values());
+                const detailedTickets = tickets.map((ticket) => {
+                    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+                    return ({
+                        id: ticket.id,
+                        alias: ticket.alias,
+                        isPaid: ticket.isPaid,
+                        paidWith: ticket.paidWith,
+                        price: ticket.price,
+                        notes: ticket.notes,
+                        chairId: ticket.chairId,
+                        chairName: ((_a = ticket.machineChairs) === null || _a === void 0 ? void 0 : _a.name) || 'Unknown',
+                        createdAt: ticket.createdAt.toISOString(),
+                        coupon: ticket.coupons
+                            ? {
+                                id: ticket.coupons.id,
+                                code: ticket.coupons.code,
+                                discount: ticket.coupons.discount,
+                            }
+                            : null,
+                        comments: ((_b = ticket.ticketComments) === null || _b === void 0 ? void 0 : _b.map((tc) => ({
+                            id: tc.comments.id,
+                            content: tc.comments.content,
+                        }))) || [],
+                        parentTicket: ticket.parentTicket
+                            ? {
+                                id: ticket.parentTicket.id,
+                                alias: ticket.parentTicket.alias,
+                                chairName: ((_c = ticket.parentTicket.machineChairs) === null || _c === void 0 ? void 0 : _c.name) || 'Unknown',
+                                machineName: ((_e = (_d = ticket.parentTicket.experiences) === null || _d === void 0 ? void 0 : _d.machines) === null || _e === void 0 ? void 0 : _e.name) || 'Unknown',
+                                machineAlias: ((_g = (_f = ticket.parentTicket.experiences) === null || _f === void 0 ? void 0 : _f.machines) === null || _g === void 0 ? void 0 : _g.alias) || 'Unknown',
+                                gameName: ((_j = (_h = ticket.parentTicket.experiences) === null || _h === void 0 ? void 0 : _h.games) === null || _j === void 0 ? void 0 : _j.name) || 'Unknown',
+                                gamePrice: ((_l = (_k = ticket.parentTicket.experiences) === null || _k === void 0 ? void 0 : _k.games) === null || _l === void 0 ? void 0 : _l.price) || 0,
+                            }
+                            : null,
+                    });
+                });
                 return {
                     id: experience.id,
                     machineId: experience.machineId,
@@ -171,10 +275,21 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                     gamePrice: ((_j = experience.games) === null || _j === void 0 ? void 0 : _j.price) || 0,
                     gamePlayTime: ((_k = experience.games) === null || _k === void 0 ? void 0 : _k.playTime) || 0,
                     gameType: ((_m = (_l = experience.games) === null || _l === void 0 ? void 0 : _l.gameTypes) === null || _m === void 0 ? void 0 : _m.name) || 'Unknown Game Type',
-                    requiredMachineType: ((_p = (_o = experience.games) === null || _o === void 0 ? void 0 : _o.machineTypes) === null || _p === void 0 ? void 0 : _p.name) || 'Unknown Required Type',
-                    domeAddress: ((_q = experience.doms) === null || _q === void 0 ? void 0 : _q.address) || 'Unknown Address',
+                    requiredMachineType: ((_r = (_q = (_p = (_o = experience.games) === null || _o === void 0 ? void 0 : _o.gameMachineTypes) === null || _p === void 0 ? void 0 : _p[0]) === null || _q === void 0 ? void 0 : _q.machineTypes) === null || _r === void 0 ? void 0 : _r.name) || 'Unknown Required Type',
+                    domeAddress: ((_s = experience.doms) === null || _s === void 0 ? void 0 : _s.address) || 'Unknown Address',
                     ticketCount: tickets.length,
                     ticketSummary,
+                    couponsUsed,
+                    commentsUsed,
+                    startedAt: experience.startedAt
+                        ? experience.startedAt.toISOString()
+                        : null,
+                    endedAt: experience.endedAt ? experience.endedAt.toISOString() : null,
+                    isNext: experience.isNext,
+                    isStarted: experience.isStarted,
+                    isEnded: experience.isEnded,
+                    isFractioned: experience.isFractioned,
+                    tickets: detailedTickets,
                 };
             });
             return {
@@ -188,7 +303,7 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
         }
     }
     async getExperienceById(id) {
-        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q;
+        var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p, _q, _r, _s;
         try {
             const experience = await this.prisma.experiences.findFirst({
                 where: {
@@ -213,13 +328,37 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                     games: {
                         include: {
                             gameTypes: true,
-                            machineTypes: true,
+                            gameMachineTypes: {
+                                include: {
+                                    machineTypes: true,
+                                },
+                            },
                         },
                     },
                     doms: true,
                     tickets: {
                         where: {
                             deletedAt: null,
+                        },
+                        include: {
+                            coupons: true,
+                            ticketComments: {
+                                include: {
+                                    comments: true,
+                                },
+                            },
+                            machineChairs: true,
+                            parentTicket: {
+                                include: {
+                                    machineChairs: true,
+                                    experiences: {
+                                        include: {
+                                            games: true,
+                                            machines: true,
+                                        },
+                                    },
+                                },
+                            },
                         },
                     },
                 },
@@ -250,6 +389,82 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                 averagePrice,
                 recentTickets,
             };
+            const couponsMap = new Map();
+            tickets.forEach((ticket) => {
+                if (ticket.coupons) {
+                    const couponId = ticket.coupons.id;
+                    if (couponsMap.has(couponId)) {
+                        couponsMap.get(couponId).usageCount++;
+                    }
+                    else {
+                        couponsMap.set(couponId, {
+                            id: ticket.coupons.id,
+                            code: ticket.coupons.code,
+                            discount: ticket.coupons.discount,
+                            usageCount: 1,
+                        });
+                    }
+                }
+            });
+            const couponsUsed = Array.from(couponsMap.values());
+            const commentsMap = new Map();
+            tickets.forEach((ticket) => {
+                if (ticket.ticketComments && ticket.ticketComments.length > 0) {
+                    ticket.ticketComments.forEach((tc) => {
+                        if (tc.comments) {
+                            const commentId = tc.comments.id;
+                            if (commentsMap.has(commentId)) {
+                                commentsMap.get(commentId).usageCount++;
+                            }
+                            else {
+                                commentsMap.set(commentId, {
+                                    id: tc.comments.id,
+                                    content: tc.comments.content,
+                                    createdAt: tc.comments.createdAt.toISOString(),
+                                    usageCount: 1,
+                                });
+                            }
+                        }
+                    });
+                }
+            });
+            const commentsUsed = Array.from(commentsMap.values());
+            const detailedTickets = tickets.map((ticket) => {
+                var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
+                return ({
+                    id: ticket.id,
+                    alias: ticket.alias,
+                    isPaid: ticket.isPaid,
+                    paidWith: ticket.paidWith,
+                    price: ticket.price,
+                    notes: ticket.notes,
+                    chairId: ticket.chairId,
+                    chairName: ((_a = ticket.machineChairs) === null || _a === void 0 ? void 0 : _a.name) || 'Unknown',
+                    createdAt: ticket.createdAt.toISOString(),
+                    coupon: ticket.coupons
+                        ? {
+                            id: ticket.coupons.id,
+                            code: ticket.coupons.code,
+                            discount: ticket.coupons.discount,
+                        }
+                        : null,
+                    comments: ((_b = ticket.ticketComments) === null || _b === void 0 ? void 0 : _b.map((tc) => ({
+                        id: tc.comments.id,
+                        content: tc.comments.content,
+                    }))) || [],
+                    parentTicket: ticket.parentTicket
+                        ? {
+                            id: ticket.parentTicket.id,
+                            alias: ticket.parentTicket.alias,
+                            chairName: ((_c = ticket.parentTicket.machineChairs) === null || _c === void 0 ? void 0 : _c.name) || 'Unknown',
+                            machineName: ((_e = (_d = ticket.parentTicket.experiences) === null || _d === void 0 ? void 0 : _d.machines) === null || _e === void 0 ? void 0 : _e.name) || 'Unknown',
+                            machineAlias: ((_g = (_f = ticket.parentTicket.experiences) === null || _f === void 0 ? void 0 : _f.machines) === null || _g === void 0 ? void 0 : _g.alias) || 'Unknown',
+                            gameName: ((_j = (_h = ticket.parentTicket.experiences) === null || _h === void 0 ? void 0 : _h.games) === null || _j === void 0 ? void 0 : _j.name) || 'Unknown',
+                            gamePrice: ((_l = (_k = ticket.parentTicket.experiences) === null || _k === void 0 ? void 0 : _k.games) === null || _l === void 0 ? void 0 : _l.price) || 0,
+                        }
+                        : null,
+                });
+            });
             return {
                 id: experience.id,
                 machineId: experience.machineId,
@@ -279,10 +494,21 @@ let ExperiencesService = ExperiencesService_1 = class ExperiencesService {
                 gamePrice: ((_j = experience.games) === null || _j === void 0 ? void 0 : _j.price) || 0,
                 gamePlayTime: ((_k = experience.games) === null || _k === void 0 ? void 0 : _k.playTime) || 0,
                 gameType: ((_m = (_l = experience.games) === null || _l === void 0 ? void 0 : _l.gameTypes) === null || _m === void 0 ? void 0 : _m.name) || 'Unknown Game Type',
-                requiredMachineType: ((_p = (_o = experience.games) === null || _o === void 0 ? void 0 : _o.machineTypes) === null || _p === void 0 ? void 0 : _p.name) || 'Unknown Required Type',
-                domeAddress: ((_q = experience.doms) === null || _q === void 0 ? void 0 : _q.address) || 'Unknown Address',
+                requiredMachineType: ((_r = (_q = (_p = (_o = experience.games) === null || _o === void 0 ? void 0 : _o.gameMachineTypes) === null || _p === void 0 ? void 0 : _p[0]) === null || _q === void 0 ? void 0 : _q.machineTypes) === null || _r === void 0 ? void 0 : _r.name) || 'Unknown Required Type',
+                domeAddress: ((_s = experience.doms) === null || _s === void 0 ? void 0 : _s.address) || 'Unknown Address',
                 ticketCount: tickets.length,
                 ticketSummary,
+                couponsUsed,
+                commentsUsed,
+                startedAt: experience.startedAt
+                    ? experience.startedAt.toISOString()
+                    : null,
+                endedAt: experience.endedAt ? experience.endedAt.toISOString() : null,
+                isNext: experience.isNext,
+                isStarted: experience.isStarted,
+                isEnded: experience.isEnded,
+                isFractioned: experience.isFractioned,
+                tickets: detailedTickets,
             };
         }
         catch (error) {

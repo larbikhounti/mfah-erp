@@ -45,8 +45,10 @@ let UsersService = UsersService_1 = class UsersService {
     }
     async findAll(filterParams) {
         try {
-            const { offset = 0, limit = 10, search, status, userId } = filterParams;
-            const where = {};
+            const { offset = 0, limit = 10, search, status, userId, showArchived } = filterParams;
+            const where = {
+                deletedAt: showArchived ? { not: null } : null,
+            };
             if (search) {
                 where.OR = [
                     { name: { contains: search, mode: 'insensitive' } },
@@ -67,6 +69,7 @@ let UsersService = UsersService_1 = class UsersService {
                         name: true,
                         createdAt: true,
                         updatedAt: true,
+                        deletedAt: true,
                         dom_id: true,
                         role_id: true,
                         doms: {
@@ -90,7 +93,7 @@ let UsersService = UsersService_1 = class UsersService {
                 this.prisma.users.count({ where }),
             ]);
             const formattedData = users.map((user) => {
-                var _a, _b;
+                var _a, _b, _c;
                 return ({
                     id: user.id,
                     name: user.name,
@@ -99,6 +102,7 @@ let UsersService = UsersService_1 = class UsersService {
                     dom: ((_b = user.doms) === null || _b === void 0 ? void 0 : _b.name) || null,
                     createdAt: user.createdAt.toISOString(),
                     updatedAt: user.updatedAt.toISOString(),
+                    deletedAt: ((_c = user.deletedAt) === null || _c === void 0 ? void 0 : _c.toISOString()) || null,
                 });
             });
             return { data: formattedData, total };
@@ -193,8 +197,11 @@ let UsersService = UsersService_1 = class UsersService {
             if (!existingUser) {
                 throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
             }
-            await this.prisma.users.delete({
+            await this.prisma.users.update({
                 where: { id },
+                data: {
+                    deletedAt: new Date(),
+                },
             });
             return { message: 'User deleted successfully' };
         }
@@ -238,8 +245,11 @@ let UsersService = UsersService_1 = class UsersService {
             });
             const existingUserIds = existingUsers.map((user) => user.id);
             const notFoundIds = userIds.filter((id) => !existingUserIds.includes(id));
-            const deleteResult = await this.prisma.users.deleteMany({
+            const deleteResult = await this.prisma.users.updateMany({
                 where: { id: { in: existingUserIds } },
+                data: {
+                    deletedAt: new Date(),
+                },
             });
             return {
                 message: `Bulk delete completed. ${deleteResult.count} users deleted successfully.`,
@@ -253,6 +263,48 @@ let UsersService = UsersService_1 = class UsersService {
                 throw error;
             }
             throw new common_1.HttpException('Error bulk deleting users', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async restoreUser(id) {
+        try {
+            const user = await this.prisma.users.findUnique({
+                where: { id },
+            });
+            if (!user) {
+                throw new common_1.HttpException('User not found', common_1.HttpStatus.NOT_FOUND);
+            }
+            await this.prisma.users.update({
+                where: { id },
+                data: {
+                    deletedAt: null,
+                },
+            });
+            return { message: 'User restored successfully' };
+        }
+        catch (error) {
+            this.logger.error(`Error restoring user with id ${id}:`, error);
+            if (error instanceof common_1.HttpException) {
+                throw error;
+            }
+            throw new common_1.HttpException('Error restoring user', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+    async bulkRestoreUsers(userIds) {
+        try {
+            const result = await this.prisma.users.updateMany({
+                where: { id: { in: userIds } },
+                data: {
+                    deletedAt: null,
+                },
+            });
+            return {
+                message: `${result.count} users restored successfully`,
+                restoredCount: result.count,
+            };
+        }
+        catch (error) {
+            this.logger.error('Error bulk restoring users:', error);
+            throw new common_1.HttpException('Error bulk restoring users', common_1.HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
     async getAllRoles() {
