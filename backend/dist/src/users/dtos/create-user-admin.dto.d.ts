@@ -3,5 +3,4 @@ export declare class CreateUserByAdminDto {
     password: string;
     name: string;
     role_id?: number;
-    dom_id?: number;
 }

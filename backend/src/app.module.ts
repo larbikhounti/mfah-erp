@@ -6,7 +6,16 @@ import { UsersModule } from './users/users.module';
 import { RolesModule } from './roles/roles.module';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
-import { StatisticsModule } from './statistics/statistics.module';
+import { PermissionsModule } from './permissions/permissions.module';
+import { AttachmentsModule } from './attachments/attachments.module';
+import { TrucksModule } from './trucks/trucks.module';
+import { DriversModule } from './drivers/drivers.module';
+import { ClientsModule } from './clients/clients.module';
+import { SubcontractorsModule } from './subcontractors/subcontractors.module';
+import { MissionsModule } from './missions/missions.module';
+import { ClientInvoicesModule } from './client-invoices/client-invoices.module';
+import { SubcontractorBillsModule } from './subcontractor-bills/subcontractor-bills.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 
 @Module({
   imports: [
@@ -15,7 +24,16 @@ import { StatisticsModule } from './statistics/statistics.module';
     UsersModule,
     RolesModule,
     AuthModule,
-    StatisticsModule,
+    PermissionsModule,
+    AttachmentsModule,
+    TrucksModule,
+    DriversModule,
+    ClientsModule,
+    SubcontractorsModule,
+    ClientInvoicesModule,
+    SubcontractorBillsModule,
+    MissionsModule,
+    DashboardModule,
   ],
   controllers: [AppController],
   providers: [AppService],

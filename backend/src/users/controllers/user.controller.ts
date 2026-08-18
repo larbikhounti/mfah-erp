@@ -184,7 +184,9 @@ export class UserController {
   @ApiResponse({ status: 404, description: 'User not found' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Admin access required' })
-  async restore(@Param('id', ParseIntPipe) id: number): Promise<{ message: string }> {
+  async restore(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ message: string }> {
     return this.usersService.restoreUser(id);
   }
 

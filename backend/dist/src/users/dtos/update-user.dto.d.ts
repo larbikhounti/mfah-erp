@@ -3,5 +3,4 @@ export declare class UpdateUserDto {
     name?: string;
     password?: string;
     role_id?: number;
-    dom_id?: number;
 }

@@ -57,15 +57,4 @@ __decorate([
     (0, class_validator_1.Min)(1),
     __metadata("design:type", Number)
 ], UpdateUserDto.prototype, "role_id", void 0);
-__decorate([
-    (0, swagger_1.ApiProperty)({
-        description: 'The DOM ID of the user',
-        example: 1,
-        required: false,
-    }),
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsInt)(),
-    (0, class_validator_1.Min)(1),
-    __metadata("design:type", Number)
-], UpdateUserDto.prototype, "dom_id", void 0);
 //# sourceMappingURL=update-user.dto.js.map

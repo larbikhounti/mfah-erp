@@ -48,7 +48,7 @@ let RolesService = RolesService_1 = class RolesService {
     }
     async findAll(filterParams) {
         try {
-            const { offset = 0, limit = 10, search, roleId, showArchived } = filterParams;
+            const { offset = 0, limit = 10, search, roleId, showArchived, } = filterParams;
             const where = {
                 deletedAt: showArchived ? undefined : null,
             };

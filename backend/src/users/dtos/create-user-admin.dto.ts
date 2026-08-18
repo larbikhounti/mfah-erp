@@ -42,14 +42,4 @@ export class CreateUserByAdminDto {
   @IsInt()
   @Min(1)
   role_id?: number;
-
-  @ApiProperty({
-    description: 'The DOM ID of the user',
-    example: 1,
-    required: false,
-  })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  dom_id?: number;
 }

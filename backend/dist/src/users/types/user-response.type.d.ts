@@ -7,12 +7,4 @@ export interface UserResponse extends Omit<Users, 'password'> {
         updatedAt: Date;
         deletedAt: Date | null;
     } | null;
-    doms?: {
-        id: number;
-        name: string;
-        address: string;
-        createdAt: Date;
-        updatedAt: Date;
-        deletedAt: Date | null;
-    } | null;
 }

@@ -8,236 +8,296 @@ datasource db {
 }
 
 model Users {
-  id          Int      @id @default(autoincrement())
-  email       String   @unique
+  id          Int       @id @default(autoincrement())
+  email       String    @unique
   name        String
   password    String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   deletedAt   DateTime?
-  dom_id      Int?
   jwtToken    String?
   role_id     Int?
   accessToken String?
-  doms        doms?    @relation(fields: [dom_id], references: [id])
-  roles       roles?   @relation(fields: [role_id], references: [id])
-}
-
-model doms {
-  id          Int           @id @default(autoincrement())
-  name        String        @unique
-  address     String
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  deletedAt   DateTime?
-  Users       Users[]
-  experiences experiences[]
-  machines    machines[]
-  tickets     tickets[]
-  DomeSyncLog DomeSyncLog[]
-  domeGames   domeGames[]
-}
-
-model experiences {
-  id           Int       @default(autoincrement())
-  machineId    Int
-  gameId       Int
-  isFractioned Boolean   @default(false)
-  isNext       Boolean   @default(false)
-  isStarted    Boolean   @default(false)
-  isEnded      Boolean   @default(false)
-  startedAt    DateTime?
-  endedAt      DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  deletedAt    DateTime?
-  domeId       Int
-  tickets      tickets[]
-  doms         doms      @relation(fields: [domeId], references: [id], onDelete: SetDefault)
-  games        games     @relation(fields: [gameId], references: [id], onDelete: SetDefault)
-  machines     machines  @relation(fields: [machineId], references: [id], onDelete: SetDefault)
-
-  @@id([domeId, id])
-}
-
-model gameTypes {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  games     games[]
-}
-
-model games {
-  id            Int           @id @default(autoincrement())
-  name          String
-  price         Float
-  playTime      Int
-  gameTypeId    Int?
-  age           Int?
-  isFavored       Boolean         @default(false)
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  deletedAt     DateTime?
-  experiences   experiences[]
-  domeGames     domeGames[]
-  gameMachineTypes gameMachineTypes[]
-  gameTypes     gameTypes?    @relation(fields: [gameTypeId], references: [id])
-}
-
-model gameMachineTypes {
-  id            Int       @id @default(autoincrement())
-  gameId        Int
-  machineTypeId Int
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  games         games     @relation(fields: [gameId], references: [id], onDelete: Cascade)
-  machineTypes  machineTypes @relation(fields: [machineTypeId], references: [id], onDelete: Cascade)
-
-  @@unique([gameId, machineTypeId])
-}
-
-model domeGames {
-  id        Int      @id @default(autoincrement())
-  domeId    Int
-  gameId    Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  deletedAt DateTime?
-  doms      doms     @relation(fields: [domeId], references: [id], onDelete: SetDefault)
-  games     games    @relation(fields: [gameId], references: [id], onDelete: SetDefault)
-
-  @@unique([domeId, gameId])
-}
-
-model machineChairs {
-  id        Int       @id @default(autoincrement())
-  name      String
-  status    Int
-  machineId Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  machines  machines  @relation(fields: [machineId], references: [id], onDelete: SetDefault)
-  tickets   tickets[]
-}
-
-model machineTypes {
-  id        Int        @id @default(autoincrement())
-  name      String     @unique
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  deletedAt DateTime?
-  gameMachineTypes gameMachineTypes[]
-  machines  machines[]
-}
-
-model machines {
-  id            Int             @id @default(autoincrement())
-  name          String
-  alias         String          @unique
-  machineTypeId Int
-  domeId        Int?
-  ticketNumber  Int             @default(0)
-  status        String          @default("active")
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  deletedAt     DateTime?
-  experiences   experiences[]
-  machineChairs machineChairs[]
-  doms          doms?           @relation(fields: [domeId], references: [id])
-  machineTypes  machineTypes    @relation(fields: [machineTypeId], references: [id])
+  roles       roles?    @relation(fields: [role_id], references: [id])
 }
 
 model roles {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  deletedAt DateTime?
-  Users     Users[]
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  deletedAt   DateTime?
+  Users       Users[]
+  permissions Permission[]
 }
 
+enum PermissionModule {
+  TRUCKS
+  DRIVERS
+  CLIENTS
+  SUBCONTRACTORS
+  MISSIONS
+  CLIENT_INVOICES
+  SUBCONTRACTOR_BILLS
+  DASHBOARD
+}
 
-model tickets {
-  id              Int             @default(autoincrement())
-  userId          Int?
-  experienceId    Int
-  alias           String
-  isPaid          Boolean         @default(false)
-  chairId         Int?
-  couponId        Int?
-  notes           String?
-  paidWith        Int?
-  price           Float?
-  createdAt       DateTime        @default(now())
-  updatedAt       DateTime        @updatedAt
+model Permission {
+  id        Int              @id @default(autoincrement())
+  roleId    Int
+  module    PermissionModule
+  canCreate Boolean          @default(false)
+  canRead   Boolean          @default(false)
+  canUpdate Boolean          @default(false)
+  canDelete Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  roles     roles            @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, module])
+}
+
+enum TruckStatus {
+  DISPO
+  EN_MISSION
+  MAINTENANCE
+  INDISPONIBLE
+}
+
+model Truck {
+  id              Int          @id @default(autoincrement())
+  plateNumber     String       @unique
+  type            String
+  ptac            Int
+  status          TruckStatus  @default(DISPO)
+  note            String?
+  insuranceExpiry DateTime
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
   deletedAt       DateTime?
-  domeId          Int
-  parentTicketId  Int?
-  parentTicket    tickets?        @relation("FractionedTickets", fields: [domeId, parentTicketId], references: [domeId, id], onDelete: NoAction, onUpdate: NoAction)
-  childTickets    tickets[]       @relation("FractionedTickets")
-  experiences     experiences     @relation(fields: [domeId, experienceId], references: [domeId, id], onDelete: SetDefault)
-  machineChairs   machineChairs?  @relation(fields: [chairId], references: [id])
-  doms            doms            @relation(fields: [domeId], references: [id], onDelete: SetDefault)
-  coupons         coupons?        @relation(fields: [couponId], references: [id])
-
-  ticketComments ticketComments[]
-
-  @@id([domeId, id])
+  attachments     Attachment[]
+  missions        Mission[]
 }
 
-model comments {
-  id          Int      @id @default(autoincrement())
-  content     String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+enum DriverStatus {
+  ACTIF
+  EN_CONGE
+  EN_MISSION
+  INDISPONIBLE
+}
+
+model Driver {
+  id          Int          @id @default(autoincrement())
+  fullName    String
+  cin         String       @unique
+  phone       String
+  status      DriverStatus @default(ACTIF)
+  note        String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   deletedAt   DateTime?
-
-  ticketComments ticketComments[]
+  attachments Attachment[]
+  missions    Mission[]
 }
 
-model ticketComments {
-  id        Int       @default(autoincrement())
-  ticketId  Int
-  commentId Int
-  domeId    Int
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-
-  // Relations
-  tickets   tickets   @relation(fields: [domeId, ticketId], references: [domeId, id], onDelete: Cascade)
-  comments  comments  @relation(fields: [commentId], references: [id], onDelete: Cascade)
-
-  @@id([domeId, id])
-  @@unique([domeId, ticketId, commentId])
+model Client {
+  id             Int             @id @default(autoincrement())
+  companyName    String
+  address        String?
+  contactName    String?
+  contactPhone   String?
+  contactEmail   String?
+  ice            String          @unique
+  bankName       String?
+  bankRib        String?
+  bankIban       String?
+  bankSwift      String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  attachments    Attachment[]
+  missions       Mission[]
+  clientInvoices ClientInvoice[]
 }
 
-
-model coupons {
-  id          Int      @id @default(autoincrement())
-  code        String   @unique
-  discount    Float
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  deletedAt   DateTime?
-  tickets     tickets[]
+model Subcontractor {
+  id                 Int                 @id @default(autoincrement())
+  companyName        String
+  address            String?
+  contactName        String?
+  contactPhone       String?
+  contactEmail       String?
+  ice                String              @unique
+  bankName           String?
+  bankRib            String?
+  bankIban           String?
+  bankSwift          String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  deletedAt          DateTime?
+  attachments        Attachment[]
+  missions           Mission[]
+  subcontractorBills SubcontractorBill[]
 }
 
-model DomeSyncLog {
-  id          Int      @id @default(autoincrement())
-  domeId      Int
-  lastSyncAt  DateTime // The lastSync time received from the server
-  completedAt DateTime @default(now()) // When the sync completed
-  isFirstSync Boolean  @default(true)
-  wasSuccess  Boolean  @default(true)
-  error       String?
-  dataCount   Int?
-  dome        doms     @relation(fields: [domeId], references: [id], onDelete: Cascade)
+enum AttachmentOwnerType {
+  TRUCK
+  DRIVER
+  CLIENT
+  SUBCONTRACTOR
+  CLIENT_INVOICE
+  SUBCONTRACTOR_BILL
+}
 
-  @@index([domeId])
-  @@index([completedAt])
+// One unified table for every uploaded file across Trucks/Drivers/Clients/
+// Subcontractors/ClientInvoices/SubcontractorBills. `label` is a
+// human-chosen name set by whoever uploads the file (their responsibility to
+// make it recognizable later) — kept separate from `fileName`, the original
+// uploaded file's name.
+model Attachment {
+  id                  Int                 @id @default(autoincrement())
+  ownerType           AttachmentOwnerType
+  truckId             Int?
+  driverId            Int?
+  clientId            Int?
+  subcontractorId     Int?
+  clientInvoiceId     Int?
+  subcontractorBillId Int?
+  label               String
+  fileName            String
+  filePath            String
+  mimeType            String?
+  fileSize            Int?
+  uploadedAt          DateTime            @default(now())
+  deletedAt           DateTime?
+  truck               Truck?              @relation(fields: [truckId], references: [id], onDelete: Cascade)
+  driver              Driver?             @relation(fields: [driverId], references: [id], onDelete: Cascade)
+  client              Client?             @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  subcontractor       Subcontractor?      @relation(fields: [subcontractorId], references: [id], onDelete: Cascade)
+  clientInvoice       ClientInvoice?      @relation(fields: [clientInvoiceId], references: [id], onDelete: Cascade)
+  subcontractorBill   SubcontractorBill?  @relation(fields: [subcontractorBillId], references: [id], onDelete: Cascade)
+
+  @@index([truckId])
+  @@index([driverId])
+  @@index([clientId])
+  @@index([subcontractorId])
+  @@index([clientInvoiceId])
+  @@index([subcontractorBillId])
+}
+
+enum TransportType {
+  EXPORT
+  IMPORT
+}
+
+enum ExecutionMode {
+  IN_HOUSE
+  SUBCONTRACTED
+}
+
+enum MissionStatus {
+  PLANNED
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+}
+
+enum Currency {
+  MAD
+  EUR
+}
+
+// The core transaction: a transport job, either run with our own truck+driver
+// (IN_HOUSE) or outsourced to a subcontractor (SUBCONTRACTED) — never both,
+// enforced in the service layer since Prisma has no declarative XOR.
+model Mission {
+  id                Int                @id @default(autoincrement())
+  reference         String             @unique
+  clientId          Int
+  transportType     TransportType
+  executionMode     ExecutionMode
+  loadingLocation   String
+  deliveryLocation  String
+  clientPrice       Decimal            @db.Decimal(12, 2)
+  currency          Currency
+  subcontractorId   Int?
+  subcontractorCost Decimal?           @db.Decimal(12, 2)
+  truckId           Int?
+  driverId          Int?
+  status            MissionStatus      @default(PLANNED)
+  missionDate       DateTime
+  autoInvoice       Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  deletedAt         DateTime?
+  client            Client             @relation(fields: [clientId], references: [id])
+  subcontractor     Subcontractor?     @relation(fields: [subcontractorId], references: [id])
+  truck             Truck?             @relation(fields: [truckId], references: [id])
+  driver            Driver?            @relation(fields: [driverId], references: [id])
+  clientInvoice     ClientInvoice?
+  subcontractorBill SubcontractorBill?
+
+  @@index([clientId])
+  @@index([subcontractorId])
+  @@index([truckId])
+  @@index([driverId])
+  @@index([missionDate])
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIALLY_PAID
+  PAID
+}
+
+// Invoice MFAH sends to the client for a mission — amount/currency mirror
+// the mission's clientPrice at creation time (single source of truth), not
+// entered independently. The PDF itself (made outside the system) is
+// uploaded as an Attachment, not stored on this model directly.
+model ClientInvoice {
+  id            Int           @id @default(autoincrement())
+  missionId     Int           @unique
+  clientId      Int
+  invoiceNumber String        @unique
+  amount        Decimal       @db.Decimal(12, 2)
+  amountPaid    Decimal       @default(0) @db.Decimal(12, 2)
+  currency      Currency
+  status        InvoiceStatus @default(UNPAID)
+  issueDate     DateTime
+  dueDate       DateTime?
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  deletedAt     DateTime?
+  mission       Mission       @relation(fields: [missionId], references: [id])
+  client        Client        @relation(fields: [clientId], references: [id])
+  attachments   Attachment[]
+
+  @@index([clientId])
+}
+
+// Bill MFAH receives from a subcontractor for a mission it handled —
+// amount/currency mirror the mission's subcontractorCost. Kept fully
+// separate from ClientInvoice (not polymorphic): the client must never be
+// able to reach subcontractor-cost data through any query path.
+model SubcontractorBill {
+  id              Int           @id @default(autoincrement())
+  missionId       Int           @unique
+  subcontractorId Int
+  billNumber      String        @unique
+  amount          Decimal       @db.Decimal(12, 2)
+  amountPaid      Decimal       @default(0) @db.Decimal(12, 2)
+  currency        Currency
+  status          InvoiceStatus @default(UNPAID)
+  issueDate       DateTime
+  dueDate         DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+  mission         Mission       @relation(fields: [missionId], references: [id])
+  subcontractor   Subcontractor @relation(fields: [subcontractorId], references: [id])
+  attachments     Attachment[]
+
+  @@index([subcontractorId])
 }

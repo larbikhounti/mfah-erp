@@ -3,12 +3,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.seedUsers = seedUsers;
 const bcrypt = require("bcrypt");
 async function seedUsers(prisma) {
+    var _a, _b, _c;
     console.log('Seeding users...');
     const hashedPassword = await bcrypt.hash('password', 10);
     const adminRole = await prisma.roles.findUnique({ where: { name: 'ADMIN' } });
-    const managerRole = await prisma.roles.findUnique({
-        where: { name: 'MANAGER' },
-    });
     const backOfficeRole = await prisma.roles.findUnique({
         where: { name: 'back office' },
     });
@@ -19,22 +17,17 @@ async function seedUsers(prisma) {
         {
             email: 'admin@example.com',
             name: 'Admin User',
-            role_id: (adminRole === null || adminRole === void 0 ? void 0 : adminRole.id) || 1,
-            dom_id: null,
+            role_id: (_a = adminRole === null || adminRole === void 0 ? void 0 : adminRole.id) !== null && _a !== void 0 ? _a : null,
         },
         {
             email: 'frontoffice@example.com',
             name: 'Front Office',
-            password: hashedPassword,
-            role_id: frontOfficeRole.id,
-            dom_id: process.env.DOM_ID ? parseInt(process.env.DOM_ID) : null,
+            role_id: (_b = frontOfficeRole === null || frontOfficeRole === void 0 ? void 0 : frontOfficeRole.id) !== null && _b !== void 0 ? _b : null,
         },
         {
             email: 'backoffice@example.com',
             name: 'Back Office',
-            password: hashedPassword,
-            role_id: backOfficeRole.id,
-            dom_id: process.env.DOM_ID ? parseInt(process.env.DOM_ID) : null,
+            role_id: (_c = backOfficeRole === null || backOfficeRole === void 0 ? void 0 : backOfficeRole.id) !== null && _c !== void 0 ? _c : null,
         },
     ];
     for (const user of users) {
@@ -46,7 +39,6 @@ async function seedUsers(prisma) {
                 name: user.name,
                 password: hashedPassword,
                 role_id: user.role_id,
-                dom_id: user.dom_id,
                 accessToken: null,
             },
         });

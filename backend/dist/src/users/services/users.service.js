@@ -45,7 +45,7 @@ let UsersService = UsersService_1 = class UsersService {
     }
     async findAll(filterParams) {
         try {
-            const { offset = 0, limit = 10, search, status, userId, showArchived } = filterParams;
+            const { offset = 0, limit = 10, search, status, userId, showArchived, } = filterParams;
             const where = {
                 deletedAt: showArchived ? { not: null } : null,
             };
@@ -70,15 +70,7 @@ let UsersService = UsersService_1 = class UsersService {
                         createdAt: true,
                         updatedAt: true,
                         deletedAt: true,
-                        dom_id: true,
                         role_id: true,
-                        doms: {
-                            select: {
-                                id: true,
-                                name: true,
-                                address: true,
-                            },
-                        },
                         roles: {
                             select: {
                                 id: true,
@@ -93,16 +85,15 @@ let UsersService = UsersService_1 = class UsersService {
                 this.prisma.users.count({ where }),
             ]);
             const formattedData = users.map((user) => {
-                var _a, _b, _c;
+                var _a, _b;
                 return ({
                     id: user.id,
                     name: user.name,
                     email: user.email,
                     role: ((_a = user.roles) === null || _a === void 0 ? void 0 : _a.name) || null,
-                    dom: ((_b = user.doms) === null || _b === void 0 ? void 0 : _b.name) || null,
                     createdAt: user.createdAt.toISOString(),
                     updatedAt: user.updatedAt.toISOString(),
-                    deletedAt: ((_c = user.deletedAt) === null || _c === void 0 ? void 0 : _c.toISOString()) || null,
+                    deletedAt: ((_b = user.deletedAt) === null || _b === void 0 ? void 0 : _b.toISOString()) || null,
                 });
             });
             return { data: formattedData, total };
@@ -136,7 +127,6 @@ let UsersService = UsersService_1 = class UsersService {
                 data: Object.assign(Object.assign({}, data), { password: hashedPassword, createdAt: new Date(), updatedAt: new Date() }),
                 include: {
                     roles: true,
-                    doms: true,
                 },
             });
             const { password } = user, userWithoutPassword = __rest(user, ["password"]);
@@ -175,7 +165,6 @@ let UsersService = UsersService_1 = class UsersService {
                 data: Object.assign(Object.assign({}, updateData), { updatedAt: new Date() }),
                 include: {
                     roles: true,
-                    doms: true,
                 },
             });
             const { password } = user, userWithoutPassword = __rest(user, ["password"]);
@@ -219,7 +208,6 @@ let UsersService = UsersService_1 = class UsersService {
                 where: { id },
                 include: {
                     roles: true,
-                    doms: true,
                 },
             });
             if (!user) {

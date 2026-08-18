@@ -58,7 +58,13 @@ export class RolesService {
     filterParams: FilterRolesDto,
   ): Promise<{ data: RoleResponse[]; total: number }> {
     try {
-      const { offset = 0, limit = 10, search, roleId, showArchived } = filterParams;
+      const {
+        offset = 0,
+        limit = 10,
+        search,
+        roleId,
+        showArchived,
+      } = filterParams;
 
       // Build the where clause based on filter parameters
       const where: any = {
@@ -226,9 +232,7 @@ export class RolesService {
     }
   }
 
-  async bulkDelete(
-    bulkDeleteDto: BulkDeleteRolesDto,
-  ): Promise<{
+  async bulkDelete(bulkDeleteDto: BulkDeleteRolesDto): Promise<{
     message: string;
     deletedCount: number;
     notFound: number[];
@@ -250,7 +254,9 @@ export class RolesService {
       const notFoundIds = roleIds.filter((id) => !existingRoleIds.includes(id));
 
       // Filter out roles that are already deleted
-      const alreadyDeletedRoles = existingRoles.filter((role) => role.deletedAt !== null);
+      const alreadyDeletedRoles = existingRoles.filter(
+        (role) => role.deletedAt !== null,
+      );
       const alreadyDeletedIds = alreadyDeletedRoles.map((role) => role.id);
 
       const deletableIds = existingRoleIds.filter(
@@ -289,10 +295,7 @@ export class RolesService {
       }
 
       if (!role.deletedAt) {
-        throw new HttpException(
-          'Role is not deleted',
-          HttpStatus.BAD_REQUEST,
-        );
+        throw new HttpException('Role is not deleted', HttpStatus.BAD_REQUEST);
       }
 
       await this.prisma.roles.update({
@@ -313,9 +316,7 @@ export class RolesService {
     }
   }
 
-  async bulkRestore(
-    roleIds: number[],
-  ): Promise<{
+  async bulkRestore(roleIds: number[]): Promise<{
     message: string;
     restoredCount: number;
     notFound: number[];
@@ -333,7 +334,9 @@ export class RolesService {
       const existingRoleIds = existingRoles.map((role) => role.id);
       const notFoundIds = roleIds.filter((id) => !existingRoleIds.includes(id));
 
-      const notDeletedRoles = existingRoles.filter((role) => role.deletedAt === null);
+      const notDeletedRoles = existingRoles.filter(
+        (role) => role.deletedAt === null,
+      );
       const notDeletedIds = notDeletedRoles.map((role) => role.id);
 
       const restorableIds = existingRoleIds.filter(

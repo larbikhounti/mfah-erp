@@ -1,4 +1,3 @@
-
 import { Module } from '@nestjs/common';
 import { UsersModule } from '../users/users.module';
 import { JwtModule } from '@nestjs/jwt';
@@ -18,18 +17,21 @@ import { PrismaModule } from 'src/prisma/prisma.module';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_ACCESS_SECRET'),
-        signOptions : {
-         expiresIn: configService.get<string>('JWT_EXPIRATION_TIME')
-        }
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRATION_TIME'),
+        },
       }),
     }),
   ],
-  providers: [AuthService,AuthService,
+  providers: [
+    AuthService,
+    AuthService,
     {
       provide: APP_GUARD,
       useClass: AuthGuard,
-    }],
+    },
+  ],
   controllers: [AuthController],
   exports: [AuthService],
 })
-export class AuthModule { }
+export class AuthModule {}

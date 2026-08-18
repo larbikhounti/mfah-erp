@@ -1,1 +1,0 @@
-{"version":3,"file":"update-game-type.dto.js","sourceRoot":"","sources":["../../../../src/game-types/dtos/update-game-type.dto.ts"],"names":[],"mappings":";;;;;;;;;;;;AAAA,6CAA8C;AAC9C,qDAAuD;AAEvD,MAAa,iBAAiB;CAS7B;AATD,8CASC;AADC;IAPC,IAAA,qBAAW,EAAC;QACX,WAAW,EAAE,2BAA2B;QACxC,OAAO,EAAE,WAAW;QACpB,QAAQ,EAAE,KAAK;KAChB,CAAC;IACD,IAAA,4BAAU,GAAE;IACZ,IAAA,0BAAQ,GAAE;;+CACG"}

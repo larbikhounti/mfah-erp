@@ -2,7 +2,6 @@ import { IsOptional, IsString, IsNumber, IsBoolean } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
-
 export class FilterParamsDto {
   @ApiPropertyOptional({ description: 'Offset for pagination' })
   @Type(() => Number)
@@ -37,5 +36,4 @@ export class FilterParamsDto {
   @IsOptional()
   @IsBoolean()
   showArchived?: boolean;
-
 }

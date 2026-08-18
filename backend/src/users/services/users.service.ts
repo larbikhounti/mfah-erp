@@ -38,7 +38,14 @@ export class UsersService {
     filterParams: FilterParamsDto,
   ): Promise<{ data: any[]; total: number }> {
     try {
-      const { offset = 0, limit = 10, search, status, userId, showArchived } = filterParams;
+      const {
+        offset = 0,
+        limit = 10,
+        search,
+        status,
+        userId,
+        showArchived,
+      } = filterParams;
 
       // Build the where clause based on filter parameters
       const where: any = {
@@ -69,15 +76,7 @@ export class UsersService {
             createdAt: true,
             updatedAt: true,
             deletedAt: true,
-            dom_id: true,
             role_id: true,
-            doms: {
-              select: {
-                id: true,
-                name: true,
-                address: true,
-              },
-            },
             roles: {
               select: {
                 id: true,
@@ -98,7 +97,6 @@ export class UsersService {
         name: user.name,
         email: user.email,
         role: user.roles?.name || null,
-        dom: user.doms?.name || null,
         createdAt: user.createdAt.toISOString(),
         updatedAt: user.updatedAt.toISOString(),
         deletedAt: user.deletedAt?.toISOString() || null,
@@ -154,7 +152,6 @@ export class UsersService {
         },
         include: {
           roles: true,
-          doms: true,
         },
       });
 
@@ -215,7 +212,6 @@ export class UsersService {
         },
         include: {
           roles: true,
-          doms: true,
         },
       });
 
@@ -272,7 +268,6 @@ export class UsersService {
         where: { id },
         include: {
           roles: true,
-          doms: true,
         },
       });
 
