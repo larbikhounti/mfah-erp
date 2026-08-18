@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { CreateSubcontractorBillDialog } from "@/components/subcontractor-bill/create-subcontractor-bill-dialog";
 import { RecordPaymentDialog } from "@/components/subcontractor-bill/record-payment-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
+import { ViewMissionDialog } from "@/components/mission/view-mission-dialog";
 import PaginationTable from "@/components/pagination-table";
 
 const STATUS_VARIANT: Record<InvoiceStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -140,6 +141,23 @@ export function EnhancedSubcontractorBillTable() {
       label: "Bill Number",
       sortable: true,
       render: (bill) => <div className="font-mono text-sm font-medium">{bill.billNumber}</div>,
+    },
+    {
+      key: "missionId",
+      label: "Mission",
+      render: (bill) => (
+        <ViewMissionDialog
+          missionId={bill.missionId}
+          trigger={
+            <button
+              type="button"
+              className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+            >
+              View Mission
+            </button>
+          }
+        />
+      ),
     },
     {
       key: "amount",

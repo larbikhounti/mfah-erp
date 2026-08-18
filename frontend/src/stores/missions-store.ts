@@ -75,6 +75,7 @@ interface MissionsStore {
   totalPages: number;
 
   fetchMissions: (params?: FilterParams) => Promise<void>;
+  fetchMissionById: (id: number) => Promise<Mission>;
   createMission: (data: CreateMissionPayload) => Promise<void>;
   updateMission: (id: number, data: UpdateMissionPayload) => Promise<void>;
   updateMissionStatus: (id: number, status: MissionStatus) => Promise<void>;
@@ -143,6 +144,11 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
         loading: false,
       });
     }
+  },
+
+  fetchMissionById: async (id: number) => {
+    const response = await axiosInstance.get<Mission>(`/missions/${id}`);
+    return response.data;
   },
 
   createMission: async (data: CreateMissionPayload) => {

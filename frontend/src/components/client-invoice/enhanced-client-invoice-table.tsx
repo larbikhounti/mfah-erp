@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { CreateClientInvoiceDialog } from "@/components/client-invoice/create-client-invoice-dialog";
 import { RecordPaymentDialog } from "@/components/client-invoice/record-payment-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
+import { ViewMissionDialog } from "@/components/mission/view-mission-dialog";
 import PaginationTable from "@/components/pagination-table";
 
 const STATUS_VARIANT: Record<InvoiceStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -140,6 +141,23 @@ export function EnhancedClientInvoiceTable() {
       label: "Invoice Number",
       sortable: true,
       render: (invoice) => <div className="font-mono text-sm font-medium">{invoice.invoiceNumber}</div>,
+    },
+    {
+      key: "missionId",
+      label: "Mission",
+      render: (invoice) => (
+        <ViewMissionDialog
+          missionId={invoice.missionId}
+          trigger={
+            <button
+              type="button"
+              className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+            >
+              View Mission
+            </button>
+          }
+        />
+      ),
     },
     {
       key: "amount",
