@@ -32,6 +32,7 @@ import { Loader } from "@/components/loader";
 import PaginationTable from "@/components/pagination-table";
 import RangeDate from "@/components/range-date";
 import { useDashboardStore, type MissionStatus } from "@/stores/dashboard-store";
+import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
 
 const STATUS_VARIANT: Record<MissionStatus, "default" | "secondary" | "destructive" | "outline"> = {
   PLANNED: "outline",
@@ -255,6 +256,8 @@ export default function DashboardPage() {
           </CardFooter>
         </Card>
       </div>
+
+      <DashboardCharts summary={summary} />
 
       <Card>
         <CardHeader>
