@@ -3,26 +3,17 @@
 import type * as React from "react";
 import {
   IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
   IconInnerShadowTop,
-  IconListDetails,
-  IconSearch,
-  IconSettings,
   IconUsers,
   IconShield,
-  IconWorld,
-  IconDeviceGamepad2,
-  IconCpu,
-  IconDeviceDesktop,
-  IconPlayerPlay,
-  IconArmchair,
-  IconTicket,
-  IconMessage,
+  IconTruck,
+  IconSteeringWheel,
+  IconBuilding,
+  IconBriefcase,
+  IconRoute,
+  IconFileInvoice,
+  IconReceipt,
+  IconLockAccess,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -47,7 +38,41 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/dashboard",
       icon: IconDashboard,
     },
-
+    {
+      title: "Missions",
+      url: "/dashboard/missions",
+      icon: IconRoute,
+    },
+    {
+      title: "Trucks",
+      url: "/dashboard/trucks",
+      icon: IconTruck,
+    },
+    {
+      title: "Drivers",
+      url: "/dashboard/drivers",
+      icon: IconSteeringWheel,
+    },
+    {
+      title: "Clients",
+      url: "/dashboard/clients",
+      icon: IconBuilding,
+    },
+    {
+      title: "Subcontractors",
+      url: "/dashboard/subcontractors",
+      icon: IconBriefcase,
+    },
+    {
+      title: "Client Invoices",
+      url: "/dashboard/client-invoices",
+      icon: IconFileInvoice,
+    },
+    {
+      title: "Subcontractor Bills",
+      url: "/dashboard/subcontractor-bills",
+      icon: IconReceipt,
+    },
     {
       title: "Users",
       url: "/dashboard/users",
@@ -59,49 +84,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconShield,
     },
     {
-      title: "Stores",
-      url: "/dashboard/doms",
-      icon: IconWorld,
-    },
-    {
-      title: "Game Types",
-      url: "/dashboard/game-types",
-      icon: IconDeviceGamepad2,
-    }, // Added game types navigation item
-    {
-      title: "Machine Types",
-      url: "/dashboard/machine-types",
-      icon: IconCpu,
-    },
-    {
-      title: "Machines",
-      url: "/dashboard/machines",
-      icon: IconDeviceDesktop,
-    },
-    // {
-    //   title: "Machine Chairs",
-    //   url: "/dashboard/machine-chairs",
-    //   icon: IconArmchair,
-    // },
-    {
-      title: "Games",
-      url: "/dashboard/games",
-      icon: IconPlayerPlay,
-    },
-      {
-      title: "Coupons",
-      url: "/dashboard/coupons",
-      icon: IconTicket,
-    },
-    {
-      title: "Comments",
-      url: "/dashboard/comments",
-      icon: IconMessage,
-    },
-    {
-      title: "Experiences",
-      url: "/dashboard/experiences",
-      icon: IconListDetails,
+      title: "Permissions",
+      url: "/dashboard/permissions",
+      icon: IconLockAccess,
     },
   ];
 
@@ -116,7 +101,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Store Manager</span>
+                <span className="text-base font-semibold">MFAH ERP</span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
