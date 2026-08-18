@@ -29,6 +29,16 @@ const STATUS_VARIANT: Record<MissionStatus, "default" | "secondary" | "destructi
   CANCELLED: "destructive",
 };
 
+// Shared with any row-level "View Mission" trigger (client invoices,
+// subcontractor bills) so the link itself hints at the mission's status
+// before the dialog is even opened.
+export const MISSION_LINK_COLOR: Record<MissionStatus, string> = {
+  PLANNED: "text-primary",
+  IN_PROGRESS: "text-yellow-500",
+  FINISHED: "text-green-600",
+  CANCELLED: "text-destructive",
+};
+
 function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="grid grid-cols-3 gap-2 py-1.5 text-sm">

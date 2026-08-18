@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,7 +29,8 @@ import { toast } from "sonner";
 import { CreateClientInvoiceDialog } from "@/components/client-invoice/create-client-invoice-dialog";
 import { RecordPaymentDialog } from "@/components/client-invoice/record-payment-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
-import { ViewMissionDialog } from "@/components/mission/view-mission-dialog";
+import { ViewMissionDialog, MISSION_LINK_COLOR } from "@/components/mission/view-mission-dialog";
+import { useMissionsStore, type Mission } from "@/stores/missions-store";
 import PaginationTable from "@/components/pagination-table";
 
 const STATUS_VARIANT: Record<InvoiceStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -61,6 +62,8 @@ export function EnhancedClientInvoiceTable() {
     setShowArchived,
   } = useClientInvoicesStore();
 
+  const { missions, fetchMissions } = useMissionsStore();
+
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
@@ -70,7 +73,8 @@ export function EnhancedClientInvoiceTable() {
 
   useEffect(() => {
     fetchInvoices();
-  }, [fetchInvoices]);
+    fetchMissions({ limit: 100 });
+  }, [fetchInvoices, fetchMissions]);
 
   useEffect(() => {
     if (error) {
@@ -78,6 +82,12 @@ export function EnhancedClientInvoiceTable() {
       clearError();
     }
   }, [error, clearError]);
+
+  const missionStatusById = useMemo(() => {
+    const map = new Map<number, Mission["status"]>();
+    missions.forEach((m) => map.set(m.id, m.status));
+    return map;
+  }, [missions]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -145,19 +155,23 @@ export function EnhancedClientInvoiceTable() {
     {
       key: "missionId",
       label: "Mission",
-      render: (invoice) => (
-        <ViewMissionDialog
-          missionId={invoice.missionId}
-          trigger={
-            <button
-              type="button"
-              className="text-primary text-sm font-medium underline-offset-4 hover:underline"
-            >
-              View Mission
-            </button>
-          }
-        />
-      ),
+      render: (invoice) => {
+        const missionStatus = missionStatusById.get(invoice.missionId);
+        const colorClass = missionStatus ? MISSION_LINK_COLOR[missionStatus] : "text-primary";
+        return (
+          <ViewMissionDialog
+            missionId={invoice.missionId}
+            trigger={
+              <button
+                type="button"
+                className={`${colorClass} text-sm font-medium underline-offset-4 hover:underline`}
+              >
+                View Mission
+              </button>
+            }
+          />
+        );
+      },
     },
     {
       key: "amount",

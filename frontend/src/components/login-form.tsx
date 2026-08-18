@@ -113,6 +113,9 @@ export const LoginForm = memo<LoginFormProps>(({ className }) => {
 
   return (
     <div className={cn("flex flex-col gap-6", className)}>
+      <div className="mx-auto w-fit rounded-md bg-slate-900 px-4 py-2.5">
+        <img src="/mfah-logo.png" alt="MFAH Globalog" className="h-6 w-auto" />
+      </div>
       <Card>
         <CardHeader>
           <CardTitle>ADMIN LOGIN</CardTitle>

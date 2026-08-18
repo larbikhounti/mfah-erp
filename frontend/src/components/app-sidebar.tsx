@@ -3,7 +3,6 @@
 import type * as React from "react";
 import {
   IconDashboard,
-  IconInnerShadowTop,
   IconUsers,
   IconShield,
   IconTruck,
@@ -99,9 +98,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               asChild
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
-              <a href="#">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">MFAH ERP</span>
+              <a href="#" className="flex items-center">
+                <span className="rounded-md bg-slate-900 px-2.5 py-1.5">
+                  <img src="/mfah-logo.png" alt="MFAH Globalog" className="h-4 w-auto" />
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
