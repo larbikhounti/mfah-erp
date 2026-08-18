@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateClientDto {
   @ApiProperty({ description: 'Company name', example: 'Acme Freight SARL' })
@@ -23,6 +24,7 @@ export class CreateClientDto {
   contactPhone?: string;
 
   @ApiProperty({ description: 'Primary contact email', required: false })
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsOptional()
   @IsEmail()
   contactEmail?: string;

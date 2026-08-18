@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateSubcontractorDto {
   @ApiProperty({
@@ -26,6 +27,7 @@ export class CreateSubcontractorDto {
   contactPhone?: string;
 
   @ApiProperty({ description: 'Primary contact email', required: false })
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsOptional()
   @IsEmail()
   contactEmail?: string;
