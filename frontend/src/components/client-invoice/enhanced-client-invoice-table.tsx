@@ -24,6 +24,13 @@ import {
 import { MoreHorizontal, Trash2, Paperclip, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useClientInvoicesStore, type ClientInvoice, type InvoiceStatus } from "@/stores/client-invoices-store";
 import { toast } from "sonner";
 import { CreateClientInvoiceDialog } from "@/components/client-invoice/create-client-invoice-dialog";
@@ -31,6 +38,8 @@ import { RecordPaymentDialog } from "@/components/client-invoice/record-payment-
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
 import { ViewMissionDialog, MISSION_LINK_COLOR } from "@/components/mission/view-mission-dialog";
 import { useMissionsStore, type Mission } from "@/stores/missions-store";
+import { useClientsStore } from "@/stores/clients-store";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
 const STATUS_VARIANT: Record<InvoiceStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -50,6 +59,7 @@ export function EnhancedClientInvoiceTable() {
     pageSize,
     totalPages,
     showArchived,
+    filterClientId,
     fetchInvoices,
     deleteInvoice,
     bulkDeleteInvoices,
@@ -60,9 +70,11 @@ export function EnhancedClientInvoiceTable() {
     setPage,
     setPageSize,
     setShowArchived,
+    setFilterClientId,
   } = useClientInvoicesStore();
 
   const { missions, fetchMissions } = useMissionsStore();
+  const { clients, fetchClients } = useClientsStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
@@ -74,7 +86,8 @@ export function EnhancedClientInvoiceTable() {
   useEffect(() => {
     fetchInvoices();
     fetchMissions({ limit: 100 });
-  }, [fetchInvoices, fetchMissions]);
+    fetchClients({ limit: 100 });
+  }, [fetchInvoices, fetchMissions, fetchClients]);
 
   useEffect(() => {
     if (error) {
@@ -88,6 +101,12 @@ export function EnhancedClientInvoiceTable() {
     missions.forEach((m) => map.set(m.id, m.status));
     return map;
   }, [missions]);
+
+  const clientNameById = useMemo(() => {
+    const map = new Map<number, string>();
+    clients.forEach((c) => map.set(c.id, c.companyName));
+    return map;
+  }, [clients]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -151,6 +170,13 @@ export function EnhancedClientInvoiceTable() {
       label: "Invoice Number",
       sortable: true,
       render: (invoice) => <div className="font-mono text-sm font-medium">{invoice.invoiceNumber}</div>,
+    },
+    {
+      key: "clientId",
+      label: "Client",
+      render: (invoice) => (
+        <div className="text-sm">{clientNameById.get(invoice.clientId) ?? `#${invoice.clientId}`}</div>
+      ),
     },
     {
       key: "missionId",
@@ -289,6 +315,22 @@ export function EnhancedClientInvoiceTable() {
         showCount={true}
         customHeader={
           <div className="flex items-center gap-4">
+            <Select
+              value={filterClientId ? String(filterClientId) : "all"}
+              onValueChange={(value) => setFilterClientId(value === "all" ? null : Number(value))}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by client" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All clients</SelectItem>
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id.toString()}>
+                    {c.companyName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="flex items-center space-x-2">
               <Switch
                 id="show-archived"
@@ -300,6 +342,33 @@ export function EnhancedClientInvoiceTable() {
                 Archive
               </Label>
             </div>
+            <ExportExcelButton<ClientInvoice>
+              endpoint="/client-invoices"
+              total={total}
+              extraParams={{ showArchived, clientId: filterClientId ?? undefined }}
+              filenamePrefix="client-invoices"
+              sheetName="Client Invoices"
+              mapRow={(invoice) => ({
+                "Invoice Number": invoice.invoiceNumber,
+                Client: clientNameById.get(invoice.clientId) ?? `#${invoice.clientId}`,
+                Amount: Number(invoice.amount),
+                Paid: Number(invoice.amountPaid),
+                Currency: invoice.currency,
+                Status: invoice.status,
+                "Issue Date": new Date(invoice.issueDate).toLocaleDateString(),
+                "Due Date": invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "",
+              })}
+              columns={[
+                { key: "Invoice Number", header: "Invoice Number" },
+                { key: "Client", header: "Client" },
+                { key: "Amount", header: "Amount" },
+                { key: "Paid", header: "Paid" },
+                { key: "Currency", header: "Currency" },
+                { key: "Status", header: "Status" },
+                { key: "Issue Date", header: "Issue Date" },
+                { key: "Due Date", header: "Due Date" },
+              ]}
+            />
             {selectedInvoices.length > 0 && (
               <>
                 {selectedActive.length > 0 && (

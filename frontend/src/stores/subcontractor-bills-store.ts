@@ -38,6 +38,7 @@ export interface FilterParams {
   search?: string;
   status?: InvoiceStatus;
   currency?: Currency;
+  subcontractorId?: number;
   showArchived?: boolean;
 }
 
@@ -53,6 +54,7 @@ interface SubcontractorBillsStore {
   error: string | null;
   selectedBills: number[];
   showArchived: boolean;
+  filterSubcontractorId: number | null;
 
   currentPage: number;
   pageSize: number;
@@ -70,6 +72,7 @@ interface SubcontractorBillsStore {
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
   setShowArchived: (show: boolean) => void;
+  setFilterSubcontractorId: (subcontractorId: number | null) => void;
 
   selectBill: (id: number) => void;
   selectAllBills: () => void;
@@ -85,6 +88,7 @@ export const useSubcontractorBillsStore = create<SubcontractorBillsStore>((set, 
   error: null,
   selectedBills: [],
   showArchived: false,
+  filterSubcontractorId: null,
 
   currentPage: 1,
   pageSize: 25,
@@ -94,7 +98,7 @@ export const useSubcontractorBillsStore = create<SubcontractorBillsStore>((set, 
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize, showArchived } = get();
+      const { currentPage, pageSize, showArchived, filterSubcontractorId } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       const apiParams: any = {
@@ -106,6 +110,8 @@ export const useSubcontractorBillsStore = create<SubcontractorBillsStore>((set, 
       if (params.search && params.search.trim()) apiParams.search = params.search.trim();
       if (params.status) apiParams.status = params.status;
       if (params.currency) apiParams.currency = params.currency;
+      const subcontractorId = params.subcontractorId ?? filterSubcontractorId;
+      if (subcontractorId) apiParams.subcontractorId = subcontractorId;
 
       const response = await axiosInstance.get<SubcontractorBillsResponse>("/subcontractor-bills", {
         params: apiParams,
@@ -247,6 +253,11 @@ export const useSubcontractorBillsStore = create<SubcontractorBillsStore>((set, 
   setShowArchived: (show: boolean) => {
     set({ showArchived: show, currentPage: 1 });
     get().fetchBills({ showArchived: show });
+  },
+
+  setFilterSubcontractorId: (subcontractorId: number | null) => {
+    set({ filterSubcontractorId: subcontractorId, currentPage: 1 });
+    get().fetchBills({ subcontractorId: subcontractorId ?? undefined });
   },
 
   selectBill: (id: number) => {

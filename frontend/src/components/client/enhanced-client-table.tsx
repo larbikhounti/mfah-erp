@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { CreateClientDialog } from "@/components/client/create-client-dialog";
 import { EditClientDialog } from "@/components/client/edit-client-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
 export function EnhancedClientTable() {
@@ -240,6 +241,29 @@ export function EnhancedClientTable() {
                 Archive
               </Label>
             </div>
+            <ExportExcelButton<Client>
+              endpoint="/clients"
+              total={total}
+              extraParams={{ showArchived }}
+              filenamePrefix="clients"
+              sheetName="Clients"
+              mapRow={(c) => ({
+                Company: c.companyName,
+                ICE: c.ice,
+                Contact: c.contactName ?? "",
+                Phone: c.contactPhone ?? "",
+                Email: c.contactEmail ?? "",
+                Address: c.address ?? "",
+              })}
+              columns={[
+                { key: "Company", header: "Company" },
+                { key: "ICE", header: "ICE" },
+                { key: "Contact", header: "Contact" },
+                { key: "Phone", header: "Phone" },
+                { key: "Email", header: "Email" },
+                { key: "Address", header: "Address" },
+              ]}
+            />
             {selectedClients.length > 0 && (
               <>
                 {selectedActiveClients.length > 0 && (

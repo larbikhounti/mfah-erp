@@ -26,6 +26,7 @@ import { useRolesStore, type Role } from "@/stores/roles-store";
 import { toast } from "sonner";
 import { EditRoleDialog } from "./edit-role-dialog";
 import { CreateRoleDialog } from "./create-role-dialog";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 
 interface EnhancedRoleTableProps {
   // Remove the callback props since we'll handle them internally
@@ -37,6 +38,7 @@ export function EnhancedRoleTable({}: EnhancedRoleTableProps) {
     loading,
     error,
     selectedRoles,
+    total,
     fetchRoles,
     deleteRole,
     bulkDeleteRoles,
@@ -201,6 +203,22 @@ export function EnhancedRoleTable({}: EnhancedRoleTableProps) {
         showCount={true}
         customHeader={
           <div className="flex items-center gap-2">
+            <ExportExcelButton<Role>
+              endpoint="/roles/admin/list/all"
+              total={total}
+              filenamePrefix="roles"
+              sheetName="Roles"
+              mapRow={(r) => ({
+                Name: r.name,
+                Users: r._count?.Users ?? 0,
+                "Created At": new Date(r.createdAt).toLocaleDateString(),
+              })}
+              columns={[
+                { key: "Name", header: "Name" },
+                { key: "Users", header: "Users" },
+                { key: "Created At", header: "Created At" },
+              ]}
+            />
             {selectedRoles.length > 0 && (
               <Button
                 variant="destructive"

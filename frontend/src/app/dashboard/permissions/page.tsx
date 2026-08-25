@@ -39,6 +39,7 @@ const MODULE_LABELS: Record<PermissionModule, string> = {
   CLIENT_INVOICES: "Client Invoices",
   SUBCONTRACTOR_BILLS: "Subcontractor Bills",
   DASHBOARD: "Dashboard",
+  REPORTS: "Reports",
 };
 
 export default function PermissionsPage() {

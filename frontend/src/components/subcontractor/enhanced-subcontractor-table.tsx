@@ -28,6 +28,7 @@ import { toast } from "sonner";
 import { CreateSubcontractorDialog } from "@/components/subcontractor/create-subcontractor-dialog";
 import { EditSubcontractorDialog } from "@/components/subcontractor/edit-subcontractor-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
 export function EnhancedSubcontractorTable() {
@@ -240,6 +241,29 @@ export function EnhancedSubcontractorTable() {
                 Archive
               </Label>
             </div>
+            <ExportExcelButton<Subcontractor>
+              endpoint="/subcontractors"
+              total={total}
+              extraParams={{ showArchived }}
+              filenamePrefix="subcontractors"
+              sheetName="Subcontractors"
+              mapRow={(s) => ({
+                Company: s.companyName,
+                ICE: s.ice,
+                Contact: s.contactName ?? "",
+                Phone: s.contactPhone ?? "",
+                Email: s.contactEmail ?? "",
+                Address: s.address ?? "",
+              })}
+              columns={[
+                { key: "Company", header: "Company" },
+                { key: "ICE", header: "ICE" },
+                { key: "Contact", header: "Contact" },
+                { key: "Phone", header: "Phone" },
+                { key: "Email", header: "Email" },
+                { key: "Address", header: "Address" },
+              ]}
+            />
             {selectedSubcontractors.length > 0 && (
               <>
                 {selectedActive.length > 0 && (

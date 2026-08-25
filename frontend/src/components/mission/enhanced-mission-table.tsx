@@ -30,6 +30,7 @@ import { toast } from "sonner";
 import { CreateMissionDialog } from "@/components/mission/create-mission-dialog";
 import { EditMissionDialog } from "@/components/mission/edit-mission-dialog";
 import { ChangeMissionStatusDialog } from "@/components/mission/change-mission-status-dialog";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
 const STATUS_VARIANT: Record<MissionStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -277,6 +278,33 @@ export function EnhancedMissionTable() {
                 Archive
               </Label>
             </div>
+            <ExportExcelButton<Mission>
+              endpoint="/missions"
+              total={total}
+              extraParams={{ showArchived }}
+              filenamePrefix="missions"
+              sheetName="Missions"
+              mapRow={(m) => ({
+                Reference: m.reference,
+                Client: clientNameById.get(m.clientId) || `Client #${m.clientId}`,
+                Route: `${m.loadingLocation} -> ${m.deliveryLocation}`,
+                Mode: m.executionMode === "IN_HOUSE" ? "In-house" : "Subcontracted",
+                Price: Number(m.clientPrice),
+                Currency: m.currency,
+                Status: m.status,
+                Date: new Date(m.missionDate).toLocaleDateString(),
+              })}
+              columns={[
+                { key: "Reference", header: "Reference" },
+                { key: "Client", header: "Client" },
+                { key: "Route", header: "Route" },
+                { key: "Mode", header: "Mode" },
+                { key: "Price", header: "Price" },
+                { key: "Currency", header: "Currency" },
+                { key: "Status", header: "Status" },
+                { key: "Date", header: "Date" },
+              ]}
+            />
             {selectedMissions.length > 0 && (
               <>
                 {selectedActiveMissions.length > 0 && (

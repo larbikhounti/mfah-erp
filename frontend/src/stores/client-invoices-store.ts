@@ -38,6 +38,7 @@ export interface FilterParams {
   search?: string;
   status?: InvoiceStatus;
   currency?: Currency;
+  clientId?: number;
   showArchived?: boolean;
 }
 
@@ -53,6 +54,7 @@ interface ClientInvoicesStore {
   error: string | null;
   selectedInvoices: number[];
   showArchived: boolean;
+  filterClientId: number | null;
 
   currentPage: number;
   pageSize: number;
@@ -70,6 +72,7 @@ interface ClientInvoicesStore {
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
   setShowArchived: (show: boolean) => void;
+  setFilterClientId: (clientId: number | null) => void;
 
   selectInvoice: (id: number) => void;
   selectAllInvoices: () => void;
@@ -85,6 +88,7 @@ export const useClientInvoicesStore = create<ClientInvoicesStore>((set, get) => 
   error: null,
   selectedInvoices: [],
   showArchived: false,
+  filterClientId: null,
 
   currentPage: 1,
   pageSize: 25,
@@ -94,7 +98,7 @@ export const useClientInvoicesStore = create<ClientInvoicesStore>((set, get) => 
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize, showArchived } = get();
+      const { currentPage, pageSize, showArchived, filterClientId } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       const apiParams: any = {
@@ -106,6 +110,8 @@ export const useClientInvoicesStore = create<ClientInvoicesStore>((set, get) => 
       if (params.search && params.search.trim()) apiParams.search = params.search.trim();
       if (params.status) apiParams.status = params.status;
       if (params.currency) apiParams.currency = params.currency;
+      const clientId = params.clientId ?? filterClientId;
+      if (clientId) apiParams.clientId = clientId;
 
       const response = await axiosInstance.get<ClientInvoicesResponse>("/client-invoices", {
         params: apiParams,
@@ -247,6 +253,11 @@ export const useClientInvoicesStore = create<ClientInvoicesStore>((set, get) => 
   setShowArchived: (show: boolean) => {
     set({ showArchived: show, currentPage: 1 });
     get().fetchInvoices({ showArchived: show });
+  },
+
+  setFilterClientId: (clientId: number | null) => {
+    set({ filterClientId: clientId, currentPage: 1 });
+    get().fetchInvoices({ clientId: clientId ?? undefined });
   },
 
   selectInvoice: (id: number) => {

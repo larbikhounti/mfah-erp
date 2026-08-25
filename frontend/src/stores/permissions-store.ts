@@ -9,7 +9,8 @@ export type PermissionModule =
   | "MISSIONS"
   | "CLIENT_INVOICES"
   | "SUBCONTRACTOR_BILLS"
-  | "DASHBOARD";
+  | "DASHBOARD"
+  | "REPORTS";
 
 export const ALL_PERMISSION_MODULES: PermissionModule[] = [
   "TRUCKS",
@@ -20,6 +21,7 @@ export const ALL_PERMISSION_MODULES: PermissionModule[] = [
   "CLIENT_INVOICES",
   "SUBCONTRACTOR_BILLS",
   "DASHBOARD",
+  "REPORTS",
 ];
 
 export interface Permission {

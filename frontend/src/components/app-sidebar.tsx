@@ -13,6 +13,7 @@ import {
   IconFileInvoice,
   IconReceipt,
   IconLockAccess,
+  IconReportAnalytics,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -71,6 +72,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Subcontractor Bills",
       url: "/dashboard/subcontractor-bills",
       icon: IconReceipt,
+    },
+    {
+      title: "Reports",
+      url: "/dashboard/reports",
+      icon: IconReportAnalytics,
     },
     {
       title: "Users",

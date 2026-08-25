@@ -28,6 +28,7 @@ import { useUsersStore, type User } from "@/stores/users-store";
 import { toast } from "sonner";
 import { CreateUserDialog } from "@/components/user/create-user-dialog";
 import { EditUserDialog } from "@/components/user/edit-user-dialog";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
 interface EnhancedUserTableProps {
@@ -303,6 +304,23 @@ export function EnhancedUserTable({}: EnhancedUserTableProps) {
                 Archive
               </Label>
             </div>
+            <ExportExcelButton<User>
+              endpoint="/users/admin/list/all"
+              total={total}
+              extraParams={{ showArchived }}
+              filenamePrefix="users"
+              sheetName="Users"
+              mapRow={(u) => ({
+                Name: u.name,
+                Email: u.email,
+                Role: u.role,
+              })}
+              columns={[
+                { key: "Name", header: "Name" },
+                { key: "Email", header: "Email" },
+                { key: "Role", header: "Role" },
+              ]}
+            />
             {selectedUsers.length > 0 && (
               <>
                 {selectedActiveUsers.length > 0 && (

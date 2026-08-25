@@ -40,6 +40,7 @@ enum PermissionModule {
   CLIENT_INVOICES
   SUBCONTRACTOR_BILLS
   DASHBOARD
+  REPORTS
 }
 
 model Permission {

@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { CreateTruckDialog } from "@/components/truck/create-truck-dialog";
 import { EditTruckDialog } from "@/components/truck/edit-truck-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
 const STATUS_VARIANT: Record<TruckStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -255,6 +256,29 @@ export function EnhancedTruckTable() {
                 Archive
               </Label>
             </div>
+            <ExportExcelButton<Truck>
+              endpoint="/trucks"
+              total={total}
+              extraParams={{ showArchived }}
+              filenamePrefix="trucks"
+              sheetName="Trucks"
+              mapRow={(t) => ({
+                "Plate Number": t.plateNumber,
+                Type: t.type,
+                PTAC: t.ptac,
+                Status: t.status,
+                "Insurance Expiry": new Date(t.insuranceExpiry).toLocaleDateString(),
+                Note: t.note ?? "",
+              })}
+              columns={[
+                { key: "Plate Number", header: "Plate Number" },
+                { key: "Type", header: "Type" },
+                { key: "PTAC", header: "PTAC" },
+                { key: "Status", header: "Status" },
+                { key: "Insurance Expiry", header: "Insurance Expiry" },
+                { key: "Note", header: "Note" },
+              ]}
+            />
             {selectedTrucks.length > 0 && (
               <>
                 {selectedActiveTrucks.length > 0 && (

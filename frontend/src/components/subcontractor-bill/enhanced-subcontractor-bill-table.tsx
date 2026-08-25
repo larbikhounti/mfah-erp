@@ -24,6 +24,13 @@ import {
 import { MoreHorizontal, Trash2, Paperclip, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useSubcontractorBillsStore, type SubcontractorBill, type InvoiceStatus } from "@/stores/subcontractor-bills-store";
 import { toast } from "sonner";
 import { CreateSubcontractorBillDialog } from "@/components/subcontractor-bill/create-subcontractor-bill-dialog";
@@ -31,6 +38,8 @@ import { RecordPaymentDialog } from "@/components/subcontractor-bill/record-paym
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
 import { ViewMissionDialog, MISSION_LINK_COLOR } from "@/components/mission/view-mission-dialog";
 import { useMissionsStore, type Mission } from "@/stores/missions-store";
+import { useSubcontractorsStore } from "@/stores/subcontractors-store";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
 const STATUS_VARIANT: Record<InvoiceStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -50,6 +59,7 @@ export function EnhancedSubcontractorBillTable() {
     pageSize,
     totalPages,
     showArchived,
+    filterSubcontractorId,
     fetchBills,
     deleteBill,
     bulkDeleteBills,
@@ -60,9 +70,11 @@ export function EnhancedSubcontractorBillTable() {
     setPage,
     setPageSize,
     setShowArchived,
+    setFilterSubcontractorId,
   } = useSubcontractorBillsStore();
 
   const { missions, fetchMissions } = useMissionsStore();
+  const { subcontractors, fetchSubcontractors } = useSubcontractorsStore();
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
@@ -74,7 +86,8 @@ export function EnhancedSubcontractorBillTable() {
   useEffect(() => {
     fetchBills();
     fetchMissions({ limit: 100 });
-  }, [fetchBills, fetchMissions]);
+    fetchSubcontractors({ limit: 100 });
+  }, [fetchBills, fetchMissions, fetchSubcontractors]);
 
   useEffect(() => {
     if (error) {
@@ -88,6 +101,12 @@ export function EnhancedSubcontractorBillTable() {
     missions.forEach((m) => map.set(m.id, m.status));
     return map;
   }, [missions]);
+
+  const subcontractorNameById = useMemo(() => {
+    const map = new Map<number, string>();
+    subcontractors.forEach((s) => map.set(s.id, s.companyName));
+    return map;
+  }, [subcontractors]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -151,6 +170,13 @@ export function EnhancedSubcontractorBillTable() {
       label: "Bill Number",
       sortable: true,
       render: (bill) => <div className="font-mono text-sm font-medium">{bill.billNumber}</div>,
+    },
+    {
+      key: "subcontractorId",
+      label: "Subcontractor",
+      render: (bill) => (
+        <div className="text-sm">{subcontractorNameById.get(bill.subcontractorId) ?? `#${bill.subcontractorId}`}</div>
+      ),
     },
     {
       key: "missionId",
@@ -289,6 +315,22 @@ export function EnhancedSubcontractorBillTable() {
         showCount={true}
         customHeader={
           <div className="flex items-center gap-4">
+            <Select
+              value={filterSubcontractorId ? String(filterSubcontractorId) : "all"}
+              onValueChange={(value) => setFilterSubcontractorId(value === "all" ? null : Number(value))}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by subcontractor" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All subcontractors</SelectItem>
+                {subcontractors.map((s) => (
+                  <SelectItem key={s.id} value={s.id.toString()}>
+                    {s.companyName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <div className="flex items-center space-x-2">
               <Switch
                 id="show-archived"
@@ -300,6 +342,33 @@ export function EnhancedSubcontractorBillTable() {
                 Archive
               </Label>
             </div>
+            <ExportExcelButton<SubcontractorBill>
+              endpoint="/subcontractor-bills"
+              total={total}
+              extraParams={{ showArchived, subcontractorId: filterSubcontractorId ?? undefined }}
+              filenamePrefix="subcontractor-bills"
+              sheetName="Subcontractor Bills"
+              mapRow={(bill) => ({
+                "Bill Number": bill.billNumber,
+                Subcontractor: subcontractorNameById.get(bill.subcontractorId) ?? `#${bill.subcontractorId}`,
+                Amount: Number(bill.amount),
+                Paid: Number(bill.amountPaid),
+                Currency: bill.currency,
+                Status: bill.status,
+                "Issue Date": new Date(bill.issueDate).toLocaleDateString(),
+                "Due Date": bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : "",
+              })}
+              columns={[
+                { key: "Bill Number", header: "Bill Number" },
+                { key: "Subcontractor", header: "Subcontractor" },
+                { key: "Amount", header: "Amount" },
+                { key: "Paid", header: "Paid" },
+                { key: "Currency", header: "Currency" },
+                { key: "Status", header: "Status" },
+                { key: "Issue Date", header: "Issue Date" },
+                { key: "Due Date", header: "Due Date" },
+              ]}
+            />
             {selectedBills.length > 0 && (
               <>
                 {selectedActive.length > 0 && (

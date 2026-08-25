@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { CreateDriverDialog } from "@/components/driver/create-driver-dialog";
 import { EditDriverDialog } from "@/components/driver/edit-driver-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
+import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
 const STATUS_VARIANT: Record<DriverStatus, "default" | "secondary" | "destructive" | "outline"> = {
@@ -244,6 +245,27 @@ export function EnhancedDriverTable() {
                 Archive
               </Label>
             </div>
+            <ExportExcelButton<Driver>
+              endpoint="/drivers"
+              total={total}
+              extraParams={{ showArchived }}
+              filenamePrefix="drivers"
+              sheetName="Drivers"
+              mapRow={(d) => ({
+                "Full Name": d.fullName,
+                CIN: d.cin,
+                Phone: d.phone,
+                Status: d.status,
+                Note: d.note ?? "",
+              })}
+              columns={[
+                { key: "Full Name", header: "Full Name" },
+                { key: "CIN", header: "CIN" },
+                { key: "Phone", header: "Phone" },
+                { key: "Status", header: "Status" },
+                { key: "Note", header: "Note" },
+              ]}
+            />
             {selectedDrivers.length > 0 && (
               <>
                 {selectedActiveDrivers.length > 0 && (
