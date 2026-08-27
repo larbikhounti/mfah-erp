@@ -22,6 +22,7 @@ jobs:
           command_timeout: 20m
           script: |
             set -e
+            git clone --depth 1 --branch main
             cd /root/apps/mfah-erp  # TODO: set the real path on the droplet
             git pull origin main
 
