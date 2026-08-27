@@ -97,7 +97,7 @@ export function EnhancedMissionTable() {
       setDeleteDialogOpen(false);
       setMissionToDelete(null);
     } catch {
-      toast.error("Failed to archive mission");
+      // The `error` effect above already toasts the real backend error.
     }
   };
 
@@ -107,7 +107,7 @@ export function EnhancedMissionTable() {
       toast.success(`${selectedMissions.length} missions archived successfully`);
       setBulkDeleteDialogOpen(false);
     } catch {
-      toast.error("Failed to archive missions");
+      // The `error` effect above already toasts the real backend error.
     }
   };
 
@@ -118,7 +118,7 @@ export function EnhancedMissionTable() {
       setRestoreDialogOpen(false);
       setMissionToRestore(null);
     } catch {
-      toast.error("Failed to restore mission");
+      // The `error` effect above already toasts the real backend error.
     }
   };
 
@@ -128,7 +128,7 @@ export function EnhancedMissionTable() {
       toast.success(`${selectedMissions.length} missions restored successfully`);
       setBulkRestoreDialogOpen(false);
     } catch {
-      toast.error("Failed to restore missions");
+      // The `error` effect above already toasts the real backend error.
     }
   };
 

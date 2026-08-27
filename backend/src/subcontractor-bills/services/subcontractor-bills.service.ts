@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { ExecutionMode, InvoiceStatus, Prisma } from '@prisma/client';
+import { ExecutionMode, Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { computeInvoiceStatus } from '../../helpers/helper.helpers';
 import { CreateSubcontractorBillDto } from '../dtos/create-subcontractor-bill.dto';
 import { UpdateSubcontractorBillDto } from '../dtos/update-subcontractor-bill.dto';
 import { UpdatePaymentDto } from '../dtos/update-payment.dto';
@@ -196,20 +197,14 @@ export class SubcontractorBillsService {
 
     const amount = Number(bill.amount);
     const amountPaid = dto.amountPaid;
-
-    let status: InvoiceStatus = InvoiceStatus.UNPAID;
-    if (amountPaid >= amount) {
-      status = InvoiceStatus.PAID;
-    } else if (amountPaid > 0) {
-      status = InvoiceStatus.PARTIALLY_PAID;
-    }
+    const { status, paidAt } = computeInvoiceStatus(amount, amountPaid);
 
     return this.prisma.subcontractorBill.update({
       where: { id },
       data: {
         amountPaid: new Prisma.Decimal(amountPaid),
         status,
-        paidAt: status === InvoiceStatus.PAID ? new Date() : null,
+        paidAt,
       },
     });
   }

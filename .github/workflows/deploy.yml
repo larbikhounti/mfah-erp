@@ -22,7 +22,7 @@ jobs:
           command_timeout: 20m
           script: |
             set -e
-            cd /path/to/mfah-mrp   # TODO: set the real path on the droplet
+            cd /root/apps/mfah-erp  # TODO: set the real path on the droplet
             git pull origin main
 
             # backend

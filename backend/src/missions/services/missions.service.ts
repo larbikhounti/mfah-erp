@@ -2,6 +2,7 @@ import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import {
   DriverStatus,
   ExecutionMode,
+  InvoiceStatus,
   MissionStatus,
   Prisma,
   TruckStatus,
@@ -14,6 +15,7 @@ import { BulkDeleteMissionsDto } from '../dtos/bulk-delete-missions.dto';
 import { FilterMissionsDto } from '../dtos/filter-missions.dto';
 import { MissionResponse } from '../types/mission-response.type';
 import { ClientInvoicesService } from '../../client-invoices/services/client-invoices.service';
+import { computeInvoiceStatus } from '../../helpers/helper.helpers';
 
 const MAX_REFERENCE_ATTEMPTS = 5;
 
@@ -181,7 +183,10 @@ export class MissionsService {
   }
 
   async update(id: number, data: UpdateMissionDto): Promise<MissionResponse> {
-    const existing = await this.prisma.mission.findUnique({ where: { id } });
+    const existing = await this.prisma.mission.findUnique({
+      where: { id },
+      include: { clientInvoice: true, subcontractorBill: true },
+    });
 
     if (!existing) {
       throw new HttpException('Mission not found', HttpStatus.NOT_FOUND);
@@ -210,29 +215,124 @@ export class MissionsService {
 
     const sanitized = await this.validateAndSanitize(merged);
 
+    // The ClientInvoice/SubcontractorBill amount, currency, and billed party
+    // are derived from the mission at creation time (see
+    // ClientInvoicesService.createForMission / SubcontractorBillsService.
+    // create) — so editing the mission's price/subcontractor here must keep
+    // whatever's already been billed in sync, rather than letting it drift
+    // from the mission that's supposed to be its source of truth.
+    const { clientInvoice, subcontractorBill } = existing;
+
+    const clientBillingChanged =
+      !!clientInvoice &&
+      (sanitized.clientId !== existing.clientId ||
+        sanitized.currency !== existing.currency ||
+        sanitized.clientPrice !== Number(existing.clientPrice));
+
+    if (clientBillingChanged && clientInvoice.status === InvoiceStatus.PAID) {
+      throw new HttpException(
+        "This mission's client invoice is already fully paid",
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const switchingAwayFromSubcontracted =
+      existing.executionMode === ExecutionMode.SUBCONTRACTED &&
+      sanitized.executionMode !== ExecutionMode.SUBCONTRACTED;
+
+    if (switchingAwayFromSubcontracted && subcontractorBill) {
+      throw new HttpException(
+        'This mission already has a subcontractor bill',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const existingSubcontractorCost = existing.subcontractorCost
+      ? Number(existing.subcontractorCost)
+      : null;
+    const subcontractorBillingChanged =
+      !!subcontractorBill &&
+      sanitized.executionMode === ExecutionMode.SUBCONTRACTED &&
+      (sanitized.subcontractorId !== existing.subcontractorId ||
+        sanitized.currency !== existing.currency ||
+        (sanitized.subcontractorCost ?? null) !== existingSubcontractorCost);
+
+    if (
+      subcontractorBillingChanged &&
+      subcontractorBill.status === InvoiceStatus.PAID
+    ) {
+      throw new HttpException(
+        "This mission's subcontractor bill is already fully paid",
+        HttpStatus.CONFLICT,
+      );
+    }
+
     try {
-      return await this.prisma.mission.update({
-        where: { id },
-        data: {
-          clientId: sanitized.clientId,
-          transportType: sanitized.transportType,
-          executionMode: sanitized.executionMode,
-          loadingLocation: sanitized.loadingLocation,
-          deliveryLocation: sanitized.deliveryLocation,
-          clientPrice: new Prisma.Decimal(sanitized.clientPrice),
-          currency: sanitized.currency,
-          subcontractorId: sanitized.subcontractorId,
-          subcontractorCost:
-            sanitized.subcontractorCost !== undefined &&
-            sanitized.subcontractorCost !== null
-              ? new Prisma.Decimal(sanitized.subcontractorCost)
-              : null,
-          truckId: sanitized.truckId,
-          driverId: sanitized.driverId,
-          missionDate: data.missionDate ?? undefined,
-          autoInvoice: data.autoInvoice ?? undefined,
-        },
-      });
+      const operations: Prisma.PrismaPromise<any>[] = [
+        this.prisma.mission.update({
+          where: { id },
+          data: {
+            clientId: sanitized.clientId,
+            transportType: sanitized.transportType,
+            executionMode: sanitized.executionMode,
+            loadingLocation: sanitized.loadingLocation,
+            deliveryLocation: sanitized.deliveryLocation,
+            clientPrice: new Prisma.Decimal(sanitized.clientPrice),
+            currency: sanitized.currency,
+            subcontractorId: sanitized.subcontractorId,
+            subcontractorCost:
+              sanitized.subcontractorCost !== undefined &&
+              sanitized.subcontractorCost !== null
+                ? new Prisma.Decimal(sanitized.subcontractorCost)
+                : null,
+            truckId: sanitized.truckId,
+            driverId: sanitized.driverId,
+            missionDate: data.missionDate ?? undefined,
+            autoInvoice: data.autoInvoice ?? undefined,
+          },
+        }),
+      ];
+
+      if (clientBillingChanged) {
+        const { status, paidAt } = computeInvoiceStatus(
+          sanitized.clientPrice,
+          Number(clientInvoice.amountPaid),
+        );
+        operations.push(
+          this.prisma.clientInvoice.update({
+            where: { id: clientInvoice.id },
+            data: {
+              clientId: sanitized.clientId,
+              amount: new Prisma.Decimal(sanitized.clientPrice),
+              currency: sanitized.currency,
+              status,
+              paidAt,
+            },
+          }),
+        );
+      }
+
+      if (subcontractorBillingChanged) {
+        const { status, paidAt } = computeInvoiceStatus(
+          sanitized.subcontractorCost,
+          Number(subcontractorBill.amountPaid),
+        );
+        operations.push(
+          this.prisma.subcontractorBill.update({
+            where: { id: subcontractorBill.id },
+            data: {
+              subcontractorId: sanitized.subcontractorId,
+              amount: new Prisma.Decimal(sanitized.subcontractorCost),
+              currency: sanitized.currency,
+              status,
+              paidAt,
+            },
+          }),
+        );
+      }
+
+      const [updated] = await this.prisma.$transaction(operations);
+      return updated;
     } catch (error) {
       this.logger.error(`Error updating mission with id ${id}:`, error);
       if (error instanceof HttpException) {

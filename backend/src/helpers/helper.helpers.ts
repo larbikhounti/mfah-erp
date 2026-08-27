@@ -1,4 +1,5 @@
 import { HttpException, Injectable } from '@nestjs/common';
+import { InvoiceStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Transform } from 'class-transformer';
 //import { dateRangesEnum } from 'src/tasks/dto/filter-tasks.dto';
@@ -66,6 +67,26 @@ export async function comparePassword(
 
 //   return { from, to };
 // }
+
+/**
+ * Shared amount-vs-amountPaid → status/paidAt derivation for ClientInvoice
+ * and SubcontractorBill (both use the same UNPAID/PARTIALLY_PAID/PAID
+ * threshold logic). Used by both models' updatePayment() and by
+ * MissionsService when a mission edit changes an already-billed amount.
+ */
+export function computeInvoiceStatus(
+  amount: number,
+  amountPaid: number,
+): { status: InvoiceStatus; paidAt: Date | null } {
+  let status: InvoiceStatus = InvoiceStatus.UNPAID;
+  if (amountPaid >= amount) {
+    status = InvoiceStatus.PAID;
+  } else if (amountPaid > 0) {
+    status = InvoiceStatus.PARTIALLY_PAID;
+  }
+
+  return { status, paidAt: status === InvoiceStatus.PAID ? new Date() : null };
+}
 
 export function TransformToISODate() {
   return Transform(({ value }) => {

@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { InvoiceStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
+import { computeInvoiceStatus } from '../../helpers/helper.helpers';
 import { CreateClientInvoiceDto } from '../dtos/create-client-invoice.dto';
 import { UpdateClientInvoiceDto } from '../dtos/update-client-invoice.dto';
 import { UpdatePaymentDto } from '../dtos/update-payment.dto';
@@ -190,20 +191,14 @@ export class ClientInvoicesService {
 
     const amount = Number(invoice.amount);
     const amountPaid = dto.amountPaid;
-
-    let status: InvoiceStatus = InvoiceStatus.UNPAID;
-    if (amountPaid >= amount) {
-      status = InvoiceStatus.PAID;
-    } else if (amountPaid > 0) {
-      status = InvoiceStatus.PARTIALLY_PAID;
-    }
+    const { status, paidAt } = computeInvoiceStatus(amount, amountPaid);
 
     return this.prisma.clientInvoice.update({
       where: { id },
       data: {
         amountPaid: new Prisma.Decimal(amountPaid),
         status,
-        paidAt: status === InvoiceStatus.PAID ? new Date() : null,
+        paidAt,
       },
     });
   }

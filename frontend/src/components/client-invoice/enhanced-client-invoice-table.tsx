@@ -34,6 +34,7 @@ import {
 import { useClientInvoicesStore, type ClientInvoice, type InvoiceStatus } from "@/stores/client-invoices-store";
 import { toast } from "sonner";
 import { CreateClientInvoiceDialog } from "@/components/client-invoice/create-client-invoice-dialog";
+import { EditClientInvoiceDialog } from "@/components/client-invoice/edit-client-invoice-dialog";
 import { RecordPaymentDialog } from "@/components/client-invoice/record-payment-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
 import { ViewMissionDialog, MISSION_LINK_COLOR } from "@/components/mission/view-mission-dialog";
@@ -235,6 +236,7 @@ export function EnhancedClientInvoiceTable() {
     {
       key: "dueDate",
       label: "Due Date",
+      sortable: true,
       render: (invoice) => (
         <div className="text-sm text-muted-foreground">
           {invoice.dueDate ? new Date(invoice.dueDate).toLocaleDateString() : "-"}
@@ -268,6 +270,9 @@ export function EnhancedClientInvoiceTable() {
           <DropdownMenuContent align="end">
             {!invoice.deletedAt && (
               <>
+                <DropdownMenuItem asChild>
+                  <EditClientInvoiceDialog invoice={invoice} />
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <RecordPaymentDialog invoice={invoice} />
                 </DropdownMenuItem>

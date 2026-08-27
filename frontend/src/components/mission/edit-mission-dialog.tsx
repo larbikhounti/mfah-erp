@@ -122,7 +122,8 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
       toast.success("Mission updated successfully");
       setIsOpen(false);
     } catch (error) {
-      toast.error("Failed to update mission");
+      // The store already surfaces the real backend error via its `error`
+      // state, toasted by the table — no generic toast here to avoid a duplicate.
     }
   };
 

@@ -34,6 +34,7 @@ import {
 import { useSubcontractorBillsStore, type SubcontractorBill, type InvoiceStatus } from "@/stores/subcontractor-bills-store";
 import { toast } from "sonner";
 import { CreateSubcontractorBillDialog } from "@/components/subcontractor-bill/create-subcontractor-bill-dialog";
+import { EditSubcontractorBillDialog } from "@/components/subcontractor-bill/edit-subcontractor-bill-dialog";
 import { RecordPaymentDialog } from "@/components/subcontractor-bill/record-payment-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
 import { ViewMissionDialog, MISSION_LINK_COLOR } from "@/components/mission/view-mission-dialog";
@@ -235,6 +236,7 @@ export function EnhancedSubcontractorBillTable() {
     {
       key: "dueDate",
       label: "Due Date",
+      sortable: true,
       render: (bill) => (
         <div className="text-sm text-muted-foreground">
           {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : "-"}
@@ -268,6 +270,9 @@ export function EnhancedSubcontractorBillTable() {
           <DropdownMenuContent align="end">
             {!bill.deletedAt && (
               <>
+                <DropdownMenuItem asChild>
+                  <EditSubcontractorBillDialog bill={bill} />
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <RecordPaymentDialog bill={bill} />
                 </DropdownMenuItem>

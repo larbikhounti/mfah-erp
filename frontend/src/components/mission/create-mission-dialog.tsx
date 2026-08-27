@@ -139,7 +139,8 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
       resetForm();
       setIsOpen(false);
     } catch (error) {
-      toast.error("Failed to create mission");
+      // The store already surfaces the real backend error via its `error`
+      // state, toasted by the table — no generic toast here to avoid a duplicate.
     }
   };
 
