@@ -16,7 +16,6 @@ export default function DriversPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold">Drivers</h1>
-          <p className="text-muted-foreground">Manage drivers: CIN, phone, and status.</p>
         </div>
       </div>
 

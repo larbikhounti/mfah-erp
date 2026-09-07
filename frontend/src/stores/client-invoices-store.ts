@@ -47,6 +47,62 @@ export interface ClientInvoicesResponse {
   total: number;
 }
 
+// Suggested defaults for the "Generate Invoice" dialog, computed server-side
+// from the invoice/mission/client/truck. Fields with no source of truth in
+// our schema (remorque, cmr, commande, tmsa, immobilisation,
+// double_equipage, gazoil, client_city) aren't included here — the dialog
+// starts those blank/off.
+export interface InvoicePdfPrefill {
+  client_name: string;
+  client_ice: string;
+  invoice_number: string;
+  invoice_date: string;
+  loading_date: string;
+  delivery_date: string;
+  matricule: string;
+  operation: string;
+  designation: string;
+  quantity: string;
+  unit_price: string;
+  line_total: string;
+  total_ht: string;
+  tva: string;
+  total_ttc: string;
+  amount_in_words: string;
+  hasTruck: boolean;
+  currency: Currency;
+}
+
+// One entry per fillable field on the invoice PDF template — matches the
+// backend's GenerateInvoicePdfDto/the template's own AcroForm field names.
+export interface InvoicePdfFields {
+  client_name?: string;
+  client_city?: string;
+  client_ice?: string;
+  invoice_number?: string;
+  invoice_date?: string;
+  loading_date?: string;
+  delivery_date?: string;
+  matricule?: string;
+  remorque?: string;
+  operation?: string;
+  cmr?: string;
+  commande?: string;
+  tmsa?: string;
+  immobilisation?: string;
+  double_equipage?: string;
+  gazoil?: string;
+  extras_total?: string;
+  designation?: string;
+  quantity?: string;
+  unit_price?: string;
+  line_total?: string;
+  tva?: string;
+  total_ht?: string;
+  amount_in_words?: string;
+  total_ttc?: string;
+}
+
 interface ClientInvoicesStore {
   invoices: ClientInvoice[];
   total: number;
@@ -64,6 +120,8 @@ interface ClientInvoicesStore {
   createInvoice: (data: CreateClientInvoicePayload) => Promise<void>;
   updateInvoice: (id: number, data: UpdateClientInvoicePayload) => Promise<void>;
   recordPayment: (id: number, amountPaid: number) => Promise<void>;
+  getPdfPrefill: (id: number) => Promise<InvoicePdfPrefill>;
+  generateInvoicePdf: (id: number, fields: InvoicePdfFields) => Promise<Blob>;
   deleteInvoice: (id: number) => Promise<void>;
   bulkDeleteInvoices: (invoiceIds: number[]) => Promise<void>;
   restoreInvoice: (id: number) => Promise<void>;
@@ -176,6 +234,18 @@ export const useClientInvoicesStore = create<ClientInvoicesStore>((set, get) => 
       });
       throw error;
     }
+  },
+
+  getPdfPrefill: async (id: number) => {
+    const response = await axiosInstance.get<InvoicePdfPrefill>(`/client-invoices/admin/${id}/pdf-prefill`);
+    return response.data;
+  },
+
+  generateInvoicePdf: async (id: number, fields: InvoicePdfFields) => {
+    const response = await axiosInstance.post(`/client-invoices/admin/${id}/generate-pdf`, fields, {
+      responseType: "blob",
+    });
+    return response.data as Blob;
   },
 
   deleteInvoice: async (id: number) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,22 +24,18 @@ import {
 import { MoreHorizontal, Trash2, Paperclip, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
+import { useRemoteComboboxOptions } from "@/hooks/use-remote-combobox-options";
 import { useClientInvoicesStore, type ClientInvoice, type InvoiceStatus } from "@/stores/client-invoices-store";
 import { toast } from "sonner";
 import { CreateClientInvoiceDialog } from "@/components/client-invoice/create-client-invoice-dialog";
 import { EditClientInvoiceDialog } from "@/components/client-invoice/edit-client-invoice-dialog";
 import { RecordPaymentDialog } from "@/components/client-invoice/record-payment-dialog";
+import { GenerateInvoicePdfDialog } from "@/components/client-invoice/generate-invoice-pdf-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
 import { ViewMissionDialog, MISSION_LINK_COLOR } from "@/components/mission/view-mission-dialog";
 import { useMissionsStore, type Mission } from "@/stores/missions-store";
-import { useClientsStore } from "@/stores/clients-store";
+import { useClientsStore, type Client } from "@/stores/clients-store";
 import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
@@ -76,6 +72,13 @@ export function EnhancedClientInvoiceTable() {
 
   const { missions, fetchMissions } = useMissionsStore();
   const { clients, fetchClients } = useClientsStore();
+
+  const mapClient = useCallback((c: Client) => ({ value: c.id.toString(), label: c.companyName }), []);
+  const {
+    options: clientFilterOptions,
+    loading: clientFilterLoading,
+    search: searchClientFilter,
+  } = useRemoteComboboxOptions<Client>({ endpoint: "/clients", mapItem: mapClient });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
@@ -276,6 +279,9 @@ export function EnhancedClientInvoiceTable() {
                 <DropdownMenuItem asChild>
                   <RecordPaymentDialog invoice={invoice} />
                 </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <GenerateInvoicePdfDialog invoice={invoice} />
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
                     setInvoiceToDelete(invoice.id);
@@ -320,22 +326,18 @@ export function EnhancedClientInvoiceTable() {
         showCount={true}
         customHeader={
           <div className="flex items-center gap-4">
-            <Select
-              value={filterClientId ? String(filterClientId) : "all"}
-              onValueChange={(value) => setFilterClientId(value === "all" ? null : Number(value))}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by client" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All clients</SelectItem>
-                {clients.map((c) => (
-                  <SelectItem key={c.id} value={c.id.toString()}>
-                    {c.companyName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              value={filterClientId ? String(filterClientId) : ""}
+              onChange={(value) => setFilterClientId(value ? Number(value) : null)}
+              onSearchChange={searchClientFilter}
+              loading={clientFilterLoading}
+              selectedLabel={filterClientId ? clientNameById.get(filterClientId) : undefined}
+              placeholder="Filter by client"
+              searchPlaceholder="Search clients..."
+              emptyText="No client found."
+              className="w-[200px]"
+              options={[{ value: "", label: "All clients" }, ...clientFilterOptions]}
+            />
             <div className="flex items-center space-x-2">
               <Switch
                 id="show-archived"

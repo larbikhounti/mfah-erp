@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -101,7 +100,6 @@ export function CreateTruckDialog({ trigger }: CreateTruckDialogProps) {
             <TruckIcon className="h-5 w-5" />
             Add New Truck
           </DialogTitle>
-          <DialogDescription>Register a new truck in the fleet.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">

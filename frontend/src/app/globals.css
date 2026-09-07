@@ -114,6 +114,101 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+/*
+ * Color theme presets — picked on the Settings page, persisted to
+ * localStorage, applied as `data-color-theme` on <html> (see
+ * use-appearance-settings.ts). Only the accent-driving variables change;
+ * surfaces (background/card/border/muted/etc.) stay neutral regardless of
+ * preset, matching shadcn's own theme picker. "blue" is the default look
+ * defined on :root/.dark above, so it has no override block here.
+ */
+[data-color-theme="zinc"] {
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.205 0 0);
+  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-ring: oklch(0.205 0 0);
+}
+.dark[data-color-theme="zinc"] {
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --ring: oklch(0.556 0 0);
+  --sidebar-primary: oklch(0.922 0 0);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+[data-color-theme="rose"] {
+  --primary: oklch(0.645 0.246 16.44);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.645 0.246 16.44);
+  --sidebar-primary: oklch(0.645 0.246 16.44);
+  --sidebar-ring: oklch(0.645 0.246 16.44);
+}
+.dark[data-color-theme="rose"] {
+  --primary: oklch(0.6 0.22 16.44);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.6 0.22 16.44);
+  --sidebar-primary: oklch(0.6 0.22 16.44);
+  --sidebar-ring: oklch(0.6 0.22 16.44);
+}
+
+[data-color-theme="green"] {
+  --primary: oklch(0.6 0.16 145);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.6 0.16 145);
+  --sidebar-primary: oklch(0.6 0.16 145);
+  --sidebar-ring: oklch(0.6 0.16 145);
+}
+.dark[data-color-theme="green"] {
+  --primary: oklch(0.6 0.16 145);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.6 0.16 145);
+  --sidebar-primary: oklch(0.6 0.16 145);
+  --sidebar-ring: oklch(0.6 0.16 145);
+}
+
+[data-color-theme="orange"] {
+  --primary: oklch(0.705 0.19 45);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.705 0.19 45);
+  --sidebar-primary: oklch(0.705 0.19 45);
+  --sidebar-ring: oklch(0.705 0.19 45);
+}
+.dark[data-color-theme="orange"] {
+  --primary: oklch(0.7 0.19 45);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.7 0.19 45);
+  --sidebar-primary: oklch(0.7 0.19 45);
+  --sidebar-ring: oklch(0.7 0.19 45);
+}
+
+[data-color-theme="violet"] {
+  --primary: oklch(0.606 0.25 293);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.606 0.25 293);
+  --sidebar-primary: oklch(0.606 0.25 293);
+  --sidebar-ring: oklch(0.606 0.25 293);
+}
+.dark[data-color-theme="violet"] {
+  --primary: oklch(0.6 0.24 293);
+  --primary-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.6 0.24 293);
+  --sidebar-primary: oklch(0.6 0.24 293);
+  --sidebar-ring: oklch(0.6 0.24 293);
+}
+
+/*
+ * Font size / density — scales the root font size so every rem-based
+ * Tailwind utility (text sizes, padding, gaps, radii) shrinks or grows
+ * together. "md" is the browser default (16px), so it has no override.
+ */
+html[data-font-size="sm"] {
+  font-size: 14px;
+}
+html[data-font-size="lg"] {
+  font-size: 18px;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

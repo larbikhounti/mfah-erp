@@ -16,9 +16,6 @@ export default function MissionsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold">Missions</h1>
-          <p className="text-muted-foreground">
-            Book and track transport missions, in-house or subcontracted.
-          </p>
         </div>
       </div>
 

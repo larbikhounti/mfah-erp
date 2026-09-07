@@ -8,19 +8,12 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Plus, User } from "lucide-react";
 import { useUsersStore, type CreateUserPayload } from "@/stores/users-store";
 import { useRolesStore } from "@/stores/roles-store";
@@ -106,9 +99,6 @@ export function CreateUserDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New User</DialogTitle>
-          <DialogDescription>
-            Create a new user account with the required information.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
@@ -146,28 +136,16 @@ export function CreateUserDialog({
             </div>
             <div className="grid gap-2">
               <Label htmlFor="role">Role</Label>
-              <Select value={role} onValueChange={(value) => setRole(value)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {rolesLoading ? (
-                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                      Loading roles...
-                    </div>
-                  ) : roles.length > 0 ? (
-                    roles.map((roleItem) => (
-                      <SelectItem key={roleItem.id} value={roleItem.id.toString()}>
-                        {roleItem.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
-                      No roles available
-                    </div>
-                  )}
-                </SelectContent>
-              </Select>
+              <Combobox
+                id="role"
+                value={role}
+                onChange={setRole}
+                disabled={rolesLoading}
+                placeholder={rolesLoading ? "Loading roles..." : "Select role"}
+                searchPlaceholder="Search roles..."
+                emptyText="No roles available."
+                options={roles.map((roleItem) => ({ value: roleItem.id.toString(), label: roleItem.name }))}
+              />
             </div>
           </div>
           <DialogFooter className="mt-8">

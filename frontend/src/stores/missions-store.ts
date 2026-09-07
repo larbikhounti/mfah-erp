@@ -54,6 +54,9 @@ export interface FilterParams {
   transportType?: TransportType;
   executionMode?: ExecutionMode;
   currency?: Currency;
+  clientId?: number;
+  startDate?: string;
+  endDate?: string;
   showArchived?: boolean;
 }
 
@@ -69,6 +72,9 @@ interface MissionsStore {
   error: string | null;
   selectedMissions: number[];
   showArchived: boolean;
+  filterClientId: number | null;
+  filterStartDate: string | null;
+  filterEndDate: string | null;
 
   currentPage: number;
   pageSize: number;
@@ -87,6 +93,8 @@ interface MissionsStore {
   setPage: (page: number) => void;
   setPageSize: (pageSize: number) => void;
   setShowArchived: (show: boolean) => void;
+  setFilterClientId: (clientId: number | null) => void;
+  setFilterDateRange: (startDate: string | null, endDate: string | null) => void;
 
   selectMission: (id: number) => void;
   selectAllMissions: () => void;
@@ -102,6 +110,9 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
   error: null,
   selectedMissions: [],
   showArchived: false,
+  filterClientId: null,
+  filterStartDate: null,
+  filterEndDate: null,
 
   currentPage: 1,
   pageSize: 25,
@@ -111,7 +122,7 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize, showArchived } = get();
+      const { currentPage, pageSize, showArchived, filterClientId, filterStartDate, filterEndDate } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       const apiParams: any = {
@@ -125,6 +136,13 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
       if (params.transportType) apiParams.transportType = params.transportType;
       if (params.executionMode) apiParams.executionMode = params.executionMode;
       if (params.currency) apiParams.currency = params.currency;
+
+      const clientId = params.clientId ?? filterClientId;
+      if (clientId) apiParams.clientId = clientId;
+      const startDate = params.startDate ?? filterStartDate;
+      if (startDate) apiParams.startDate = startDate;
+      const endDate = params.endDate ?? filterEndDate;
+      if (endDate) apiParams.endDate = endDate;
 
       const response = await axiosInstance.get<MissionsResponse>("/missions", {
         params: apiParams,
@@ -271,6 +289,16 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
   setShowArchived: (show: boolean) => {
     set({ showArchived: show, currentPage: 1 });
     get().fetchMissions({ showArchived: show });
+  },
+
+  setFilterClientId: (clientId: number | null) => {
+    set({ filterClientId: clientId, currentPage: 1 });
+    get().fetchMissions({ clientId: clientId ?? undefined });
+  },
+
+  setFilterDateRange: (startDate: string | null, endDate: string | null) => {
+    set({ filterStartDate: startDate, filterEndDate: endDate, currentPage: 1 });
+    get().fetchMissions({ startDate: startDate ?? undefined, endDate: endDate ?? undefined });
   },
 
   selectMission: (id: number) => {

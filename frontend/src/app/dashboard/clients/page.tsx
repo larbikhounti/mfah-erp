@@ -16,9 +16,6 @@ export default function ClientsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold">Clients</h1>
-          <p className="text-muted-foreground">
-            Manage client companies: contact info, ICE, and bank details.
-          </p>
         </div>
       </div>
 

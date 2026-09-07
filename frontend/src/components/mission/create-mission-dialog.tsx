@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,12 +9,21 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Select,
   SelectContent,
@@ -22,6 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
+import { useRemoteComboboxOptions } from "@/hooks/use-remote-combobox-options";
 import { Plus, Route } from "lucide-react";
 import {
   useMissionsStore,
@@ -30,10 +41,10 @@ import {
   type TransportType,
   type Currency,
 } from "@/stores/missions-store";
-import { useClientsStore } from "@/stores/clients-store";
+import type { Client } from "@/stores/clients-store";
+import type { Subcontractor } from "@/stores/subcontractors-store";
 import { useTrucksStore } from "@/stores/trucks-store";
 import { useDriversStore } from "@/stores/drivers-store";
-import { useSubcontractorsStore } from "@/stores/subcontractors-store";
 import { toast } from "sonner";
 import { Loader } from "../loader";
 
@@ -46,13 +57,29 @@ const CURRENCY_OPTIONS: Currency[] = ["MAD", "EUR"];
 
 export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
   const { createMission, loading } = useMissionsStore();
-  const { clients, fetchClients } = useClientsStore();
   const { trucks, fetchTrucks } = useTrucksStore();
   const { drivers, fetchDrivers } = useDriversStore();
-  const { subcontractors, fetchSubcontractors } = useSubcontractorsStore();
+
+  const mapClient = useCallback((c: Client) => ({ value: c.id.toString(), label: c.companyName }), []);
+  const {
+    options: clientOptions,
+    loading: clientsLoading,
+    search: searchClients,
+  } = useRemoteComboboxOptions<Client>({ endpoint: "/clients", mapItem: mapClient });
+
+  const mapSubcontractor = useCallback(
+    (s: Subcontractor) => ({ value: s.id.toString(), label: s.companyName }),
+    []
+  );
+  const {
+    options: subcontractorOptions,
+    loading: subcontractorsLoading,
+    search: searchSubcontractors,
+  } = useRemoteComboboxOptions<Subcontractor>({ endpoint: "/subcontractors", mapItem: mapSubcontractor });
 
   const [isOpen, setIsOpen] = useState(false);
   const [clientId, setClientId] = useState("");
+  const [clientLabel, setClientLabel] = useState("");
   const [transportType, setTransportType] = useState<TransportType>("EXPORT");
   const [executionMode, setExecutionMode] = useState<ExecutionMode>("IN_HOUSE");
   const [loadingLocation, setLoadingLocation] = useState("");
@@ -62,23 +89,24 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
   const [truckId, setTruckId] = useState("");
   const [driverId, setDriverId] = useState("");
   const [subcontractorId, setSubcontractorId] = useState("");
+  const [subcontractorLabel, setSubcontractorLabel] = useState("");
   const [subcontractorCost, setSubcontractorCost] = useState("");
   const [missionDate, setMissionDate] = useState("");
-  const [autoInvoice, setAutoInvoice] = useState(false);
+  const [autoInvoice, setAutoInvoice] = useState(true);
+  const [confirmNoInvoiceOpen, setConfirmNoInvoiceOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (isOpen) {
-      fetchClients({ limit: 100 });
       fetchTrucks({ limit: 100 });
       fetchDrivers({ limit: 100 });
-      fetchSubcontractors({ limit: 100 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const resetForm = () => {
     setClientId("");
+    setClientLabel("");
     setTransportType("EXPORT");
     setExecutionMode("IN_HOUSE");
     setLoadingLocation("");
@@ -88,9 +116,10 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
     setTruckId("");
     setDriverId("");
     setSubcontractorId("");
+    setSubcontractorLabel("");
     setSubcontractorCost("");
     setMissionDate("");
-    setAutoInvoice(false);
+    setAutoInvoice(true);
     setErrors({});
   };
 
@@ -166,24 +195,27 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
             <Route className="h-5 w-5" />
             Add New Mission
           </DialogTitle>
-          <DialogDescription>Book a new transport mission.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="clientId">Client *</Label>
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger id="clientId" className={"w-full" + (errors.clientId ? " border-destructive" : "")}>
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.companyName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                id="clientId"
+                value={clientId}
+                onChange={(value) => {
+                  setClientId(value);
+                  setClientLabel(clientOptions.find((o) => o.value === value)?.label ?? "");
+                }}
+                onSearchChange={searchClients}
+                loading={clientsLoading}
+                selectedLabel={clientLabel}
+                placeholder="Select client"
+                searchPlaceholder="Search clients..."
+                emptyText="No client found."
+                className={errors.clientId ? "border-destructive" : ""}
+                options={clientOptions}
+              />
               {errors.clientId && <p className="text-sm text-destructive">{errors.clientId}</p>}
             </div>
             <div className="grid gap-2">
@@ -286,34 +318,30 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
             <div className="grid gap-4 md:grid-cols-2 rounded-md border p-4">
               <div className="grid gap-2">
                 <Label htmlFor="truckId">Truck *</Label>
-                <Select value={truckId} onValueChange={setTruckId}>
-                  <SelectTrigger id="truckId" className={"w-full" + (errors.truckId ? " border-destructive" : "")}>
-                    <SelectValue placeholder="Select truck" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {trucks.map((t) => (
-                      <SelectItem key={t.id} value={t.id.toString()}>
-                        {t.plateNumber} ({t.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  id="truckId"
+                  value={truckId}
+                  onChange={setTruckId}
+                  placeholder="Select truck"
+                  searchPlaceholder="Search trucks..."
+                  emptyText="No truck found."
+                  className={errors.truckId ? "border-destructive" : ""}
+                  options={trucks.map((t) => ({ value: t.id.toString(), label: `${t.plateNumber} (${t.status})` }))}
+                />
                 {errors.truckId && <p className="text-sm text-destructive">{errors.truckId}</p>}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="driverId">Driver *</Label>
-                <Select value={driverId} onValueChange={setDriverId}>
-                  <SelectTrigger id="driverId" className={"w-full" + (errors.driverId ? " border-destructive" : "")}>
-                    <SelectValue placeholder="Select driver" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {drivers.map((d) => (
-                      <SelectItem key={d.id} value={d.id.toString()}>
-                        {d.fullName} ({d.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  id="driverId"
+                  value={driverId}
+                  onChange={setDriverId}
+                  placeholder="Select driver"
+                  searchPlaceholder="Search drivers..."
+                  emptyText="No driver found."
+                  className={errors.driverId ? "border-destructive" : ""}
+                  options={drivers.map((d) => ({ value: d.id.toString(), label: `${d.fullName} (${d.status})` }))}
+                />
                 {errors.driverId && <p className="text-sm text-destructive">{errors.driverId}</p>}
               </div>
             </div>
@@ -321,21 +349,22 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
             <div className="grid gap-4 md:grid-cols-2 rounded-md border p-4">
               <div className="grid gap-2">
                 <Label htmlFor="subcontractorId">Subcontractor *</Label>
-                <Select value={subcontractorId} onValueChange={setSubcontractorId}>
-                  <SelectTrigger
-                    id="subcontractorId"
-                    className={"w-full" + (errors.subcontractorId ? " border-destructive" : "")}
-                  >
-                    <SelectValue placeholder="Select subcontractor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subcontractors.map((s) => (
-                      <SelectItem key={s.id} value={s.id.toString()}>
-                        {s.companyName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  id="subcontractorId"
+                  value={subcontractorId}
+                  onChange={(value) => {
+                    setSubcontractorId(value);
+                    setSubcontractorLabel(subcontractorOptions.find((o) => o.value === value)?.label ?? "");
+                  }}
+                  onSearchChange={searchSubcontractors}
+                  loading={subcontractorsLoading}
+                  selectedLabel={subcontractorLabel}
+                  placeholder="Select subcontractor"
+                  searchPlaceholder="Search subcontractors..."
+                  emptyText="No subcontractor found."
+                  className={errors.subcontractorId ? "border-destructive" : ""}
+                  options={subcontractorOptions}
+                />
                 {errors.subcontractorId && <p className="text-sm text-destructive">{errors.subcontractorId}</p>}
               </div>
               <div className="grid gap-2">
@@ -359,7 +388,13 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
             <Checkbox
               id="autoInvoice"
               checked={autoInvoice}
-              onCheckedChange={(checked) => setAutoInvoice(checked === true)}
+              onCheckedChange={(checked) => {
+                if (checked === true) {
+                  setAutoInvoice(true);
+                } else {
+                  setConfirmNoInvoiceOpen(true);
+                }
+              }}
             />
             <Label htmlFor="autoInvoice" className="text-sm font-normal">
               Automatically create the client invoice for this mission
@@ -383,6 +418,22 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
           </DialogFooter>
         </form>
       </DialogContent>
+
+      <AlertDialog open={confirmNoInvoiceOpen} onOpenChange={setConfirmNoInvoiceOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Turn off automatic invoicing?</AlertDialogTitle>
+            <AlertDialogDescription>
+              The client invoice won&apos;t be created for this mission. You&apos;ll need to create it manually
+              afterwards from the Invoices section.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep it on</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setAutoInvoice(false)}>Turn off</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

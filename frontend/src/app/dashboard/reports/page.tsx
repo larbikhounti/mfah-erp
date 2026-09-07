@@ -1,18 +1,13 @@
 "use client";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import RangeDate from "@/components/range-date";
 import { Loader } from "@/components/loader";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
+import { useRemoteComboboxOptions } from "@/hooks/use-remote-combobox-options";
 import { useReportsStore } from "@/stores/reports-store";
-import { useClientsStore } from "@/stores/clients-store";
+import type { Client } from "@/stores/clients-store";
 import { DriverReportTable } from "@/components/reports/driver-report-table";
 import { TruckReportTable } from "@/components/reports/truck-report-table";
 
@@ -29,12 +24,17 @@ export default function ReportsPage() {
     clearError,
   } = useReportsStore();
 
-  const { clients, fetchClients } = useClientsStore();
+  const [clientLabel, setClientLabel] = useState("");
+  const mapClient = useCallback((c: Client) => ({ value: c.id.toString(), label: c.companyName }), []);
+  const {
+    options: clientOptions,
+    loading: clientsLoading,
+    search: searchClients,
+  } = useRemoteComboboxOptions<Client>({ endpoint: "/clients", mapItem: mapClient });
 
   useEffect(() => {
     fetchReports();
-    fetchClients({ limit: 100 });
-  }, [fetchReports, fetchClients]);
+  }, [fetchReports]);
 
   useEffect(() => {
     if (error) {
@@ -54,25 +54,23 @@ export default function ReportsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Reports</h1>
-          <p className="text-muted-foreground">Driver and truck activity for a date range.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Select
-            value={clientId ? String(clientId) : "all"}
-            onValueChange={(value) => setClientId(value === "all" ? null : Number(value))}
-          >
-            <SelectTrigger className="w-[200px]">
-              <SelectValue placeholder="Filter by client" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Clients</SelectItem>
-              {clients.map((c) => (
-                <SelectItem key={c.id} value={c.id.toString()}>
-                  {c.companyName}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Combobox
+            value={clientId ? String(clientId) : ""}
+            onChange={(value) => {
+              setClientId(value ? Number(value) : null);
+              setClientLabel(clientOptions.find((o) => o.value === value)?.label ?? "");
+            }}
+            onSearchChange={searchClients}
+            loading={clientsLoading}
+            selectedLabel={clientLabel}
+            placeholder="Filter by client"
+            searchPlaceholder="Search clients..."
+            emptyText="No client found."
+            className="w-[200px]"
+            options={[{ value: "", label: "All Clients" }, ...clientOptions]}
+          />
           <RangeDate onDateChange={handleDateChange} />
         </div>
       </div>

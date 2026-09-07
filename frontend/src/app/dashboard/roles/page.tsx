@@ -17,9 +17,6 @@ export default function RolesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold">Roles Management</h1>
-          <p className="text-muted-foreground">
-            Manage user roles and permissions to control access levels throughout the system
-          </p>
         </div>
       </div>
 

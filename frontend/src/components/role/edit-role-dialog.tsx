@@ -129,9 +129,7 @@ export function EditRoleDialog({
             <Shield className="h-5 w-5" />
             Edit Role
           </DialogTitle>
-          <DialogDescription>
-            Update the role information. This will affect all users assigned to this role.
-          </DialogDescription>
+          <DialogDescription>This will affect all users assigned to this role.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

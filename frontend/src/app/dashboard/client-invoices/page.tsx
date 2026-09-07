@@ -16,9 +16,6 @@ export default function ClientInvoicesPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold">Client Invoices</h1>
-          <p className="text-muted-foreground">
-            Invoices billed to clients for missions, and their payment status.
-          </p>
         </div>
       </div>
 

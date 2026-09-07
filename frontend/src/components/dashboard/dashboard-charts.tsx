@@ -5,7 +5,6 @@ import { Label, Pie, PieChart, Bar, BarChart, CartesianGrid, XAxis } from "recha
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -70,7 +69,6 @@ export function DashboardCharts({ summary }: { summary: DashboardSummary }) {
       <Card className="flex flex-col">
         <CardHeader className="items-center pb-0">
           <CardTitle>Mission Status</CardTitle>
-          <CardDescription>Distribution for the selected period</CardDescription>
         </CardHeader>
         <CardContent className="flex-1 pb-0">
           {totalMissions === 0 ? (
@@ -117,7 +115,6 @@ export function DashboardCharts({ summary }: { summary: DashboardSummary }) {
       <Card>
         <CardHeader>
           <CardTitle>Revenue vs. Spend</CardTitle>
-          <CardDescription>Client billing vs. subcontractor payables, by currency</CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer config={financeConfig} className="max-h-[280px] w-full">

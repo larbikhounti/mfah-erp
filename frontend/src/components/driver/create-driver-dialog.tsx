@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -97,7 +96,6 @@ export function CreateDriverDialog({ trigger }: CreateDriverDialogProps) {
             <UserRound className="h-5 w-5" />
             Add New Driver
           </DialogTitle>
-          <DialogDescription>Register a new driver.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-2">

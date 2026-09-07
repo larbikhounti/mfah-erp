@@ -104,7 +104,6 @@ export default function DashboardPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Dashboard</h1>
-          <p className="text-muted-foreground">Mission and revenue overview.</p>
         </div>
         <RangeDate onDateChange={handleDateChange} />
       </div>

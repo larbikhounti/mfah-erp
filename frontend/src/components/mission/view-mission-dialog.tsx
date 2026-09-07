@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -100,7 +99,6 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
             {mission ? `Mission ${mission.reference}` : "Mission"}
             {mission?.deletedAt && <Badge variant="destructive">Deleted</Badge>}
           </DialogTitle>
-          <DialogDescription>View-only mission details.</DialogDescription>
         </DialogHeader>
 
         {notFound && (

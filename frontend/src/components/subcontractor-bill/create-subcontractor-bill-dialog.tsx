@@ -14,13 +14,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import { Plus, Receipt } from "lucide-react";
 import { useSubcontractorBillsStore } from "@/stores/subcontractor-bills-store";
 import { useMissionsStore } from "@/stores/missions-store";
@@ -106,18 +100,19 @@ export function CreateSubcontractorBillDialog({ trigger }: CreateSubcontractorBi
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-2">
             <Label htmlFor="missionId">Mission *</Label>
-            <Select value={missionId} onValueChange={setMissionId}>
-              <SelectTrigger id="missionId" className={"w-full" + (errors.missionId ? " border-destructive" : "")}>
-                <SelectValue placeholder="Select subcontracted mission" />
-              </SelectTrigger>
-              <SelectContent>
-                {subcontractedMissions.map((m) => (
-                  <SelectItem key={m.id} value={m.id.toString()}>
-                    {m.reference} — {Number(m.subcontractorCost ?? 0).toLocaleString()} {m.currency}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              id="missionId"
+              value={missionId}
+              onChange={setMissionId}
+              placeholder="Select subcontracted mission"
+              searchPlaceholder="Search missions..."
+              emptyText="No mission found."
+              className={errors.missionId ? "border-destructive" : ""}
+              options={subcontractedMissions.map((m) => ({
+                value: m.id.toString(),
+                label: `${m.reference} — ${Number(m.subcontractorCost ?? 0).toLocaleString()} ${m.currency}`,
+              }))}
+            />
             {errors.missionId && <p className="text-sm text-destructive">{errors.missionId}</p>}
           </div>
           <div className="grid gap-4 md:grid-cols-2">

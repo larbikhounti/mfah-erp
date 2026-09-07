@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,8 +24,11 @@ import {
 import { MoreHorizontal, Trash2, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
+import { useRemoteComboboxOptions } from "@/hooks/use-remote-combobox-options";
 import { useMissionsStore, type Mission, type MissionStatus } from "@/stores/missions-store";
-import { useClientsStore } from "@/stores/clients-store";
+import { useClientsStore, type Client } from "@/stores/clients-store";
 import { toast } from "sonner";
 import { CreateMissionDialog } from "@/components/mission/create-mission-dialog";
 import { EditMissionDialog } from "@/components/mission/edit-mission-dialog";
@@ -51,6 +54,9 @@ export function EnhancedMissionTable() {
     pageSize,
     totalPages,
     showArchived,
+    filterClientId,
+    filterStartDate,
+    filterEndDate,
     fetchMissions,
     deleteMission,
     bulkDeleteMissions,
@@ -61,9 +67,18 @@ export function EnhancedMissionTable() {
     setPage,
     setPageSize,
     setShowArchived,
+    setFilterClientId,
+    setFilterDateRange,
   } = useMissionsStore();
 
   const { clients, fetchClients } = useClientsStore();
+
+  const mapClient = useCallback((c: Client) => ({ value: c.id.toString(), label: c.companyName }), []);
+  const {
+    options: clientFilterOptions,
+    loading: clientFilterLoading,
+    search: searchClientFilter,
+  } = useRemoteComboboxOptions<Client>({ endpoint: "/clients", mapItem: mapClient });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
@@ -257,6 +272,63 @@ export function EnhancedMissionTable() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-lg border bg-card p-3">
+        <div className="grid gap-1.5">
+          <Label htmlFor="filter-client" className="text-xs text-muted-foreground">
+            Client
+          </Label>
+          <Combobox
+            id="filter-client"
+            value={filterClientId ? String(filterClientId) : ""}
+            onChange={(value) => setFilterClientId(value ? Number(value) : null)}
+            onSearchChange={searchClientFilter}
+            loading={clientFilterLoading}
+            selectedLabel={filterClientId ? clientNameById.get(filterClientId) : undefined}
+            placeholder="All clients"
+            searchPlaceholder="Search clients..."
+            emptyText="No client found."
+            className="w-[220px]"
+            options={[{ value: "", label: "All clients" }, ...clientFilterOptions]}
+          />
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="filter-start-date" className="text-xs text-muted-foreground">
+            From
+          </Label>
+          <Input
+            id="filter-start-date"
+            type="date"
+            value={filterStartDate ?? ""}
+            onChange={(e) => setFilterDateRange(e.target.value || null, filterEndDate)}
+            className="w-[150px]"
+          />
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="filter-end-date" className="text-xs text-muted-foreground">
+            To
+          </Label>
+          <Input
+            id="filter-end-date"
+            type="date"
+            value={filterEndDate ?? ""}
+            onChange={(e) => setFilterDateRange(filterStartDate, e.target.value || null)}
+            className="w-[150px]"
+          />
+        </div>
+        {(filterClientId || filterStartDate || filterEndDate) && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setFilterClientId(null);
+              setFilterDateRange(null, null);
+            }}
+          >
+            Clear filters
+          </Button>
+        )}
+      </div>
+
       <DataTable
         title="Mission Management"
         data={missions}
@@ -266,7 +338,7 @@ export function EnhancedMissionTable() {
         emptyMessage="No missions found"
         showCount={true}
         customHeader={
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-2">
               <Switch
                 id="show-archived"
@@ -281,7 +353,12 @@ export function EnhancedMissionTable() {
             <ExportExcelButton<Mission>
               endpoint="/missions"
               total={total}
-              extraParams={{ showArchived }}
+              extraParams={{
+                showArchived,
+                clientId: filterClientId ?? undefined,
+                startDate: filterStartDate ?? undefined,
+                endDate: filterEndDate ?? undefined,
+              }}
               filenamePrefix="missions"
               sheetName="Missions"
               mapRow={(m) => ({

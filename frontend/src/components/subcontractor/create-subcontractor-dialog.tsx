@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -107,7 +106,6 @@ export function CreateSubcontractorDialog({ trigger }: CreateSubcontractorDialog
             <Briefcase className="h-5 w-5" />
             Add New Subcontractor
           </DialogTitle>
-          <DialogDescription>Register a new subcontractor company.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">

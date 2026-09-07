@@ -1,7 +1,8 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { axiosInstance } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -22,6 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
+import { useRemoteComboboxOptions } from "@/hooks/use-remote-combobox-options";
 import { Edit } from "lucide-react";
 import {
   useMissionsStore,
@@ -31,10 +33,10 @@ import {
   type TransportType,
   type Currency,
 } from "@/stores/missions-store";
-import { useClientsStore } from "@/stores/clients-store";
+import type { Client } from "@/stores/clients-store";
+import type { Subcontractor } from "@/stores/subcontractors-store";
 import { useTrucksStore } from "@/stores/trucks-store";
 import { useDriversStore } from "@/stores/drivers-store";
-import { useSubcontractorsStore } from "@/stores/subcontractors-store";
 import { toast } from "sonner";
 import { Loader } from "../loader";
 
@@ -47,13 +49,34 @@ const CURRENCY_OPTIONS: Currency[] = ["MAD", "EUR"];
 
 export function EditMissionDialog({ mission }: EditMissionDialogProps) {
   const { updateMission, loading } = useMissionsStore();
-  const { clients, fetchClients } = useClientsStore();
   const { trucks, fetchTrucks } = useTrucksStore();
   const { drivers, fetchDrivers } = useDriversStore();
-  const { subcontractors, fetchSubcontractors } = useSubcontractorsStore();
+
+  const mapClient = useCallback((c: Client) => ({ value: c.id.toString(), label: c.companyName }), []);
+  const {
+    options: clientOptions,
+    loading: clientsLoading,
+    search: searchClients,
+  } = useRemoteComboboxOptions<Client>({ endpoint: "/clients", mapItem: mapClient });
+
+  const mapSubcontractor = useCallback(
+    (s: Subcontractor) => ({ value: s.id.toString(), label: s.companyName }),
+    []
+  );
+  const {
+    options: subcontractorOptions,
+    loading: subcontractorsLoading,
+    search: searchSubcontractors,
+  } = useRemoteComboboxOptions<Subcontractor>({ endpoint: "/subcontractors", mapItem: mapSubcontractor });
 
   const [isOpen, setIsOpen] = useState(false);
   const [clientId, setClientId] = useState(mission.clientId.toString());
+  // The client/subcontractor pickers now search the backend live rather than
+  // filtering a pre-fetched batch, so the mission's already-selected client
+  // isn't necessarily in the current search results — resolve its name once
+  // by id so the trigger button still shows it correctly.
+  const [clientLabel, setClientLabel] = useState("");
+  const [subcontractorLabel, setSubcontractorLabel] = useState("");
   const [transportType, setTransportType] = useState<TransportType>(mission.transportType);
   const [executionMode, setExecutionMode] = useState<ExecutionMode>(mission.executionMode);
   const [loadingLocation, setLoadingLocation] = useState(mission.loadingLocation);
@@ -70,13 +93,26 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
 
   useEffect(() => {
     if (isOpen) {
-      fetchClients({ limit: 100 });
       fetchTrucks({ limit: 100 });
       fetchDrivers({ limit: 100 });
-      fetchSubcontractors({ limit: 100 });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    axiosInstance
+      .get<Client>(`/clients/${mission.clientId}`)
+      .then((res) => setClientLabel(res.data.companyName))
+      .catch(() => {});
+    if (mission.subcontractorId) {
+      axiosInstance
+        .get<Subcontractor>(`/subcontractors/${mission.subcontractorId}`)
+        .then((res) => setSubcontractorLabel(res.data.companyName))
+        .catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, mission.clientId, mission.subcontractorId]);
 
   const validate = () => {
     const newErrors: Record<string, string> = {};
@@ -138,24 +174,27 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
       <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Mission {mission.reference}</DialogTitle>
-          <DialogDescription>Update this mission's details.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <div className="grid gap-2">
               <Label htmlFor="edit-clientId">Client *</Label>
-              <Select value={clientId} onValueChange={setClientId}>
-                <SelectTrigger id="edit-clientId" className={"w-full" + (errors.clientId ? " border-destructive" : "")}>
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.companyName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                id="edit-clientId"
+                value={clientId}
+                onChange={(value) => {
+                  setClientId(value);
+                  setClientLabel(clientOptions.find((o) => o.value === value)?.label ?? "");
+                }}
+                onSearchChange={searchClients}
+                loading={clientsLoading}
+                selectedLabel={clientLabel}
+                placeholder="Select client"
+                searchPlaceholder="Search clients..."
+                emptyText="No client found."
+                className={errors.clientId ? "border-destructive" : ""}
+                options={clientOptions}
+              />
               {errors.clientId && <p className="text-sm text-destructive">{errors.clientId}</p>}
             </div>
             <div className="grid gap-2">
@@ -256,34 +295,30 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
             <div className="grid gap-4 md:grid-cols-2 rounded-md border p-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-truckId">Truck *</Label>
-                <Select value={truckId} onValueChange={setTruckId}>
-                  <SelectTrigger id="edit-truckId" className={"w-full" + (errors.truckId ? " border-destructive" : "")}>
-                    <SelectValue placeholder="Select truck" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {trucks.map((t) => (
-                      <SelectItem key={t.id} value={t.id.toString()}>
-                        {t.plateNumber} ({t.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  id="edit-truckId"
+                  value={truckId}
+                  onChange={setTruckId}
+                  placeholder="Select truck"
+                  searchPlaceholder="Search trucks..."
+                  emptyText="No truck found."
+                  className={errors.truckId ? "border-destructive" : ""}
+                  options={trucks.map((t) => ({ value: t.id.toString(), label: `${t.plateNumber} (${t.status})` }))}
+                />
                 {errors.truckId && <p className="text-sm text-destructive">{errors.truckId}</p>}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-driverId">Driver *</Label>
-                <Select value={driverId} onValueChange={setDriverId}>
-                  <SelectTrigger id="edit-driverId" className={"w-full" + (errors.driverId ? " border-destructive" : "")}>
-                    <SelectValue placeholder="Select driver" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {drivers.map((d) => (
-                      <SelectItem key={d.id} value={d.id.toString()}>
-                        {d.fullName} ({d.status})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  id="edit-driverId"
+                  value={driverId}
+                  onChange={setDriverId}
+                  placeholder="Select driver"
+                  searchPlaceholder="Search drivers..."
+                  emptyText="No driver found."
+                  className={errors.driverId ? "border-destructive" : ""}
+                  options={drivers.map((d) => ({ value: d.id.toString(), label: `${d.fullName} (${d.status})` }))}
+                />
                 {errors.driverId && <p className="text-sm text-destructive">{errors.driverId}</p>}
               </div>
             </div>
@@ -291,21 +326,22 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
             <div className="grid gap-4 md:grid-cols-2 rounded-md border p-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-subcontractorId">Subcontractor *</Label>
-                <Select value={subcontractorId} onValueChange={setSubcontractorId}>
-                  <SelectTrigger
-                    id="edit-subcontractorId"
-                    className={"w-full" + (errors.subcontractorId ? " border-destructive" : "")}
-                  >
-                    <SelectValue placeholder="Select subcontractor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {subcontractors.map((s) => (
-                      <SelectItem key={s.id} value={s.id.toString()}>
-                        {s.companyName}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Combobox
+                  id="edit-subcontractorId"
+                  value={subcontractorId}
+                  onChange={(value) => {
+                    setSubcontractorId(value);
+                    setSubcontractorLabel(subcontractorOptions.find((o) => o.value === value)?.label ?? "");
+                  }}
+                  onSearchChange={searchSubcontractors}
+                  loading={subcontractorsLoading}
+                  selectedLabel={subcontractorLabel}
+                  placeholder="Select subcontractor"
+                  searchPlaceholder="Search subcontractors..."
+                  emptyText="No subcontractor found."
+                  className={errors.subcontractorId ? "border-destructive" : ""}
+                  options={subcontractorOptions}
+                />
                 {errors.subcontractorId && <p className="text-sm text-destructive">{errors.subcontractorId}</p>}
               </div>
               <div className="grid gap-2">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { DataTable, TableColumn } from "@/components/shared/data-table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,13 +24,8 @@ import {
 import { MoreHorizontal, Trash2, Paperclip, RotateCcw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
+import { useRemoteComboboxOptions } from "@/hooks/use-remote-combobox-options";
 import { useSubcontractorBillsStore, type SubcontractorBill, type InvoiceStatus } from "@/stores/subcontractor-bills-store";
 import { toast } from "sonner";
 import { CreateSubcontractorBillDialog } from "@/components/subcontractor-bill/create-subcontractor-bill-dialog";
@@ -39,7 +34,7 @@ import { RecordPaymentDialog } from "@/components/subcontractor-bill/record-paym
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
 import { ViewMissionDialog, MISSION_LINK_COLOR } from "@/components/mission/view-mission-dialog";
 import { useMissionsStore, type Mission } from "@/stores/missions-store";
-import { useSubcontractorsStore } from "@/stores/subcontractors-store";
+import { useSubcontractorsStore, type Subcontractor } from "@/stores/subcontractors-store";
 import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
 
@@ -76,6 +71,16 @@ export function EnhancedSubcontractorBillTable() {
 
   const { missions, fetchMissions } = useMissionsStore();
   const { subcontractors, fetchSubcontractors } = useSubcontractorsStore();
+
+  const mapSubcontractor = useCallback(
+    (s: Subcontractor) => ({ value: s.id.toString(), label: s.companyName }),
+    []
+  );
+  const {
+    options: subcontractorFilterOptions,
+    loading: subcontractorFilterLoading,
+    search: searchSubcontractorFilter,
+  } = useRemoteComboboxOptions<Subcontractor>({ endpoint: "/subcontractors", mapItem: mapSubcontractor });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
@@ -320,22 +325,18 @@ export function EnhancedSubcontractorBillTable() {
         showCount={true}
         customHeader={
           <div className="flex items-center gap-4">
-            <Select
-              value={filterSubcontractorId ? String(filterSubcontractorId) : "all"}
-              onValueChange={(value) => setFilterSubcontractorId(value === "all" ? null : Number(value))}
-            >
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by subcontractor" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All subcontractors</SelectItem>
-                {subcontractors.map((s) => (
-                  <SelectItem key={s.id} value={s.id.toString()}>
-                    {s.companyName}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Combobox
+              value={filterSubcontractorId ? String(filterSubcontractorId) : ""}
+              onChange={(value) => setFilterSubcontractorId(value ? Number(value) : null)}
+              onSearchChange={searchSubcontractorFilter}
+              loading={subcontractorFilterLoading}
+              selectedLabel={filterSubcontractorId ? subcontractorNameById.get(filterSubcontractorId) : undefined}
+              placeholder="Filter by subcontractor"
+              searchPlaceholder="Search subcontractors..."
+              emptyText="No subcontractor found."
+              className="w-[200px]"
+              options={[{ value: "", label: "All subcontractors" }, ...subcontractorFilterOptions]}
+            />
             <div className="flex items-center space-x-2">
               <Switch
                 id="show-archived"

@@ -4,13 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Table,
   TableBody,
@@ -122,18 +116,16 @@ export default function PermissionsPage() {
               <Label htmlFor="role-select" className="font-normal text-muted-foreground">
                 Role
               </Label>
-              <Select value={selectedRoleId} onValueChange={setSelectedRoleId}>
-                <SelectTrigger id="role-select" className="w-[240px]">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  {roles.map((role) => (
-                    <SelectItem key={role.id} value={role.id.toString()}>
-                      {role.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Combobox
+                id="role-select"
+                value={selectedRoleId}
+                onChange={setSelectedRoleId}
+                placeholder="Select a role"
+                searchPlaceholder="Search roles..."
+                emptyText="No role found."
+                className="w-[240px]"
+                options={roles.map((role) => ({ value: role.id.toString(), label: role.name }))}
+              />
             </div>
           </CardTitle>
         </CardHeader>

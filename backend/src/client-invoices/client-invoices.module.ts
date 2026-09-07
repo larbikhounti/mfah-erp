@@ -3,6 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientInvoicesController } from './controllers/client-invoices.controller';
 import { ClientInvoicesService } from './services/client-invoices.service';
+import { ClientInvoicePdfService } from './services/client-invoice-pdf.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PermissionGuard } from '../auth/guards/permission.guard';
 import { AttachmentsModule } from '../attachments/attachments.module';
@@ -22,7 +23,7 @@ import { AttachmentsModule } from '../attachments/attachments.module';
       }),
     }),
   ],
-  providers: [ClientInvoicesService, PermissionGuard],
+  providers: [ClientInvoicesService, ClientInvoicePdfService, PermissionGuard],
   controllers: [ClientInvoicesController],
   exports: [ClientInvoicesService],
 })

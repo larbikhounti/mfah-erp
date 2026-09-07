@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -72,7 +71,6 @@ export function EditClientInvoiceDialog({ invoice }: EditClientInvoiceDialogProp
       <DialogContent className="sm:max-w-[380px]">
         <DialogHeader>
           <DialogTitle>Edit Dates — {invoice.invoiceNumber}</DialogTitle>
-          <DialogDescription>Update the issue date and payment due date.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">

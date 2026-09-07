@@ -8,7 +8,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -119,9 +118,6 @@ export function CreateRoleDialog({
             <Shield className="h-5 w-5" />
             Create New Role
           </DialogTitle>
-          <DialogDescription>
-            Create a new role to assign to users. Roles help organize user permissions and access levels.
-          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">

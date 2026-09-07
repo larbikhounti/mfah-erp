@@ -16,9 +16,6 @@ export default function TrucksPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-semibold">Trucks</h1>
-          <p className="text-muted-foreground">
-            Manage the fleet: plate numbers, PTAC, status, and insurance expiry.
-          </p>
         </div>
       </div>
 
