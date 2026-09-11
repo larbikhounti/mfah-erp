@@ -17,6 +17,7 @@ import { ClientInvoicesModule } from './client-invoices/client-invoices.module';
 import { SubcontractorBillsModule } from './subcontractor-bills/subcontractor-bills.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
+import { ActivityLogModule } from './activity-log/activity-log.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { ReportsModule } from './reports/reports.module';
     MissionsModule,
     DashboardModule,
     ReportsModule,
+    ActivityLogModule,
   ],
   controllers: [AppController],
   providers: [AppService],

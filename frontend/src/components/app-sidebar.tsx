@@ -15,6 +15,7 @@ import {
   IconLockAccess,
   IconReportAnalytics,
   IconSettings,
+  IconHistory,
 } from "@tabler/icons-react";
 
 import { NavMain } from "@/components/nav-main";
@@ -93,6 +94,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       title: "Permissions",
       url: "/dashboard/permissions",
       icon: IconLockAccess,
+    },
+    {
+      title: "Activity Log",
+      url: "/dashboard/activity-logs",
+      icon: IconHistory,
     },
     {
       title: "Settings",
