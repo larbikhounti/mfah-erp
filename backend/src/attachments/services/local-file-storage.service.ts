@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { randomUUID } from 'crypto';
 import { promises as fs } from 'fs';
-import { extname, join } from 'path';
+import { dirname, extname, join } from 'path';
 
 export interface StoredFile {
   /** Path relative to the uploads root — this is what gets persisted in the DB. */
@@ -54,5 +54,28 @@ export class LocalFileStorageService {
 
   resolveAbsolutePath(relativePath: string): string {
     return join(this.rootDir, relativePath);
+  }
+
+  /** Writes to an exact given relative path (overwriting), instead of
+   *  `save`'s randomized filename — for the handful of files the app
+   *  tracks by a fixed, stable path rather than a DB-recorded name (e.g.
+   *  the invoice xlsx template, see InvoiceTemplateService). */
+  async saveFixed(buffer: Buffer, relativePath: string): Promise<void> {
+    const absolutePath = join(this.rootDir, relativePath);
+    await fs.mkdir(dirname(absolutePath), { recursive: true });
+    await fs.writeFile(absolutePath, buffer);
+  }
+
+  async exists(relativePath: string): Promise<boolean> {
+    try {
+      await fs.access(join(this.rootDir, relativePath));
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  async read(relativePath: string): Promise<Buffer> {
+    return fs.readFile(join(this.rootDir, relativePath));
   }
 }

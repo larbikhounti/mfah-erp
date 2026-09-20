@@ -40,8 +40,9 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-parser": "^1.4.7",
+    "exceljs": "^4.4.0",
+    "jszip": "^3.10.2",
     "multer": "^2.2.0",
-    "pdf-lib": "^1.17.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "ts-node": "^10.9.2"

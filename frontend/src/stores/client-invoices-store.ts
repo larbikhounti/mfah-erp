@@ -242,8 +242,13 @@ export const useClientInvoicesStore = create<ClientInvoicesStore>((set, get) => 
   },
 
   generateInvoicePdf: async (id: number, fields: InvoicePdfFields) => {
+    // Rendering goes through a LibreOffice subprocess (see backend
+    // client-invoice-pdf module) which routinely takes several seconds —
+    // well past the axios instance's default 10s timeout used for normal
+    // CRUD calls, so this request gets its own longer one.
     const response = await axiosInstance.post(`/client-invoices/admin/${id}/generate-pdf`, fields, {
       responseType: "blob",
+      timeout: 60000,
     });
     return response.data as Blob;
   },

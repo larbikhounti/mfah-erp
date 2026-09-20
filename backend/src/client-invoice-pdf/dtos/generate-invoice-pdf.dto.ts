@@ -2,13 +2,18 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsOptional, IsString } from 'class-validator';
 
 /**
- * One entry per fillable field on facture_template_editable.pdf (names
- * match the PDF's own AcroForm field names exactly, so the fill step is a
- * straight pass-through — see ClientInvoicePdfService). All optional and
- * all plain strings: the frontend's "generate invoice" dialog is the one
- * source of truth for what's included and how it's formatted (dates,
- * numbers, etc.) — this endpoint just fills whatever it's given and leaves
- * every other field blank on the PDF.
+ * One entry per data field on "FACTURE model.xlsx" (mapped to the
+ * template's own cell addresses in invoice-template-cells.ts, so the fill
+ * step is a straight pass-through — see ClientInvoicePdfService). All
+ * optional and all plain strings: the frontend's "generate invoice" dialog
+ * is the one source of truth for what's included and how it's formatted
+ * (dates, numbers, etc.) — this endpoint just fills whatever it's given and
+ * leaves every other cell blank on the PDF.
+ *
+ * `gazoil` maps to the template's 4th surcharge column, labeled
+ * "Transitair" on FACTURE model.xlsx (the old PDF template called it
+ * Gazoil) — kept as `gazoil` here since that's what the frontend already
+ * sends; only the printed template label differs.
  *
  * `invoice_number` is deliberately NOT here — it always comes from the
  * invoice's own `invoiceNumber` in the DB (see ClientInvoicePdfService),

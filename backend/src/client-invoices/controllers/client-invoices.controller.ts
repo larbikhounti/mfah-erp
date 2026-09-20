@@ -15,7 +15,6 @@ import {
   HttpStatus,
   Patch,
   BadRequestException,
-  StreamableFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
@@ -25,9 +24,7 @@ import { UpdateClientInvoiceDto } from '../dtos/update-client-invoice.dto';
 import { UpdatePaymentDto } from '../dtos/update-payment.dto';
 import { BulkDeleteClientInvoicesDto } from '../dtos/bulk-delete-client-invoices.dto';
 import { FilterClientInvoicesDto } from '../dtos/filter-client-invoices.dto';
-import { GenerateInvoicePdfDto } from '../dtos/generate-invoice-pdf.dto';
 import { ClientInvoicesService } from '../services/client-invoices.service';
-import { ClientInvoicePdfService } from '../services/client-invoice-pdf.service';
 import { AttachmentsService } from '../../attachments/services/attachments.service';
 import {
   ApiBearerAuth,
@@ -50,7 +47,6 @@ import { RequirePermission } from '../../auth/decorator/require-permission.decor
 export class ClientInvoicesController {
   constructor(
     private clientInvoicesService: ClientInvoicesService,
-    private clientInvoicePdfService: ClientInvoicePdfService,
     private attachmentsService: AttachmentsService,
   ) {}
 
@@ -139,48 +135,9 @@ export class ClientInvoicesController {
     return this.clientInvoicesService.bulkRestore(body.clientInvoiceIds);
   }
 
-  // === PDF generation (fills facture_template_editable.pdf) ===
-
-  @RequirePermission(PermissionModule.CLIENT_INVOICES, 'read')
-  @Get('admin/:id/pdf-prefill')
-  @ApiOperation({
-    summary:
-      "Suggested default values for the invoice PDF's fields, computed from " +
-      'the invoice/mission/client/truck — the frontend generator dialog uses ' +
-      'these to pre-fill, the user can still edit everything before generating.',
-  })
-  getPdfPrefill(@Param('id', ParseIntPipe) id: number) {
-    return this.clientInvoicePdfService.getPrefill(id);
-  }
-
-  @RequirePermission(PermissionModule.CLIENT_INVOICES, 'update')
-  @Post('admin/:id/generate-pdf')
-  @HttpCode(HttpStatus.OK)
-  @ApiOperation({
-    summary:
-      'Fills facture_template_editable.pdf with the given field values, saves ' +
-      'the result as an attachment on this invoice, and returns it for download.',
-  })
-  async generatePdf(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: GenerateInvoicePdfDto,
-  ): Promise<StreamableFile> {
-    const invoice = await this.clientInvoicesService.findOne(id);
-    const pdfBuffer = await this.clientInvoicePdfService.generate(id, dto);
-
-    const invoiceNumberForFile = invoice.invoiceNumber.replace(/[\\/]/g, '-');
-    const fileName = `Facture-${invoiceNumberForFile}.pdf`;
-    await this.attachmentsService.uploadForClientInvoice(id, 'Generated Invoice', {
-      buffer: pdfBuffer,
-      originalname: fileName,
-      mimetype: 'application/pdf',
-    });
-
-    return new StreamableFile(pdfBuffer, {
-      type: 'application/pdf',
-      disposition: `attachment; filename="${fileName}"`,
-    });
-  }
+  // === PDF generation lives in ClientInvoicePdfModule (see
+  // client-invoice-pdf/controllers/client-invoice-pdf.controller.ts) —
+  // still under this same `client-invoices/admin/:id/...` path prefix.
 
   // === Attachments (the invoice PDF sent to the client, or supporting
   // docs — uploaded manually, labeled by whoever uploads it) ===

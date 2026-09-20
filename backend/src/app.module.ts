@@ -14,6 +14,7 @@ import { ClientsModule } from './clients/clients.module';
 import { SubcontractorsModule } from './subcontractors/subcontractors.module';
 import { MissionsModule } from './missions/missions.module';
 import { ClientInvoicesModule } from './client-invoices/client-invoices.module';
+import { ClientInvoicePdfModule } from './client-invoice-pdf/client-invoice-pdf.module';
 import { SubcontractorBillsModule } from './subcontractor-bills/subcontractor-bills.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { ReportsModule } from './reports/reports.module';
@@ -33,6 +34,7 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
     ClientsModule,
     SubcontractorsModule,
     ClientInvoicesModule,
+    ClientInvoicePdfModule,
     SubcontractorBillsModule,
     MissionsModule,
     DashboardModule,
