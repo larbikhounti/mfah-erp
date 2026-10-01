@@ -20,6 +20,7 @@ export interface Mission {
   subcontractorCost: string | null;
   truckId: number | null;
   driverId: number | null;
+  contractorTruckId: number | null;
   status: MissionStatus;
   missionDate: string;
   autoInvoice: boolean;
@@ -40,6 +41,7 @@ export interface CreateMissionPayload {
   subcontractorCost?: number;
   truckId?: number;
   driverId?: number;
+  contractorTruckId?: number;
   missionDate: string;
   autoInvoice?: boolean;
 }

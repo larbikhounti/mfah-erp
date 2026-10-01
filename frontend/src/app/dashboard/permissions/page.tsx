@@ -29,6 +29,7 @@ const MODULE_LABELS: Record<PermissionModule, string> = {
   DRIVERS: "Drivers",
   CLIENTS: "Clients",
   SUBCONTRACTORS: "Subcontractors",
+  CONTRACTOR_TRUCKS: "Contractor Trucks",
   MISSIONS: "Missions",
   CLIENT_INVOICES: "Client Invoices",
   SUBCONTRACTOR_BILLS: "Subcontractor Bills",

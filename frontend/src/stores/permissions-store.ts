@@ -6,6 +6,7 @@ export type PermissionModule =
   | "DRIVERS"
   | "CLIENTS"
   | "SUBCONTRACTORS"
+  | "CONTRACTOR_TRUCKS"
   | "MISSIONS"
   | "CLIENT_INVOICES"
   | "SUBCONTRACTOR_BILLS"
@@ -17,6 +18,7 @@ export const ALL_PERMISSION_MODULES: PermissionModule[] = [
   "DRIVERS",
   "CLIENTS",
   "SUBCONTRACTORS",
+  "CONTRACTOR_TRUCKS",
   "MISSIONS",
   "CLIENT_INVOICES",
   "SUBCONTRACTOR_BILLS",

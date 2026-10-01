@@ -95,6 +95,17 @@ export class CreateMissionDto {
   driverId?: number;
 
   @ApiProperty({
+    description:
+      "One of the subcontractor's own trucks doing the job — optional, only applies when executionMode is SUBCONTRACTED",
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  contractorTruckId?: number;
+
+  @ApiProperty({
     description: 'Scheduled mission date',
     example: '2026-09-01T00:00:00.000Z',
   })

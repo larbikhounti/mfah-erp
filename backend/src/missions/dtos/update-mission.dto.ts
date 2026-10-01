@@ -95,6 +95,17 @@ export class UpdateMissionDto {
   @Min(1)
   driverId?: number;
 
+  @ApiProperty({
+    description:
+      "One of the subcontractor's own trucks doing the job — only applies when executionMode is SUBCONTRACTED",
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  contractorTruckId?: number;
+
   @ApiProperty({ description: 'Scheduled mission date', required: false })
   @IsOptional()
   @Type(() => Date)

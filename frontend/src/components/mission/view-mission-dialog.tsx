@@ -15,6 +15,7 @@ import { useClientsStore } from "@/stores/clients-store";
 import { useTrucksStore } from "@/stores/trucks-store";
 import { useDriversStore } from "@/stores/drivers-store";
 import { useSubcontractorsStore } from "@/stores/subcontractors-store";
+import { useContractorTrucksStore } from "@/stores/contractor-trucks-store";
 
 interface ViewMissionDialogProps {
   missionId: number;
@@ -57,6 +58,7 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
   const { trucks, fetchTrucks } = useTrucksStore();
   const { drivers, fetchDrivers } = useDriversStore();
   const { subcontractors, fetchSubcontractors } = useSubcontractorsStore();
+  const { contractorTrucks, fetchContractorTrucks } = useContractorTrucksStore();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -64,11 +66,21 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
     fetchTrucks({ limit: 100 });
     fetchDrivers({ limit: 100 });
     fetchSubcontractors({ limit: 100 });
+    fetchContractorTrucks({ limit: 100 });
     setNotFound(false);
     fetchMissionById(missionId)
       .then((m) => setMission(m))
       .catch(() => setNotFound(true));
-  }, [isOpen, missionId, fetchMissionById, fetchClients, fetchTrucks, fetchDrivers, fetchSubcontractors]);
+  }, [
+    isOpen,
+    missionId,
+    fetchMissionById,
+    fetchClients,
+    fetchTrucks,
+    fetchDrivers,
+    fetchSubcontractors,
+    fetchContractorTrucks,
+  ]);
 
   const clientName = useMemo(
     () => (mission ? clients.find((c) => c.id === mission.clientId)?.companyName : undefined),
@@ -88,6 +100,13 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
         ? subcontractors.find((s) => s.id === mission.subcontractorId)?.companyName
         : undefined,
     [subcontractors, mission]
+  );
+  const contractorTruckLabel = useMemo(
+    () =>
+      mission?.contractorTruckId
+        ? contractorTrucks.find((t) => t.id === mission.contractorTruckId)?.plateNumber
+        : undefined,
+    [contractorTrucks, mission]
   );
 
   return (
@@ -161,6 +180,13 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
                     mission.subcontractorCost
                       ? `${Number(mission.subcontractorCost).toLocaleString()} ${mission.currency}`
                       : "-"
+                  }
+                />
+                <DetailRow
+                  label="Contractor Truck"
+                  value={
+                    contractorTruckLabel ||
+                    (mission.contractorTruckId ? `Truck #${mission.contractorTruckId}` : "-")
                   }
                 />
               </>

@@ -20,6 +20,7 @@ export interface MissionResponse {
   subcontractorCost: Decimal | null;
   truckId: number | null;
   driverId: number | null;
+  contractorTruckId: number | null;
   status: MissionStatus;
   missionDate: Date;
   autoInvoice: boolean;

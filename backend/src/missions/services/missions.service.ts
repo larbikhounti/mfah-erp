@@ -53,6 +53,7 @@ export class MissionsService {
                 : null,
             truckId: sanitized.truckId,
             driverId: sanitized.driverId,
+            contractorTruckId: sanitized.contractorTruckId,
             missionDate: data.missionDate,
             autoInvoice: data.autoInvoice ?? false,
           },
@@ -120,6 +121,7 @@ export class MissionsService {
         subcontractorId,
         truckId,
         driverId,
+        contractorTruckId,
         startDate,
         endDate,
         showArchived,
@@ -145,6 +147,7 @@ export class MissionsService {
       if (subcontractorId) where.subcontractorId = subcontractorId;
       if (truckId) where.truckId = truckId;
       if (driverId) where.driverId = driverId;
+      if (contractorTruckId) where.contractorTruckId = contractorTruckId;
 
       if (startDate || endDate) {
         where.missionDate = {};
@@ -211,6 +214,8 @@ export class MissionsService {
           : undefined),
       truckId: data.truckId ?? existing.truckId ?? undefined,
       driverId: data.driverId ?? existing.driverId ?? undefined,
+      contractorTruckId:
+        data.contractorTruckId ?? existing.contractorTruckId ?? undefined,
     };
 
     const sanitized = await this.validateAndSanitize(merged);
@@ -287,6 +292,7 @@ export class MissionsService {
                 : null,
             truckId: sanitized.truckId,
             driverId: sanitized.driverId,
+            contractorTruckId: sanitized.contractorTruckId,
             missionDate: data.missionDate ?? undefined,
             autoInvoice: data.autoInvoice ?? undefined,
           },
@@ -555,6 +561,7 @@ export class MissionsService {
     subcontractorCost?: number;
     truckId?: number;
     driverId?: number;
+    contractorTruckId?: number;
   }) {
     const client = await this.prisma.client.findUnique({
       where: { id: data.clientId },
@@ -587,6 +594,7 @@ export class MissionsService {
         ...data,
         subcontractorId: null,
         subcontractorCost: null,
+        contractorTruckId: null,
       };
     }
 
@@ -608,10 +616,26 @@ export class MissionsService {
       );
     }
 
+    if (data.contractorTruckId) {
+      const contractorTruck = await this.prisma.contractorTruck.findUnique({
+        where: { id: data.contractorTruckId },
+      });
+      if (
+        !contractorTruck ||
+        contractorTruck.subcontractorId !== data.subcontractorId
+      ) {
+        throw new HttpException(
+          'Contractor truck not found for this subcontractor',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
     return {
       ...data,
       truckId: null,
       driverId: null,
+      contractorTruckId: data.contractorTruckId ?? null,
     };
   }
 

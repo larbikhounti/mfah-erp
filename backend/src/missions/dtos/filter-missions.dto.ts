@@ -106,6 +106,15 @@ export class FilterMissionsDto {
   driverId?: number;
 
   @ApiProperty({
+    description: 'Filter by contractor truck ID',
+    required: false,
+  })
+  @Type(() => Number)
+  @IsOptional()
+  @IsInt()
+  contractorTruckId?: number;
+
+  @ApiProperty({
     description: 'Mission date range start (inclusive)',
     required: false,
   })

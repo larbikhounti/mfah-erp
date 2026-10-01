@@ -36,6 +36,7 @@ enum PermissionModule {
   DRIVERS
   CLIENTS
   SUBCONTRACTORS
+  CONTRACTOR_TRUCKS
   MISSIONS
   CLIENT_INVOICES
   SUBCONTRACTOR_BILLS
@@ -139,6 +140,25 @@ model Subcontractor {
   attachments        Attachment[]
   missions           Mission[]
   subcontractorBills SubcontractorBill[]
+  contractorTrucks   ContractorTruck[]
+}
+
+// A truck belonging to a subcontractor's own fleet, not ours — tracked so a
+// SUBCONTRACTED mission can record which specific vehicle is doing the job.
+// Deliberately minimal (plate number + owning subcontractor only): unlike
+// our own Truck model, we don't manage this vehicle's status, insurance, or
+// documents.
+model ContractorTruck {
+  id              Int           @id @default(autoincrement())
+  plateNumber     String        @unique
+  subcontractorId Int
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  deletedAt       DateTime?
+  subcontractor   Subcontractor @relation(fields: [subcontractorId], references: [id])
+  missions        Mission[]
+
+  @@index([subcontractorId])
 }
 
 enum AttachmentOwnerType {
@@ -225,6 +245,10 @@ model Mission {
   subcontractorCost Decimal?           @db.Decimal(12, 2)
   truckId           Int?
   driverId          Int?
+  // Which of the subcontractor's own trucks is doing the job — SUBCONTRACTED
+  // only, and optional (staff may not have registered the subcontractor's
+  // truck yet at mission-creation time).
+  contractorTruckId Int?
   status            MissionStatus      @default(PLANNED)
   missionDate       DateTime
   autoInvoice       Boolean            @default(false)
@@ -235,6 +259,7 @@ model Mission {
   subcontractor     Subcontractor?     @relation(fields: [subcontractorId], references: [id])
   truck             Truck?             @relation(fields: [truckId], references: [id])
   driver            Driver?            @relation(fields: [driverId], references: [id])
+  contractorTruck   ContractorTruck?   @relation(fields: [contractorTruckId], references: [id])
   clientInvoice     ClientInvoice?
   subcontractorBill SubcontractorBill?
 
@@ -242,6 +267,7 @@ model Mission {
   @@index([subcontractorId])
   @@index([truckId])
   @@index([driverId])
+  @@index([contractorTruckId])
   @@index([missionDate])
 }
 

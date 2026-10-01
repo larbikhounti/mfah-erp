@@ -6,6 +6,7 @@ import {
   IconUsers,
   IconShield,
   IconTruck,
+  IconTruckDelivery,
   IconSteeringWheel,
   IconBuilding,
   IconBriefcase,
@@ -16,9 +17,12 @@ import {
   IconReportAnalytics,
   IconSettings,
   IconHistory,
+  IconUsersGroup,
+  IconCoin,
+  IconSettingsCog,
 } from "@tabler/icons-react";
 
-import { NavMain } from "@/components/nav-main";
+import { NavMain, type NavItem } from "@/components/nav-main";
 import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
@@ -34,7 +38,7 @@ import { useAuth } from "@/hooks/use-auth";
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user } = useAuth();
 
-  const navMainData = [
+  const navMainData: NavItem[] = [
     {
       title: "Dashboard",
       url: "/dashboard",
@@ -46,59 +50,44 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       icon: IconRoute,
     },
     {
-      title: "Trucks",
+      title: "Fleet",
       url: "/dashboard/trucks",
       icon: IconTruck,
+      items: [
+        { title: "Trucks", url: "/dashboard/trucks", icon: IconTruck },
+        { title: "Drivers", url: "/dashboard/drivers", icon: IconSteeringWheel },
+        { title: "Contractor Trucks", url: "/dashboard/contractor-trucks", icon: IconTruckDelivery },
+      ],
     },
     {
-      title: "Drivers",
-      url: "/dashboard/drivers",
-      icon: IconSteeringWheel,
-    },
-    {
-      title: "Clients",
+      title: "Partners",
       url: "/dashboard/clients",
-      icon: IconBuilding,
+      icon: IconUsersGroup,
+      items: [
+        { title: "Clients", url: "/dashboard/clients", icon: IconBuilding },
+        { title: "Subcontractors", url: "/dashboard/subcontractors", icon: IconBriefcase },
+      ],
     },
     {
-      title: "Subcontractors",
-      url: "/dashboard/subcontractors",
-      icon: IconBriefcase,
-    },
-    {
-      title: "Client Invoices",
+      title: "Billing",
       url: "/dashboard/client-invoices",
-      icon: IconFileInvoice,
+      icon: IconCoin,
+      items: [
+        { title: "Client Invoices", url: "/dashboard/client-invoices", icon: IconFileInvoice },
+        { title: "Subcontractor Bills", url: "/dashboard/subcontractor-bills", icon: IconReceipt },
+        { title: "Reports", url: "/dashboard/reports", icon: IconReportAnalytics },
+      ],
     },
     {
-      title: "Subcontractor Bills",
-      url: "/dashboard/subcontractor-bills",
-      icon: IconReceipt,
-    },
-    {
-      title: "Reports",
-      url: "/dashboard/reports",
-      icon: IconReportAnalytics,
-    },
-    {
-      title: "Users",
+      title: "Administration",
       url: "/dashboard/users",
-      icon: IconUsers,
-    },
-    {
-      title: "Roles",
-      url: "/dashboard/roles",
-      icon: IconShield,
-    },
-    {
-      title: "Permissions",
-      url: "/dashboard/permissions",
-      icon: IconLockAccess,
-    },
-    {
-      title: "Activity Log",
-      url: "/dashboard/activity-logs",
-      icon: IconHistory,
+      icon: IconSettingsCog,
+      items: [
+        { title: "Users", url: "/dashboard/users", icon: IconUsers },
+        { title: "Roles", url: "/dashboard/roles", icon: IconShield },
+        { title: "Permissions", url: "/dashboard/permissions", icon: IconLockAccess },
+        { title: "Activity Log", url: "/dashboard/activity-logs", icon: IconHistory },
+      ],
     },
     {
       title: "Settings",

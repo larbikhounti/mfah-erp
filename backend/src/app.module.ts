@@ -12,6 +12,7 @@ import { TrucksModule } from './trucks/trucks.module';
 import { DriversModule } from './drivers/drivers.module';
 import { ClientsModule } from './clients/clients.module';
 import { SubcontractorsModule } from './subcontractors/subcontractors.module';
+import { ContractorTrucksModule } from './contractor-trucks/contractor-trucks.module';
 import { MissionsModule } from './missions/missions.module';
 import { ClientInvoicesModule } from './client-invoices/client-invoices.module';
 import { ClientInvoicePdfModule } from './client-invoice-pdf/client-invoice-pdf.module';
@@ -33,6 +34,7 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
     DriversModule,
     ClientsModule,
     SubcontractorsModule,
+    ContractorTrucksModule,
     ClientInvoicesModule,
     ClientInvoicePdfModule,
     SubcontractorBillsModule,

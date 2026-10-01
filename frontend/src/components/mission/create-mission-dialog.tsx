@@ -43,6 +43,7 @@ import {
 } from "@/stores/missions-store";
 import type { Client } from "@/stores/clients-store";
 import type { Subcontractor } from "@/stores/subcontractors-store";
+import type { ContractorTruck } from "@/stores/contractor-trucks-store";
 import { useTrucksStore } from "@/stores/trucks-store";
 import { useDriversStore } from "@/stores/drivers-store";
 import { toast } from "sonner";
@@ -91,10 +92,26 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
   const [subcontractorId, setSubcontractorId] = useState("");
   const [subcontractorLabel, setSubcontractorLabel] = useState("");
   const [subcontractorCost, setSubcontractorCost] = useState("");
+  const [contractorTruckId, setContractorTruckId] = useState("");
+  const [contractorTruckLabel, setContractorTruckLabel] = useState("");
   const [missionDate, setMissionDate] = useState("");
   const [autoInvoice, setAutoInvoice] = useState(true);
   const [confirmNoInvoiceOpen, setConfirmNoInvoiceOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const mapContractorTruck = useCallback(
+    (t: ContractorTruck) => ({ value: t.id.toString(), label: t.plateNumber }),
+    []
+  );
+  const {
+    options: contractorTruckOptions,
+    loading: contractorTrucksLoading,
+    search: searchContractorTrucks,
+  } = useRemoteComboboxOptions<ContractorTruck>({
+    endpoint: "/contractor-trucks",
+    mapItem: mapContractorTruck,
+    extraParams: { subcontractorId: subcontractorId || undefined },
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -118,6 +135,8 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
     setSubcontractorId("");
     setSubcontractorLabel("");
     setSubcontractorCost("");
+    setContractorTruckId("");
+    setContractorTruckLabel("");
     setMissionDate("");
     setAutoInvoice(true);
     setErrors({});
@@ -161,7 +180,11 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
         autoInvoice,
         ...(executionMode === "IN_HOUSE"
           ? { truckId: Number(truckId), driverId: Number(driverId) }
-          : { subcontractorId: Number(subcontractorId), subcontractorCost: Number(subcontractorCost) }),
+          : {
+              subcontractorId: Number(subcontractorId),
+              subcontractorCost: Number(subcontractorCost),
+              ...(contractorTruckId ? { contractorTruckId: Number(contractorTruckId) } : {}),
+            }),
       };
       await createMission(payload);
       toast.success("Mission created successfully");
@@ -355,6 +378,8 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
                   onChange={(value) => {
                     setSubcontractorId(value);
                     setSubcontractorLabel(subcontractorOptions.find((o) => o.value === value)?.label ?? "");
+                    setContractorTruckId("");
+                    setContractorTruckLabel("");
                   }}
                   onSearchChange={searchSubcontractors}
                   loading={subcontractorsLoading}
@@ -380,6 +405,25 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
                 {errors.subcontractorCost && (
                   <p className="text-sm text-destructive">{errors.subcontractorCost}</p>
                 )}
+              </div>
+              <div className="grid gap-2 md:col-span-2">
+                <Label htmlFor="contractorTruckId">Contractor Truck</Label>
+                <Combobox
+                  id="contractorTruckId"
+                  value={contractorTruckId}
+                  onChange={(value) => {
+                    setContractorTruckId(value);
+                    setContractorTruckLabel(contractorTruckOptions.find((o) => o.value === value)?.label ?? "");
+                  }}
+                  onSearchChange={searchContractorTrucks}
+                  loading={contractorTrucksLoading}
+                  selectedLabel={contractorTruckLabel}
+                  placeholder={subcontractorId ? "Select truck (optional)" : "Select a subcontractor first"}
+                  searchPlaceholder="Search trucks..."
+                  emptyText="No contractor truck found."
+                  disabled={!subcontractorId}
+                  options={contractorTruckOptions}
+                />
               </div>
             </div>
           )}
