@@ -160,6 +160,12 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
               label="Client Price"
               value={`${Number(mission.clientPrice).toLocaleString()} ${mission.currency}`}
             />
+            {mission.currency === "EUR" && (
+              <DetailRow
+                label="Exchange Rate"
+                value={mission.exchangeRate ? `1 EUR = ${Number(mission.exchangeRate)} MAD` : "-"}
+              />
+            )}
             {mission.executionMode === "IN_HOUSE" ? (
               <>
                 <DetailRow label="Truck" value={truckLabel || (mission.truckId ? `Truck #${mission.truckId}` : "-")} />

@@ -16,6 +16,8 @@ export interface Mission {
   deliveryLocation: string;
   clientPrice: string;
   currency: Currency;
+  // EUR→MAD rate (1 EUR = x MAD) — EUR missions only, Decimal-as-string.
+  exchangeRate: string | null;
   subcontractorId: number | null;
   subcontractorCost: string | null;
   truckId: number | null;
@@ -37,6 +39,7 @@ export interface CreateMissionPayload {
   deliveryLocation: string;
   clientPrice: number;
   currency: Currency;
+  exchangeRate?: number | null;
   subcontractorId?: number;
   subcontractorCost?: number;
   truckId?: number;

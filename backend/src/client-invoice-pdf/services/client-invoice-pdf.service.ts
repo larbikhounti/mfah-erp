@@ -6,6 +6,8 @@ import { InvoicePdfPrefill } from '../types/invoice-pdf-prefill.type';
 import { InvoiceXlsxRendererService } from './invoice-xlsx-renderer.service';
 import { InvoiceTemplateService } from './invoice-template.service';
 import {
+  EXCHANGE_RATE_FIELD_NAMES,
+  EXCHANGE_RATE_ROWS,
   INVOICE_TEMPLATE_CELLS,
   SURCHARGE_FIELD_NAMES,
   SURCHARGE_ROWS,
@@ -50,15 +52,14 @@ export class ClientInvoicePdfService {
     const tva = Math.round(amount * 0.1 * 100) / 100;
     const totalTtc = Math.round((amount + tva) * 100) / 100;
 
-    // The template's "DH" labels are baked into its design, not data cells
-    // — there's no clean way to swap them for "€" per invoice. For a EUR
-    // invoice we instead spell the currency out in the amount itself, so
-    // the number is unambiguous even sitting next to a "DH".
+    // The template has no currency labels of its own — every amount
+    // carries its unit ("DH"/"EUR") in the value itself.
     const money = (value: number) =>
-      invoice.currency === 'EUR' ? `${value.toFixed(2)} EUR` : value.toFixed(2);
+      `${value.toFixed(2)} ${invoice.currency === 'EUR' ? 'EUR' : 'DH'}`;
 
     return {
       client_name: invoice.client.companyName,
+      client_address: invoice.client.address ?? '',
       client_ice: invoice.client.ice,
       invoice_number: invoice.invoiceNumber,
       invoice_date: formatDateFr(invoice.issueDate),
@@ -76,6 +77,11 @@ export class ClientInvoicePdfService {
       tva: money(tva),
       total_ttc: money(totalTtc),
       amount_in_words: amountToFrenchWords(totalTtc, invoice.currency),
+      exchange_rate:
+        invoice.currency === 'EUR' && invoice.mission.exchangeRate
+          ? String(Number(invoice.mission.exchangeRate))
+          : '',
+      exchange_rate_date: formatDateFr(invoice.mission.missionDate),
       hasTruck: !!invoice.mission.truckId,
       currency: invoice.currency,
     };
@@ -113,6 +119,13 @@ export class ClientInvoicePdfService {
     const hasAnySurcharge = SURCHARGE_FIELD_NAMES.some((name) => allFields[name]);
     if (!hasAnySurcharge) {
       for (const rowNumber of SURCHARGE_ROWS) {
+        sheet.getRow(rowNumber).hidden = true;
+      }
+    }
+
+    const hasExchangeRate = EXCHANGE_RATE_FIELD_NAMES.some((name) => allFields[name]);
+    if (!hasExchangeRate) {
+      for (const rowNumber of EXCHANGE_RATE_ROWS) {
         sheet.getRow(rowNumber).hidden = true;
       }
     }

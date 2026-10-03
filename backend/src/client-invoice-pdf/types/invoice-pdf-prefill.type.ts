@@ -1,12 +1,14 @@
 /**
  * Suggested default values for the "Generate PDF" dialog's fields that we
  * actually have a source of truth for. Everything else on the template
- * (remorque, cmr, commande, tmsa, immobilisation, double_equipage, gazoil,
- * client_city) has no backing data in our schema — the dialog starts those
+ * (remorque, cmr, commande, tmsa, immobilisation, double_equipage, gazoil)
+ * has no backing data in our schema — the dialog starts those
  * blank/off and the frontend fills them in only if the user turns them on.
  */
 export interface InvoicePdfPrefill {
   client_name: string;
+  /** The client's address, or "" if none is on file. */
+  client_address: string;
   client_ice: string;
   invoice_number: string;
   invoice_date: string;
@@ -22,6 +24,11 @@ export interface InvoicePdfPrefill {
   tva: string;
   total_ttc: string;
   amount_in_words: string;
+  /** The mission's EUR→MAD rate ("" if none — always "" for MAD), and the
+   *  date shown next to it on the invoice. The dialog builds the rate line
+   *  and the MAD-converted total from these. */
+  exchange_rate: string;
+  exchange_rate_date: string;
   /** Whether this mission has a truck assigned (IN_HOUSE) — the frontend
    *  uses this to decide whether "Matricule" defaults on or off. */
   hasTruck: boolean;

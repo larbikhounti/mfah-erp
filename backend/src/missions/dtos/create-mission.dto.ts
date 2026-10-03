@@ -54,6 +54,18 @@ export class CreateMissionDto {
 
   @ApiProperty({
     description:
+      'EUR→MAD exchange rate (1 EUR = x MAD) — optional, only kept when currency is EUR',
+    required: false,
+    example: 10.93,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0.0001)
+  exchangeRate?: number | null;
+
+  @ApiProperty({
+    description:
       'Subcontractor ID — required when executionMode is SUBCONTRACTED',
     required: false,
   })

@@ -9,7 +9,7 @@ export const INVOICE_TEMPLATE_CELLS: Record<string, string> = {
   client_name: 'B9',
   invoice_number: 'H9',
   invoice_date: 'K9',
-  client_city: 'B11',
+  client_address: 'B11',
   loading_date: 'H12',
   delivery_date: 'K12',
   client_ice: 'C13',
@@ -31,6 +31,8 @@ export const INVOICE_TEMPLATE_CELLS: Record<string, string> = {
   total_ht: 'K31',
   total_ttc: 'I36',
   amount_in_words: 'B36',
+  exchange_rate_line: 'B38',
+  total_ttc_mad: 'I38',
 };
 
 /** TMSA/Immobilisation/Double Équipage/Transitair header row + its values
@@ -41,3 +43,10 @@ export const INVOICE_TEMPLATE_CELLS: Record<string, string> = {
 export const SURCHARGE_ROWS = [19, 20];
 
 export const SURCHARGE_FIELD_NAMES = ['tmsa', 'immobilisation', 'double_equipage', 'gazoil'] as const;
+
+/** "Taux de change EUR/MAD ..." line + the Total TTC converted to MAD —
+ *  hidden when the invoice has no exchange rate (MAD invoices, or EUR
+ *  missions with no rate entered). */
+export const EXCHANGE_RATE_ROWS = [38];
+
+export const EXCHANGE_RATE_FIELD_NAMES = ['exchange_rate_line', 'total_ttc_mad'] as const;

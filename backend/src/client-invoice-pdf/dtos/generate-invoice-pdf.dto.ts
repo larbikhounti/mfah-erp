@@ -23,7 +23,7 @@ import { IsOptional, IsString } from 'class-validator';
  */
 export class GenerateInvoicePdfDto {
   @ApiProperty({ required: false }) @IsOptional() @IsString() client_name?: string;
-  @ApiProperty({ required: false }) @IsOptional() @IsString() client_city?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() client_address?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() client_ice?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() invoice_date?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() loading_date?: string;
@@ -45,5 +45,7 @@ export class GenerateInvoicePdfDto {
   @ApiProperty({ required: false }) @IsOptional() @IsString() tva?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() total_ht?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() amount_in_words?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() exchange_rate_line?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() total_ttc_mad?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() total_ttc?: string;
 }

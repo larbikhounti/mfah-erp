@@ -16,6 +16,7 @@ export interface MissionResponse {
   deliveryLocation: string;
   clientPrice: Decimal;
   currency: Currency;
+  exchangeRate: Decimal | null;
   subcontractorId: number | null;
   subcontractorCost: Decimal | null;
   truckId: number | null;

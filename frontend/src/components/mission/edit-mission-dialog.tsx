@@ -83,6 +83,7 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
   const [loadingLocation, setLoadingLocation] = useState(mission.loadingLocation);
   const [deliveryLocation, setDeliveryLocation] = useState(mission.deliveryLocation);
   const [clientPrice, setClientPrice] = useState(mission.clientPrice);
+  const [exchangeRate, setExchangeRate] = useState(mission.exchangeRate ? String(Number(mission.exchangeRate)) : "");
   const [currency, setCurrency] = useState<Currency>(mission.currency);
   const [truckId, setTruckId] = useState(mission.truckId?.toString() ?? "");
   const [driverId, setDriverId] = useState(mission.driverId?.toString() ?? "");
@@ -144,6 +145,8 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
     if (!deliveryLocation.trim()) newErrors.deliveryLocation = "Delivery location is required";
     if (!clientPrice || Number(clientPrice) <= 0) newErrors.clientPrice = "Client price must be positive";
     if (!missionDate) newErrors.missionDate = "Mission date is required";
+    if (currency === "EUR" && exchangeRate && Number(exchangeRate) <= 0)
+      newErrors.exchangeRate = "Exchange rate must be positive";
 
     if (executionMode === "IN_HOUSE") {
       if (!truckId) newErrors.truckId = "Truck is required";
@@ -171,6 +174,7 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
         deliveryLocation: deliveryLocation.trim(),
         clientPrice: Number(clientPrice),
         currency,
+        exchangeRate: currency === "EUR" && exchangeRate ? Number(exchangeRate) : null,
         missionDate: new Date(missionDate).toISOString(),
         autoInvoice,
         ...(executionMode === "IN_HOUSE"
@@ -304,6 +308,23 @@ export function EditMissionDialog({ mission }: EditMissionDialogProps) {
               {errors.missionDate && <p className="text-sm text-destructive">{errors.missionDate}</p>}
             </div>
           </div>
+
+          {currency === "EUR" && (
+            <div className="grid gap-2 md:w-1/3">
+              <Label htmlFor="edit-exchangeRate">Exchange Rate (1 EUR = ? MAD)</Label>
+              <Input
+                id="edit-exchangeRate"
+                type="number"
+                min={0}
+                step="0.0001"
+                placeholder="e.g. 10.93"
+                value={exchangeRate}
+                onChange={(e) => setExchangeRate(e.target.value)}
+                className={errors.exchangeRate ? "border-destructive" : ""}
+              />
+              {errors.exchangeRate && <p className="text-sm text-destructive">{errors.exchangeRate}</p>}
+            </div>
+          )}
 
           <div className="grid gap-2">
             <Label htmlFor="edit-executionMode">Execution Mode</Label>

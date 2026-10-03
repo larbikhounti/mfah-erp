@@ -1,5 +1,6 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import {
+  Currency,
   DriverStatus,
   ExecutionMode,
   InvoiceStatus,
@@ -45,6 +46,10 @@ export class MissionsService {
             deliveryLocation: sanitized.deliveryLocation,
             clientPrice: new Prisma.Decimal(sanitized.clientPrice),
             currency: sanitized.currency,
+            exchangeRate: this.resolveExchangeRate(
+              sanitized.currency,
+              data.exchangeRate,
+            ),
             subcontractorId: sanitized.subcontractorId,
             subcontractorCost:
               sanitized.subcontractorCost !== undefined &&
@@ -284,6 +289,12 @@ export class MissionsService {
             deliveryLocation: sanitized.deliveryLocation,
             clientPrice: new Prisma.Decimal(sanitized.clientPrice),
             currency: sanitized.currency,
+            exchangeRate: this.resolveExchangeRate(
+              sanitized.currency,
+              data.exchangeRate !== undefined
+                ? data.exchangeRate
+                : existing.exchangeRate && Number(existing.exchangeRate),
+            ),
             subcontractorId: sanitized.subcontractorId,
             subcontractorCost:
               sanitized.subcontractorCost !== undefined &&
@@ -549,6 +560,18 @@ export class MissionsService {
    * side doesn't apply so the stored data never has both a truck+driver and a
    * subcontractor set at once.
    */
+  // The EUR→MAD rate only means anything on a EUR mission — dropped
+  // otherwise, so a mission switched to MAD never keeps a stale rate.
+  private resolveExchangeRate(
+    currency: Currency,
+    rate: number | null | undefined,
+  ): Prisma.Decimal | null {
+    if (currency !== Currency.EUR || rate === undefined || rate === null) {
+      return null;
+    }
+    return new Prisma.Decimal(rate);
+  }
+
   private async validateAndSanitize(data: {
     clientId: number;
     transportType: any;

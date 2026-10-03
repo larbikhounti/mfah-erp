@@ -241,6 +241,9 @@ model Mission {
   deliveryLocation  String
   clientPrice       Decimal            @db.Decimal(12, 2)
   currency          Currency
+  // EUR→MAD rate at the time of the mission (1 EUR = exchangeRate MAD) —
+  // EUR missions only, optional; printed on the client invoice PDF.
+  exchangeRate      Decimal?           @db.Decimal(10, 4)
   subcontractorId   Int?
   subcontractorCost Decimal?           @db.Decimal(12, 2)
   truckId           Int?

@@ -50,10 +50,12 @@ export interface ClientInvoicesResponse {
 // Suggested defaults for the "Generate Invoice" dialog, computed server-side
 // from the invoice/mission/client/truck. Fields with no source of truth in
 // our schema (remorque, cmr, commande, tmsa, immobilisation,
-// double_equipage, gazoil, client_city) aren't included here — the dialog
+// double_equipage, gazoil) aren't included here — the dialog
 // starts those blank/off.
 export interface InvoicePdfPrefill {
   client_name: string;
+  // The client's address, or "" if none is on file.
+  client_address: string;
   client_ice: string;
   invoice_number: string;
   invoice_date: string;
@@ -69,6 +71,9 @@ export interface InvoicePdfPrefill {
   tva: string;
   total_ttc: string;
   amount_in_words: string;
+  // The mission's EUR→MAD rate ("" if none) and the date shown next to it.
+  exchange_rate: string;
+  exchange_rate_date: string;
   hasTruck: boolean;
   currency: Currency;
 }
@@ -77,7 +82,7 @@ export interface InvoicePdfPrefill {
 // backend's GenerateInvoicePdfDto/the template's own AcroForm field names.
 export interface InvoicePdfFields {
   client_name?: string;
-  client_city?: string;
+  client_address?: string;
   client_ice?: string;
   invoice_number?: string;
   invoice_date?: string;
@@ -100,6 +105,8 @@ export interface InvoicePdfFields {
   tva?: string;
   total_ht?: string;
   amount_in_words?: string;
+  exchange_rate_line?: string;
+  total_ttc_mad?: string;
   total_ttc?: string;
 }
 

@@ -39,7 +39,7 @@ type ToggleKey =
   | "remorque"
   | "cmr"
   | "commande"
-  | "client_city"
+  | "client_address"
   | "tmsa"
   | "immobilisation"
   | "double_equipage"
@@ -56,7 +56,7 @@ const DETAIL_TOGGLES: { key: ToggleKey; label: string; placeholder?: string }[] 
   { key: "remorque", label: "Remorque (Trailer)" },
   { key: "cmr", label: "CMR N°" },
   { key: "commande", label: "N° Commande" },
-  { key: "client_city", label: "Client City" },
+  { key: "client_address", label: "Client Address" },
 ];
 
 const SURCHARGE_TOGGLES: { key: ToggleKey; label: string }[] = [
@@ -72,7 +72,7 @@ const EMPTY_TOGGLES: Record<ToggleKey, ToggleFieldState> = {
   remorque: { enabled: false, value: "" },
   cmr: { enabled: false, value: "" },
   commande: { enabled: false, value: "" },
-  client_city: { enabled: false, value: "" },
+  client_address: { enabled: false, value: "" },
   tmsa: { enabled: false, value: "" },
   immobilisation: { enabled: false, value: "" },
   double_equipage: { enabled: false, value: "" },
@@ -137,14 +137,13 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
   const [totalHtTouched, setTotalHtTouched] = useState(false);
   const [amountInWords, setAmountInWords] = useState("");
   const [amountInWordsTouched, setAmountInWordsTouched] = useState(false);
+  const [exchangeRate, setExchangeRate] = useState("");
+  const [exchangeRateDate, setExchangeRateDate] = useState("");
 
-  // The template's total boxes have "DH" printed as static design text, not
-  // something we can swap per invoice — for EUR invoices we spell the
-  // currency out in the amount itself instead so it's never ambiguous.
-  const formatMoney = (value: number) => (currency === "EUR" ? `${value.toFixed(2)} EUR` : value.toFixed(2));
-  // Same idea, but always shows a unit — used for the dialog's own
-  // read-only previews, where "1000.00" alone would be ambiguous.
-  const displayMoney = (value: number) => `${value.toFixed(2)} ${currency === "EUR" ? "EUR" : "DH"}`;
+  // The template has no currency labels of its own — every amount carries
+  // its unit ("DH"/"EUR") in the value itself, in the PDF and in the
+  // dialog's own read-only previews alike.
+  const formatMoney = (value: number) => `${value.toFixed(2)} ${currency === "EUR" ? "EUR" : "DH"}`;
 
   const [toggles, setToggles] = useState<Record<ToggleKey, ToggleFieldState>>(EMPTY_TOGGLES);
   const updateToggle = (key: ToggleKey, patch: Partial<ToggleFieldState>) =>
@@ -169,10 +168,13 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
         setTotalHtTouched(false);
         setAmountInWords(prefill.amount_in_words);
         setAmountInWordsTouched(false);
+        setExchangeRate(prefill.exchange_rate);
+        setExchangeRateDate(prefill.exchange_rate_date);
         setToggles({
           ...EMPTY_TOGGLES,
           loading_date: { enabled: true, value: prefill.loading_date },
           delivery_date: { enabled: true, value: prefill.delivery_date },
+          client_address: { enabled: !!prefill.client_address, value: prefill.client_address },
         });
       })
       .catch(() => toast.error("Failed to load invoice details"))
@@ -197,6 +199,11 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [totalTtc, amountInWordsTouched, currency]);
 
+  // EUR invoices only: the Total TTC converted to dirhams at the mission's
+  // rate, printed under the totals together with the rate itself.
+  const rate = currency === "EUR" ? parseFloat(exchangeRate) || 0 : 0;
+  const totalTtcMad = Math.round(totalTtc * rate * 100) / 100;
+
   const handleGenerate = async () => {
     setGenerating(true);
     try {
@@ -219,6 +226,10 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
         amount_in_words: amountInWords,
       };
       if (extrasTotal > 0) fields.extras_total = formatMoney(extrasTotal);
+      if (rate > 0) {
+        fields.exchange_rate_line = `Taux de change EUR/MAD au ${exchangeRateDate} : 1 EUR = ${exchangeRate.trim().replace(".", ",")} MAD`;
+        fields.total_ttc_mad = `${totalTtcMad.toFixed(2)} DH`;
+      }
 
       for (const key of Object.keys(toggles) as ToggleKey[]) {
         const field = toggles[key];
@@ -357,7 +368,7 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
               </div>
               {extrasTotal > 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Surcharges total: <span className="font-medium text-foreground">{displayMoney(extrasTotal)}</span>
+                  Surcharges total: <span className="font-medium text-foreground">{formatMoney(extrasTotal)}</span>
                 </p>
               )}
             </div>
@@ -375,7 +386,7 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
                 </div>
                 <div className="grid gap-2">
                   <Label>Line Total</Label>
-                  <div className="rounded-md border bg-muted px-3 py-2 text-sm">{displayMoney(lineTotal)}</div>
+                  <div className="rounded-md border bg-muted px-3 py-2 text-sm">{formatMoney(lineTotal)}</div>
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-3">
@@ -397,7 +408,7 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
                 <div className="grid gap-2">
                   <Label>Total TTC</Label>
                   <div className="rounded-md border bg-muted px-3 py-2 text-sm font-medium">
-                    {displayMoney(totalTtc)}
+                    {formatMoney(totalTtc)}
                   </div>
                 </div>
               </div>
@@ -413,6 +424,33 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
                   rows={2}
                 />
               </div>
+              {currency === "EUR" && (
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="grid gap-2">
+                    <Label htmlFor="exchange_rate">Exchange Rate (1 EUR = ? MAD)</Label>
+                    <Input
+                      id="exchange_rate"
+                      value={exchangeRate}
+                      onChange={(e) => setExchangeRate(e.target.value)}
+                      placeholder="Not printed if empty"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="exchange_rate_date">Rate Date</Label>
+                    <Input
+                      id="exchange_rate_date"
+                      value={exchangeRateDate}
+                      onChange={(e) => setExchangeRateDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Total TTC in MAD</Label>
+                    <div className="rounded-md border bg-muted px-3 py-2 text-sm font-medium">
+                      {rate > 0 ? `${totalTtcMad.toFixed(2)} DH` : "-"}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
