@@ -59,6 +59,11 @@ npx prisma db seed           # runs prisma/seed.ts directly (ts-node)
 ```
 Swagger docs are served at `/api/docs` when the backend is running.
 
+**Tests** — no real database is touched by either suite:
+- Unit specs (`src/**/*.spec.ts`, `npm run test`) cover the business rules: missions (IN_HOUSE/SUBCONTRACTED, exchange rate, invoice/bill sync, truck/driver status), invoices/bills, `PermissionGuard`, auth, the invoice PDF prefill/generate, and the default xlsx template's structure. Services get a fake Prisma from `test/helpers/prisma-mock.ts` (`createPrismaMock()` — every `prisma.<model>.<method>` is a `jest.fn()`; unknown models are created lazily). `invoice-xlsx-renderer.service.spec.ts` does a **real LibreOffice render** and asserts one page per invoice (the Linux 2-page overflow bug); it auto-skips when `soffice` isn't installed, so run it on a machine with LibreOffice + Neo Sans fonts before shipping template changes.
+- `test/app.e2e-spec.ts` (`npm run test:e2e`) boots the whole `AppModule` with `PrismaService` overridden by the same mock, configured via `configureApp()` (`src/app.setup.ts`, shared with `main.ts` so prefix/versioning/`ValidationPipe` can't drift). Catches boot-time DI failures, unguarded routes, permission/validation regressions, and DTO fields the frontend sends being dropped.
+- Both jest configs map the `src/...` absolute imports some files use (`moduleNameMapper`); without it those suites fail to load.
+
 ### Frontend (`frontend/`)
 ```bash
 npm run dev      # next dev --turbopack, http://localhost:3000
