@@ -24,12 +24,12 @@ import { ArrowLeftRight } from "lucide-react";
 import { useMissionsStore, type Mission, type MissionStatus } from "@/stores/missions-store";
 import { toast } from "sonner";
 import { Loader } from "../loader";
+import { MISSION_STATUSES, MISSION_STATUS_LABEL } from "./mission-status-badge";
 
 interface ChangeMissionStatusDialogProps {
   mission: Mission;
 }
 
-const STATUS_OPTIONS: MissionStatus[] = ["PLANNED", "IN_PROGRESS", "FINISHED", "CANCELLED"];
 
 export function ChangeMissionStatusDialog({ mission }: ChangeMissionStatusDialogProps) {
   const { updateMissionStatus, loading } = useMissionsStore();
@@ -61,7 +61,7 @@ export function ChangeMissionStatusDialog({ mission }: ChangeMissionStatusDialog
           <DialogTitle>Change Status — {mission.reference}</DialogTitle>
           <DialogDescription>
             For in-house missions, entering "In Progress" marks the truck/driver as on mission;
-            finishing or cancelling frees them up again.
+            any other status frees them up again.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,9 +72,9 @@ export function ChangeMissionStatusDialog({ mission }: ChangeMissionStatusDialog
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {STATUS_OPTIONS.map((option) => (
+                {MISSION_STATUSES.map((option) => (
                   <SelectItem key={option} value={option}>
-                    {option}
+                    {MISSION_STATUS_LABEL[option]}
                   </SelectItem>
                 ))}
               </SelectContent>

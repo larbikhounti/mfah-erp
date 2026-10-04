@@ -1,5 +1,13 @@
-import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
-import { AttachmentOwnerType } from '@prisma/client';
+import {
+  HttpException,
+  HttpStatus,
+  Injectable,
+  Logger,
+  NotFoundException,
+  StreamableFile,
+} from '@nestjs/common';
+import { createReadStream, existsSync } from 'fs';
+import { AttachmentCategory, AttachmentOwnerType } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { LocalFileStorageService } from './local-file-storage.service';
 import { AttachmentResponse } from '../types/attachment-response.type';
@@ -12,7 +20,7 @@ export interface UploadedFileInput {
 
 /**
  * Backs the single, unified `Attachment` table shared by Trucks, Drivers,
- * Clients, and Subcontractors. Every upload carries a `label` — a
+ * Clients, Subcontractors, invoices/bills, Missions and FuelEntries. Every upload carries a `label` — a
  * human-chosen name the uploader is responsible for picking so the file is
  * recognizable later; there's no separate per-owner-type table for special
  * categories (e.g. contracts) — labeling is on the uploader, not the schema.
@@ -98,6 +106,34 @@ export class AttachmentsService {
     );
   }
 
+  /** `category` tags files the app has rules about (CMR, odometer photo). */
+  uploadForMission(
+    missionId: number,
+    label: string,
+    file: UploadedFileInput,
+    category?: AttachmentCategory,
+  ) {
+    return this.upload(
+      AttachmentOwnerType.MISSION,
+      { missionId },
+      label,
+      file,
+      'missions',
+      category,
+    );
+  }
+
+  uploadForFuelEntry(fuelEntryId: number, file: UploadedFileInput) {
+    return this.upload(
+      AttachmentOwnerType.FUEL_ENTRY,
+      { fuelEntryId },
+      'Fuel receipt',
+      file,
+      'fuel-receipts',
+      AttachmentCategory.FUEL_RECEIPT,
+    );
+  }
+
   private async upload(
     ownerType: AttachmentOwnerType,
     owner: {
@@ -107,10 +143,13 @@ export class AttachmentsService {
       subcontractorId?: number;
       clientInvoiceId?: number;
       subcontractorBillId?: number;
+      missionId?: number;
+      fuelEntryId?: number;
     },
     label: string,
     file: UploadedFileInput,
     subdir: string,
+    category?: AttachmentCategory,
   ): Promise<AttachmentResponse> {
     try {
       const stored = await this.storage.save(
@@ -124,6 +163,7 @@ export class AttachmentsService {
         data: {
           ownerType,
           ...owner,
+          category,
           label,
           fileName: stored.fileName,
           filePath: stored.filePath,
@@ -184,6 +224,20 @@ export class AttachmentsService {
     });
   }
 
+  findForMission(missionId: number): Promise<AttachmentResponse[]> {
+    return this.prisma.attachment.findMany({
+      where: { missionId },
+      orderBy: { uploadedAt: 'desc' },
+    });
+  }
+
+  findForFuelEntries(fuelEntryIds: number[]): Promise<AttachmentResponse[]> {
+    return this.prisma.attachment.findMany({
+      where: { fuelEntryId: { in: fuelEntryIds } },
+      orderBy: { uploadedAt: 'desc' },
+    });
+  }
+
   async findOne(id: number): Promise<AttachmentResponse> {
     const attachment = await this.prisma.attachment.findUnique({
       where: { id },
@@ -194,6 +248,20 @@ export class AttachmentsService {
     }
 
     return attachment;
+  }
+
+  /** Streams the stored file — callers must have checked access first. */
+  toStreamableFile(attachment: AttachmentResponse): StreamableFile {
+    const absolutePath = this.storage.resolveAbsolutePath(attachment.filePath);
+
+    if (!existsSync(absolutePath)) {
+      throw new NotFoundException('File not found on disk');
+    }
+
+    return new StreamableFile(createReadStream(absolutePath), {
+      type: attachment.mimeType ?? 'application/octet-stream',
+      disposition: `attachment; filename="${attachment.fileName}"`,
+    });
   }
 
   async remove(id: number): Promise<{ message: string }> {

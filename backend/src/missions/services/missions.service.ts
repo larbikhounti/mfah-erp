@@ -1,12 +1,12 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import {
   Currency,
-  DriverStatus,
   ExecutionMode,
   InvoiceStatus,
+  Mission,
   MissionStatus,
   Prisma,
-  TruckStatus,
 } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateMissionDto } from '../dtos/create-mission.dto';
@@ -17,8 +17,29 @@ import { FilterMissionsDto } from '../dtos/filter-missions.dto';
 import { MissionResponse } from '../types/mission-response.type';
 import { ClientInvoicesService } from '../../client-invoices/services/client-invoices.service';
 import { computeInvoiceStatus } from '../../helpers/helper.helpers';
+import { MissionLifecycleService } from './mission-lifecycle.service';
+import { MissionDriverEvent, MissionEvents } from '../events/mission.events';
 
 const MAX_REFERENCE_ATTEMPTS = 5;
+
+/** Missions still ahead of / on the road for the driver — the only ones
+ *  worth notifying them about. */
+const DRIVER_ACTIVE_STATUSES: ReadonlySet<MissionStatus> = new Set([
+  MissionStatus.PLANNED,
+  MissionStatus.IN_PROGRESS,
+]);
+
+/** Fields shown on the driver's mission screen: changing one notifies them. */
+const DRIVER_VISIBLE_FIELDS = [
+  'loadingLocation',
+  'deliveryLocation',
+  'missionDate',
+  'expectedDeliveryDate',
+  'truckId',
+  'goods',
+  'weightKg',
+  'clientReference',
+] as const satisfies readonly (keyof Mission)[];
 
 @Injectable()
 export class MissionsService {
@@ -27,6 +48,8 @@ export class MissionsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly clientInvoicesService: ClientInvoicesService,
+    private readonly lifecycle: MissionLifecycleService,
+    private readonly events: EventEmitter2,
   ) {}
 
   async create(data: CreateMissionDto): Promise<MissionResponse> {
@@ -60,9 +83,21 @@ export class MissionsService {
             driverId: sanitized.driverId,
             contractorTruckId: sanitized.contractorTruckId,
             missionDate: data.missionDate,
+            expectedDeliveryDate: data.expectedDeliveryDate,
+            goods: data.goods,
+            weightKg: data.weightKg,
+            clientReference: data.clientReference,
             autoInvoice: data.autoInvoice ?? false,
           },
         });
+
+        if (mission.driverId) {
+          this.emitDriverEvent(
+            MissionEvents.DRIVER_ASSIGNED,
+            mission,
+            mission.driverId,
+          );
+        }
 
         if (mission.autoInvoice) {
           // The mission itself is already created and valid at this point —
@@ -305,6 +340,10 @@ export class MissionsService {
             driverId: sanitized.driverId,
             contractorTruckId: sanitized.contractorTruckId,
             missionDate: data.missionDate ?? undefined,
+            expectedDeliveryDate: data.expectedDeliveryDate,
+            goods: data.goods,
+            weightKg: data.weightKg,
+            clientReference: data.clientReference,
             autoInvoice: data.autoInvoice ?? undefined,
           },
         }),
@@ -349,6 +388,7 @@ export class MissionsService {
       }
 
       const [updated] = await this.prisma.$transaction(operations);
+      this.emitUpdateEvents(existing, updated);
       return updated;
     } catch (error) {
       this.logger.error(`Error updating mission with id ${id}:`, error);
@@ -362,85 +402,77 @@ export class MissionsService {
     }
   }
 
-  async updateStatus(
+  updateStatus(
     id: number,
     dto: UpdateMissionStatusDto,
   ): Promise<MissionResponse> {
-    const mission = await this.prisma.mission.findUnique({ where: { id } });
+    return this.lifecycle.transition(id, dto.status);
+  }
 
-    if (!mission) {
-      throw new HttpException('Mission not found', HttpStatus.NOT_FOUND);
+  /** Ops confirm a delivery the driver submitted for review. */
+  approveReview(id: number): Promise<MissionResponse> {
+    return this.lifecycle.transition(id, MissionStatus.FINISHED, {
+      allowedFrom: [MissionStatus.PENDING_REVIEW],
+    });
+  }
+
+  private emitUpdateEvents(before: Mission, after: Mission): void {
+    if (!DRIVER_ACTIVE_STATUSES.has(after.status)) {
+      return;
     }
 
-    const oldStatus = mission.status;
-    const newStatus = dto.status;
+    if (before.driverId !== after.driverId) {
+      if (before.driverId) {
+        this.emitDriverEvent(
+          MissionEvents.DRIVER_UNASSIGNED,
+          after,
+          before.driverId,
+        );
+      }
+      if (after.driverId) {
+        this.emitDriverEvent(
+          MissionEvents.DRIVER_ASSIGNED,
+          after,
+          after.driverId,
+        );
+      }
+      return;
+    }
 
-    const enteringInProgress =
-      newStatus === MissionStatus.IN_PROGRESS &&
-      oldStatus !== MissionStatus.IN_PROGRESS;
-    const leavingInProgress =
-      oldStatus === MissionStatus.IN_PROGRESS &&
-      (newStatus === MissionStatus.FINISHED ||
-        newStatus === MissionStatus.CANCELLED);
-
-    try {
-      const [updated] = await this.prisma.$transaction([
-        this.prisma.mission.update({
-          where: { id },
-          data: { status: newStatus },
-        }),
-        ...(mission.executionMode === ExecutionMode.IN_HOUSE &&
-        enteringInProgress
-          ? this.truckDriverStatusUpdates(mission.truckId, mission.driverId, {
-              truck: TruckStatus.EN_MISSION,
-              driver: DriverStatus.EN_MISSION,
-            })
-          : []),
-        ...(mission.executionMode === ExecutionMode.IN_HOUSE &&
-        leavingInProgress
-          ? this.truckDriverStatusUpdates(mission.truckId, mission.driverId, {
-              truck: TruckStatus.DISPO,
-              driver: DriverStatus.ACTIF,
-            })
-          : []),
-      ]);
-
-      return updated;
-    } catch (error) {
-      this.logger.error(`Error updating status for mission ${id}:`, error);
-      throw new HttpException(
-        'Error updating mission status',
-        HttpStatus.INTERNAL_SERVER_ERROR,
+    const changed = DRIVER_VISIBLE_FIELDS.some(
+      (field) => !this.sameValue(before[field], after[field]),
+    );
+    if (changed && after.driverId) {
+      this.emitDriverEvent(
+        MissionEvents.DETAILS_CHANGED,
+        after,
+        after.driverId,
       );
     }
   }
 
-  private truckDriverStatusUpdates(
-    truckId: number | null,
-    driverId: number | null,
-    to: { truck: TruckStatus; driver: DriverStatus },
-  ) {
-    const updates: Prisma.PrismaPromise<any>[] = [];
-
-    if (truckId) {
-      updates.push(
-        this.prisma.truck.update({
-          where: { id: truckId },
-          data: { status: to.truck },
-        }),
-      );
+  /** A deleted mission disappears from the driver's list: tell them. */
+  private emitRemovedEvents(missions: Mission[]): void {
+    for (const mission of missions) {
+      if (mission.driverId && DRIVER_ACTIVE_STATUSES.has(mission.status)) {
+        this.emitDriverEvent(
+          MissionEvents.DRIVER_UNASSIGNED,
+          mission,
+          mission.driverId,
+        );
+      }
     }
+  }
 
-    if (driverId) {
-      updates.push(
-        this.prisma.driver.update({
-          where: { id: driverId },
-          data: { status: to.driver },
-        }),
-      );
+  private emitDriverEvent(event: string, mission: Mission, driverId: number) {
+    this.events.emit(event, new MissionDriverEvent(mission.id, driverId));
+  }
+
+  private sameValue(a: unknown, b: unknown): boolean {
+    if (a instanceof Date && b instanceof Date) {
+      return a.getTime() === b.getTime();
     }
-
-    return updates;
+    return a === b;
   }
 
   async remove(id: number): Promise<{ message: string }> {
@@ -461,6 +493,7 @@ export class MissionsService {
       where: { id },
       data: { deletedAt: new Date() },
     });
+    this.emitRemovedEvents([mission]);
 
     return { message: 'Mission deleted successfully' };
   }
@@ -475,7 +508,6 @@ export class MissionsService {
 
     const existing = await this.prisma.mission.findMany({
       where: { id: { in: missionIds } },
-      select: { id: true, deletedAt: true },
     });
 
     const existingIds = existing.map((m) => m.id);
@@ -492,6 +524,8 @@ export class MissionsService {
       where: { id: { in: deletableIds } },
       data: { deletedAt: new Date() },
     });
+
+    this.emitRemovedEvents(existing.filter((m) => deletableIds.includes(m.id)));
 
     return {
       message: `Bulk delete completed. ${result.count} missions deleted.`,

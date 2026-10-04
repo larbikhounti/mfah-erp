@@ -22,6 +22,7 @@ const missionStatusConfig = {
   count: { label: "Missions" },
   PLANNED: { label: "Planned", color: "var(--chart-1)" },
   IN_PROGRESS: { label: "In Progress", color: "var(--chart-2)" },
+  PENDING_REVIEW: { label: "Pending Review", color: "var(--chart-5)" },
   FINISHED: { label: "Finished", color: "var(--chart-3)" },
   CANCELLED: { label: "Cancelled", color: "var(--chart-4)" },
 } satisfies ChartConfig;

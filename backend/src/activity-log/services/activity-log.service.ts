@@ -11,6 +11,8 @@ const SENSITIVE_KEYS = new Set([
   'accesstoken',
   'token',
   'refreshtoken',
+  'pin',
+  'pinhash',
 ]);
 
 const SEPARATOR = '='.repeat(80);

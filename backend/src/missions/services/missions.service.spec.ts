@@ -10,7 +10,10 @@ import {
   TransportType,
   TruckStatus,
 } from '@prisma/client';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { MissionsService } from './missions.service';
+import { MissionLifecycleService } from './mission-lifecycle.service';
+import { MissionEvents } from '../events/mission.events';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ClientInvoicesService } from '../../client-invoices/services/client-invoices.service';
 import { CreateMissionDto } from '../dtos/create-mission.dto';
@@ -82,16 +85,20 @@ describe('MissionsService', () => {
   let service: MissionsService;
   let prisma: PrismaMock;
   let clientInvoices: { createForMission: jest.Mock };
+  let events: { emit: jest.Mock };
 
   beforeEach(async () => {
     prisma = createPrismaMock();
     clientInvoices = { createForMission: jest.fn() };
+    events = { emit: jest.fn() };
 
     const moduleRef = await Test.createTestingModule({
       providers: [
         MissionsService,
         { provide: PrismaService, useValue: prisma },
+        MissionLifecycleService,
         { provide: ClientInvoicesService, useValue: clientInvoices },
+        { provide: EventEmitter2, useValue: events },
       ],
     }).compile();
     service = moduleRef.get(MissionsService);
@@ -446,7 +453,11 @@ describe('MissionsService', () => {
       });
     });
 
-    it.each([MissionStatus.FINISHED, MissionStatus.CANCELLED])(
+    it.each([
+      MissionStatus.PENDING_REVIEW,
+      MissionStatus.FINISHED,
+      MissionStatus.CANCELLED,
+    ])(
       'frees the truck and driver when an in-progress mission becomes %s',
       async (status) => {
         prisma.mission.findUnique.mockResolvedValue(
@@ -500,6 +511,136 @@ describe('MissionsService', () => {
 
       expect(prisma.$transaction).toHaveBeenCalledTimes(1);
       expect(prisma.$transaction.mock.calls[0][0]).toHaveLength(3);
+    });
+  });
+
+  describe('driver portal workflow', () => {
+    beforeEach(() => {
+      prisma.truck.update.mockResolvedValue({});
+      prisma.driver.update.mockResolvedValue({});
+    });
+
+    it('stamps loadingConfirmedAt when a mission starts', async () => {
+      prisma.mission.findUnique.mockResolvedValue(storedMission());
+
+      await service.updateStatus(1, { status: MissionStatus.IN_PROGRESS });
+
+      const { data } = prisma.mission.update.mock.calls[0][0];
+      expect(data.loadingConfirmedAt).toBeInstanceOf(Date);
+    });
+
+    it('guards the status update against a concurrent transition', async () => {
+      prisma.mission.findUnique.mockResolvedValue(storedMission());
+
+      await service.updateStatus(1, { status: MissionStatus.IN_PROGRESS });
+
+      expect(prisma.mission.update.mock.calls[0][0].where).toEqual({
+        id: 1,
+        status: MissionStatus.PLANNED,
+      });
+    });
+
+    it('approves a mission pending review and stamps reviewedAt', async () => {
+      prisma.mission.findUnique.mockResolvedValue(
+        storedMission({ status: MissionStatus.PENDING_REVIEW }),
+      );
+
+      await service.approveReview(1);
+
+      const { data } = prisma.mission.update.mock.calls[0][0];
+      expect(data.status).toBe(MissionStatus.FINISHED);
+      expect(data.reviewedAt).toBeInstanceOf(Date);
+      expect(prisma.truck.update).not.toHaveBeenCalled();
+    });
+
+    it('refuses to approve a mission that is not pending review', async () => {
+      prisma.mission.findUnique.mockResolvedValue(
+        storedMission({ status: MissionStatus.IN_PROGRESS }),
+      );
+
+      await expectHttpError(service.approveReview(1), HttpStatus.CONFLICT);
+      expect(prisma.mission.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('driver notifications (domain events)', () => {
+    it('announces the assigned driver when an IN_HOUSE mission is created', async () => {
+      await service.create(inHouseDto());
+
+      expect(events.emit).toHaveBeenCalledWith(
+        MissionEvents.DRIVER_ASSIGNED,
+        expect.objectContaining({ driverId: 20 }),
+      );
+    });
+
+    it('emits nothing for a SUBCONTRACTED mission', async () => {
+      await service.create(subcontractedDto());
+      expect(events.emit).not.toHaveBeenCalled();
+    });
+
+    it('tells the old driver they were removed and the new one they were assigned', async () => {
+      prisma.mission.findUnique.mockResolvedValue(storedMission());
+      prisma.mission.update.mockResolvedValue(storedMission({ driverId: 21 }));
+
+      await service.update(1, { driverId: 21 });
+
+      expect(events.emit).toHaveBeenCalledWith(
+        MissionEvents.DRIVER_UNASSIGNED,
+        expect.objectContaining({ driverId: 20 }),
+      );
+      expect(events.emit).toHaveBeenCalledWith(
+        MissionEvents.DRIVER_ASSIGNED,
+        expect.objectContaining({ driverId: 21 }),
+      );
+    });
+
+    it('notifies the driver when a visible detail changes', async () => {
+      prisma.mission.findUnique.mockResolvedValue(storedMission());
+      prisma.mission.update.mockResolvedValue(
+        storedMission({ deliveryLocation: 'Barcelona' }),
+      );
+
+      await service.update(1, { deliveryLocation: 'Barcelona' });
+
+      expect(events.emit).toHaveBeenCalledWith(
+        MissionEvents.DETAILS_CHANGED,
+        expect.objectContaining({ driverId: 20 }),
+      );
+    });
+
+    it('stays quiet when only billing changes', async () => {
+      prisma.mission.findUnique.mockResolvedValue(storedMission());
+      prisma.mission.update.mockResolvedValue(
+        storedMission({ clientPrice: new Prisma.Decimal(16000) }),
+      );
+
+      await service.update(1, { clientPrice: 16000 });
+
+      expect(events.emit).not.toHaveBeenCalled();
+    });
+
+    it('stays quiet about finished missions', async () => {
+      const finished = storedMission({ status: MissionStatus.FINISHED });
+      prisma.mission.findUnique.mockResolvedValue(finished);
+      prisma.mission.update.mockResolvedValue({
+        ...finished,
+        deliveryLocation: 'Barcelona',
+      });
+
+      await service.update(1, { deliveryLocation: 'Barcelona' });
+
+      expect(events.emit).not.toHaveBeenCalled();
+    });
+
+    it('announces a cancellation to the driver', async () => {
+      prisma.mission.findUnique.mockResolvedValue(storedMission());
+
+      await service.updateStatus(1, { status: MissionStatus.CANCELLED });
+
+      expect(events.emit).toHaveBeenCalledWith(
+        MissionEvents.CANCELLED,
+        expect.objectContaining({ missionId: 1, driverId: 20 }),
+      );
     });
   });
 });

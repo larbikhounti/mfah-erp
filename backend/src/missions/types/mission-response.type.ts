@@ -24,6 +24,14 @@ export interface MissionResponse {
   contractorTruckId: number | null;
   status: MissionStatus;
   missionDate: Date;
+  expectedDeliveryDate: Date | null;
+  goods: string | null;
+  weightKg: number | null;
+  clientReference: string | null;
+  loadingConfirmedAt: Date | null;
+  completedAt: Date | null;
+  completionComment: string | null;
+  reviewedAt: Date | null;
   autoInvoice: boolean;
   createdAt: Date;
   updatedAt: Date;

@@ -8,6 +8,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
 } from 'class-validator';
 import { Currency, ExecutionMode, TransportType } from '@prisma/client';
@@ -118,11 +119,55 @@ export class UpdateMissionDto {
   @Min(1)
   contractorTruckId?: number;
 
-  @ApiProperty({ description: 'Scheduled mission date', required: false })
+  @ApiProperty({
+    description: 'Scheduled loading date and time',
+    required: false,
+  })
   @IsOptional()
   @Type(() => Date)
   @IsDate()
   missionDate?: Date;
+
+  @ApiProperty({
+    description: 'Expected delivery date (null clears it)',
+    required: false,
+    example: '2026-09-03T00:00:00.000Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  expectedDeliveryDate?: Date | null;
+
+  @ApiProperty({
+    description: 'Goods carried',
+    required: false,
+    example: 'Automotive parts',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  goods?: string | null;
+
+  @ApiProperty({
+    description: 'Load weight (kg)',
+    required: false,
+    example: 20000,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  weightKg?: number | null;
+
+  @ApiProperty({
+    description: "The client's own reference for this job",
+    required: false,
+    example: 'K+N / AGC',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  clientReference?: string | null;
 
   @ApiProperty({
     description: 'Automatically create the client invoice',

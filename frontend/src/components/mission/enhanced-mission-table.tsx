@@ -21,7 +21,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Trash2, RotateCcw } from "lucide-react";
+import { MoreHorizontal, Trash2, RotateCcw, Eye } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -35,13 +42,13 @@ import { EditMissionDialog } from "@/components/mission/edit-mission-dialog";
 import { ChangeMissionStatusDialog } from "@/components/mission/change-mission-status-dialog";
 import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
+import {
+  MissionStatusBadge,
+  MISSION_STATUSES,
+  MISSION_STATUS_LABEL,
+} from "@/components/mission/mission-status-badge";
+import { ViewMissionDialog } from "@/components/mission/view-mission-dialog";
 
-const STATUS_VARIANT: Record<MissionStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  PLANNED: "outline",
-  IN_PROGRESS: "secondary",
-  FINISHED: "default",
-  CANCELLED: "destructive",
-};
 
 export function EnhancedMissionTable() {
   const {
@@ -55,6 +62,7 @@ export function EnhancedMissionTable() {
     totalPages,
     showArchived,
     filterClientId,
+    filterStatus,
     filterStartDate,
     filterEndDate,
     fetchMissions,
@@ -68,6 +76,7 @@ export function EnhancedMissionTable() {
     setPageSize,
     setShowArchived,
     setFilterClientId,
+    setFilterStatus,
     setFilterDateRange,
   } = useMissionsStore();
 
@@ -207,7 +216,7 @@ export function EnhancedMissionTable() {
       key: "status",
       label: "Status",
       sortable: true,
-      render: (mission) => <Badge variant={STATUS_VARIANT[mission.status]}>{mission.status}</Badge>,
+      render: (mission) => <MissionStatusBadge status={mission.status} />,
     },
     {
       key: "missionDate",
@@ -231,6 +240,17 @@ export function EnhancedMissionTable() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <ViewMissionDialog
+              missionId={mission.id}
+              trigger={
+                <span className="relative flex cursor-default items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden">
+                  <Eye className="mr-2 h-4 w-4" />
+                  {mission.status === "PENDING_REVIEW" ? "Review" : "View"}
+                </span>
+              }
+            />
+          </DropdownMenuItem>
           {!mission.deletedAt && (
             <>
               <DropdownMenuItem asChild>
@@ -292,6 +312,27 @@ export function EnhancedMissionTable() {
           />
         </div>
         <div className="grid gap-1.5">
+          <Label htmlFor="filter-status" className="text-xs text-muted-foreground">
+            Status
+          </Label>
+          <Select
+            value={filterStatus ?? "ALL"}
+            onValueChange={(value) => setFilterStatus(value === "ALL" ? null : (value as MissionStatus))}
+          >
+            <SelectTrigger id="filter-status" className="w-[170px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All statuses</SelectItem>
+              {MISSION_STATUSES.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {MISSION_STATUS_LABEL[status]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="grid gap-1.5">
           <Label htmlFor="filter-start-date" className="text-xs text-muted-foreground">
             From
           </Label>
@@ -315,12 +356,13 @@ export function EnhancedMissionTable() {
             className="w-[150px]"
           />
         </div>
-        {(filterClientId || filterStartDate || filterEndDate) && (
+        {(filterClientId || filterStatus || filterStartDate || filterEndDate) && (
           <Button
             variant="ghost"
             size="sm"
             onClick={() => {
               setFilterClientId(null);
+              setFilterStatus(null);
               setFilterDateRange(null, null);
             }}
           >

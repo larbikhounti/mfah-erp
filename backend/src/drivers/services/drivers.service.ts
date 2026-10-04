@@ -1,16 +1,21 @@
 import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateDriverDto } from '../dtos/create-driver.dto';
 import { UpdateDriverDto } from '../dtos/update-driver.dto';
 import { BulkDeleteDriversDto } from '../dtos/bulk-delete-drivers.dto';
 import { FilterDriversDto } from '../dtos/filter-drivers.dto';
 import { DriverResponse } from '../types/driver-response.type';
+import { DriverEvents, DriverPhoneChangedEvent } from '../events/driver.events';
 
 @Injectable()
 export class DriversService {
   private readonly logger = new Logger(DriversService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly events: EventEmitter2,
+  ) {}
 
   async create(data: CreateDriverDto): Promise<DriverResponse> {
     try {
@@ -117,7 +122,16 @@ export class DriversService {
         }
       }
 
-      return await this.prisma.driver.update({ where: { id }, data });
+      const updated = await this.prisma.driver.update({ where: { id }, data });
+
+      if (data.phone && data.phone !== existing.phone) {
+        this.events.emit(
+          DriverEvents.PHONE_CHANGED,
+          new DriverPhoneChangedEvent(id, updated.phone),
+        );
+      }
+
+      return updated;
     } catch (error) {
       this.logger.error(`Error updating driver with id ${id}:`, error);
       if (error instanceof HttpException) {

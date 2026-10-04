@@ -3,7 +3,9 @@ import { axiosInstance } from "@/lib/utils";
 
 export type TransportType = "EXPORT" | "IMPORT";
 export type ExecutionMode = "IN_HOUSE" | "SUBCONTRACTED";
-export type MissionStatus = "PLANNED" | "IN_PROGRESS" | "FINISHED" | "CANCELLED";
+// PENDING_REVIEW: the driver completed the delivery in the driver portal
+// and ops still have to approve it (see approveMission).
+export type MissionStatus = "PLANNED" | "IN_PROGRESS" | "PENDING_REVIEW" | "FINISHED" | "CANCELLED";
 export type Currency = "MAD" | "EUR";
 
 export interface Mission {
@@ -24,7 +26,17 @@ export interface Mission {
   driverId: number | null;
   contractorTruckId: number | null;
   status: MissionStatus;
+  // Loading date + time.
   missionDate: string;
+  expectedDeliveryDate: string | null;
+  goods: string | null;
+  weightKg: number | null;
+  clientReference: string | null;
+  // Driver-portal workflow, set by the driver's actions.
+  loadingConfirmedAt: string | null;
+  completedAt: string | null;
+  completionComment: string | null;
+  reviewedAt: string | null;
   autoInvoice: boolean;
   createdAt: string;
   updatedAt: string;
@@ -46,6 +58,10 @@ export interface CreateMissionPayload {
   driverId?: number;
   contractorTruckId?: number;
   missionDate: string;
+  expectedDeliveryDate?: string | null;
+  goods?: string | null;
+  weightKg?: number | null;
+  clientReference?: string | null;
   autoInvoice?: boolean;
 }
 
@@ -78,6 +94,7 @@ interface MissionsStore {
   selectedMissions: number[];
   showArchived: boolean;
   filterClientId: number | null;
+  filterStatus: MissionStatus | null;
   filterStartDate: string | null;
   filterEndDate: string | null;
 
@@ -90,6 +107,7 @@ interface MissionsStore {
   createMission: (data: CreateMissionPayload) => Promise<void>;
   updateMission: (id: number, data: UpdateMissionPayload) => Promise<void>;
   updateMissionStatus: (id: number, status: MissionStatus) => Promise<void>;
+  approveMission: (id: number) => Promise<void>;
   deleteMission: (id: number) => Promise<void>;
   bulkDeleteMissions: (missionIds: number[]) => Promise<void>;
   restoreMission: (id: number) => Promise<void>;
@@ -99,6 +117,7 @@ interface MissionsStore {
   setPageSize: (pageSize: number) => void;
   setShowArchived: (show: boolean) => void;
   setFilterClientId: (clientId: number | null) => void;
+  setFilterStatus: (status: MissionStatus | null) => void;
   setFilterDateRange: (startDate: string | null, endDate: string | null) => void;
 
   selectMission: (id: number) => void;
@@ -116,6 +135,7 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
   selectedMissions: [],
   showArchived: false,
   filterClientId: null,
+  filterStatus: null,
   filterStartDate: null,
   filterEndDate: null,
 
@@ -127,7 +147,7 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
     try {
       set({ loading: true, error: null });
 
-      const { currentPage, pageSize, showArchived, filterClientId, filterStartDate, filterEndDate } = get();
+      const { currentPage, pageSize, showArchived, filterClientId, filterStatus, filterStartDate, filterEndDate } = get();
       const offset = Math.max(0, (currentPage - 1) * pageSize);
 
       const apiParams: any = {
@@ -137,7 +157,8 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
       };
 
       if (params.search && params.search.trim()) apiParams.search = params.search.trim();
-      if (params.status) apiParams.status = params.status;
+      const status = params.status ?? filterStatus;
+      if (status) apiParams.status = status;
       if (params.transportType) apiParams.transportType = params.transportType;
       if (params.executionMode) apiParams.executionMode = params.executionMode;
       if (params.currency) apiParams.currency = params.currency;
@@ -294,6 +315,16 @@ export const useMissionsStore = create<MissionsStore>((set, get) => ({
   setShowArchived: (show: boolean) => {
     set({ showArchived: show, currentPage: 1 });
     get().fetchMissions({ showArchived: show });
+  },
+
+  approveMission: async (id: number) => {
+    await axiosInstance.patch(`/missions/admin/${id}/approve`);
+    await get().fetchMissions();
+  },
+
+  setFilterStatus: (status: MissionStatus | null) => {
+    set({ filterStatus: status, currentPage: 1 });
+    get().fetchMissions();
   },
 
   setFilterClientId: (clientId: number | null) => {

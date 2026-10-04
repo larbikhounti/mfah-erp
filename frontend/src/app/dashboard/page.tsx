@@ -33,13 +33,8 @@ import PaginationTable from "@/components/pagination-table";
 import RangeDate from "@/components/range-date";
 import { useDashboardStore, type MissionStatus } from "@/stores/dashboard-store";
 import { DashboardCharts } from "@/components/dashboard/dashboard-charts";
+import { MissionStatusBadge } from "@/components/mission/mission-status-badge";
 
-const STATUS_VARIANT: Record<MissionStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  PLANNED: "outline",
-  IN_PROGRESS: "secondary",
-  FINISHED: "default",
-  CANCELLED: "destructive",
-};
 
 function money(amount: number) {
   return amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -94,6 +89,7 @@ export default function DashboardPage() {
 
   const finishedMissions = summary.missionsByStatus.FINISHED ?? 0;
   const inProgressMissions = summary.missionsByStatus.IN_PROGRESS ?? 0;
+  const pendingReviewMissions = summary.missionsByStatus.PENDING_REVIEW ?? 0;
   const dispoTrucks = summary.fleetStatus.DISPO ?? 0;
   const totalTrucks = Object.values(summary.fleetStatus).reduce((a, b) => a + b, 0);
   const activeDrivers = summary.driverStatus.ACTIF ?? 0;
@@ -123,7 +119,10 @@ export default function DashboardPage() {
           </CardHeader>
           <CardFooter className="flex-col items-start gap-1.5 text-sm">
             <div className="line-clamp-1 flex gap-2 font-medium">{finishedMissions} finished</div>
-            <div className="text-muted-foreground">{inProgressMissions} in progress</div>
+            <div className="text-muted-foreground">
+              {inProgressMissions} in progress
+              {pendingReviewMissions > 0 && ` · ${pendingReviewMissions} pending review`}
+            </div>
           </CardFooter>
         </Card>
 
@@ -298,7 +297,7 @@ export default function DashboardPage() {
                         {Number(mission.clientPrice).toLocaleString()} {mission.currency}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={STATUS_VARIANT[mission.status]}>{mission.status}</Badge>
+                        <MissionStatusBadge status={mission.status} />
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {mission.clientInvoiceStatus?.replace("_", " ") || "-"}

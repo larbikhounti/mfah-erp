@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   Logger,
   UnauthorizedException,
@@ -9,7 +10,9 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorator/public.decorator';
+import { IS_DRIVER_ROUTE_KEY } from '../decorator/driver-route.decorator';
 import { Reflector } from '@nestjs/core';
+import { DRIVER_TOKEN_KIND } from '../types/jwt-payload.type';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -31,23 +34,46 @@ export class AuthGuard implements CanActivate {
       return true;
     }
 
+    const request = context.switchToHttp().getRequest();
+    let payload: any;
     try {
-      const request = context.switchToHttp().getRequest();
       const token = this.extractTokenFromHeader(request);
       if (!token) {
         throw new UnauthorizedException();
       }
-      const payload = await this.verifyAccessToken(token);
+      payload = await this.verifyAccessToken(token);
       if (!payload) {
         throw new UnauthorizedException('Invalid access token');
       }
-
-      request['user'] = payload;
     } catch (error) {
       this.logger.error('Error occurred while verifying access token', error);
       throw new UnauthorizedException();
     }
+
+    this.assertTokenKindMatchesRoute(context, payload);
+    request['user'] = payload;
     return true;
+  }
+
+  // Staff and driver tokens are signed with the same secret, so without
+  // this check a driver token would pass on staff routes (and its `sub`, a
+  // Driver.id, would be looked up as a Users.id by PermissionGuard).
+  private assertTokenKindMatchesRoute(
+    context: ExecutionContext,
+    payload: { kind?: string },
+  ): void {
+    const isDriverRoute = this.reflector.getAllAndOverride<boolean>(
+      IS_DRIVER_ROUTE_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+    const isDriverToken = payload.kind === DRIVER_TOKEN_KIND;
+
+    if (isDriverRoute && !isDriverToken) {
+      throw new ForbiddenException('This route is for drivers only');
+    }
+    if (!isDriverRoute && isDriverToken) {
+      throw new ForbiddenException('Drivers cannot access this route');
+    }
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {

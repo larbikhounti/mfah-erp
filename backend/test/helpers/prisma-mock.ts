@@ -9,6 +9,7 @@ const MODEL_METHODS = [
   'create',
   'update',
   'updateMany',
+  'upsert',
   'delete',
   'deleteMany',
   'aggregate',
@@ -28,6 +29,9 @@ const MODELS = [
   'clientInvoice',
   'subcontractorBill',
   'attachment',
+  'driverCredential',
+  'fuelEntry',
+  'pushSubscription',
 ] as const;
 
 type ModelMock = Record<(typeof MODEL_METHODS)[number], jest.Mock>;

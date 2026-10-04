@@ -9,6 +9,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  MaxLength,
   Min,
   ValidateIf,
 } from 'class-validator';
@@ -118,12 +119,53 @@ export class CreateMissionDto {
   contractorTruckId?: number;
 
   @ApiProperty({
-    description: 'Scheduled mission date',
-    example: '2026-09-01T00:00:00.000Z',
+    description: 'Scheduled loading date and time',
+    example: '2026-09-01T08:00:00.000Z',
   })
   @Type(() => Date)
   @IsDate()
   missionDate: Date;
+
+  @ApiProperty({
+    description: 'Expected delivery date',
+    required: false,
+    example: '2026-09-03T00:00:00.000Z',
+  })
+  @IsOptional()
+  @Type(() => Date)
+  @IsDate()
+  expectedDeliveryDate?: Date | null;
+
+  @ApiProperty({
+    description: 'Goods carried',
+    required: false,
+    example: 'Automotive parts',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  goods?: string | null;
+
+  @ApiProperty({
+    description: 'Load weight (kg)',
+    required: false,
+    example: 20000,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  weightKg?: number | null;
+
+  @ApiProperty({
+    description: "The client's own reference for this job",
+    required: false,
+    example: 'K+N / AGC',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  clientReference?: string | null;
 
   @ApiProperty({
     description:

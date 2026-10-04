@@ -34,9 +34,17 @@ const MODULE_DELEGATES: Record<string, { delegate: string; label: string }> =
 
 // Routes deliberately never written to the log: auth (login/refresh isn't
 // a data mutation), attachments (logged implicitly through the owning
-// entity's own admin/:id/attachments route), and the log's own endpoints
-// (clearing it already logs itself explicitly, see ActivityLogService.clear).
-const IGNORED_MODULES = new Set(['auth', 'attachments', 'activity-logs']);
+// entity's own admin/:id/attachments route), the log's own endpoints
+// (clearing it already logs itself explicitly, see ActivityLogService.clear),
+// and the driver portal (drivers have no email/user account; their actions
+// are traceable on the records themselves — loadingConfirmedAt,
+// completedAt, FuelEntry.createdAt, attachment uploadedAt).
+const IGNORED_MODULES = new Set([
+  'auth',
+  'attachments',
+  'activity-logs',
+  'driver',
+]);
 
 const ACTION_KEYWORDS = [
   'create',
@@ -48,6 +56,8 @@ const ACTION_KEYWORDS = [
   'attachments',
   'generate-pdf',
   'roles',
+  'approve',
+  'portal-access',
 ];
 
 type RouteInfo = {
@@ -80,6 +90,12 @@ function deriveAction(method: string, segments: string[]): string {
       return 'PDF_GENERATED';
     case 'roles':
       return 'PERMISSIONS_UPDATE';
+    case 'approve':
+      return 'REVIEW_APPROVED';
+    case 'portal-access':
+      return method === 'DELETE'
+        ? 'PORTAL_ACCESS_REVOKED'
+        : 'PORTAL_ACCESS_GRANTED';
   }
 
   switch (method) {

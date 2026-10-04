@@ -28,6 +28,7 @@ import { useDriversStore, type Driver, type DriverStatus } from "@/stores/driver
 import { toast } from "sonner";
 import { CreateDriverDialog } from "@/components/driver/create-driver-dialog";
 import { EditDriverDialog } from "@/components/driver/edit-driver-dialog";
+import { DriverPortalAccessDialog } from "@/components/driver/driver-portal-access-dialog";
 import { AttachmentsPanel } from "@/components/shared/attachments-panel";
 import { ExportExcelButton } from "@/components/shared/export-excel-button";
 import PaginationTable from "@/components/pagination-table";
@@ -189,6 +190,9 @@ export function EnhancedDriverTable() {
               <>
                 <DropdownMenuItem asChild>
                   <EditDriverDialog driver={driver} />
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <DriverPortalAccessDialog driver={driver} />
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {

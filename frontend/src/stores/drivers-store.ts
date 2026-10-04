@@ -44,6 +44,14 @@ export interface DriversResponse {
   total: number;
 }
 
+/** Driver-portal login (phone + PIN) as managed by staff. */
+export interface PortalAccess {
+  enabled: boolean;
+  loginPhone: string | null;
+  lockedUntil: string | null;
+  lastLoginAt: string | null;
+}
+
 interface DriversStore {
   drivers: Driver[];
   total: number;
@@ -61,6 +69,9 @@ interface DriversStore {
   updateDriver: (id: number, data: UpdateDriverPayload) => Promise<void>;
   deleteDriver: (id: number) => Promise<void>;
   bulkDeleteDrivers: (driverIds: number[]) => Promise<void>;
+  getPortalAccess: (id: number) => Promise<PortalAccess>;
+  setPortalPin: (id: number, pin: string) => Promise<PortalAccess>;
+  revokePortalAccess: (id: number) => Promise<PortalAccess>;
   restoreDriver: (id: number) => Promise<void>;
   bulkRestoreDrivers: (driverIds: number[]) => Promise<void>;
 
@@ -186,6 +197,21 @@ export const useDriversStore = create<DriversStore>((set, get) => ({
       });
       throw error;
     }
+  },
+
+  getPortalAccess: async (id: number) => {
+    const { data } = await axiosInstance.get<PortalAccess>(`/drivers/admin/${id}/portal-access`);
+    return data;
+  },
+
+  setPortalPin: async (id: number, pin: string) => {
+    const { data } = await axiosInstance.put<PortalAccess>(`/drivers/admin/${id}/portal-access`, { pin });
+    return data;
+  },
+
+  revokePortalAccess: async (id: number) => {
+    const { data } = await axiosInstance.delete<PortalAccess>(`/drivers/admin/${id}/portal-access`);
+    return data;
   },
 
   restoreDriver: async (id: number) => {

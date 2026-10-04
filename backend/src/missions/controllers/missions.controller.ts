@@ -12,19 +12,26 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
 } from '@nestjs/common';
-import { PermissionModule } from '@prisma/client';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
+import { AttachmentCategory, PermissionModule } from '@prisma/client';
 import { CreateMissionDto } from '../dtos/create-mission.dto';
 import { UpdateMissionDto } from '../dtos/update-mission.dto';
 import { UpdateMissionStatusDto } from '../dtos/update-mission-status.dto';
 import { BulkDeleteMissionsDto } from '../dtos/bulk-delete-missions.dto';
 import { FilterMissionsDto } from '../dtos/filter-missions.dto';
 import { MissionsService } from '../services/missions.service';
+import { AttachmentsService } from '../../attachments/services/attachments.service';
 import {
   ApiBearerAuth,
   ApiTags,
   ApiOperation,
   ApiResponse,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { AuthGuard } from '../../auth/guards/auth.guard';
 import { PermissionGuard } from '../../auth/guards/permission.guard';
@@ -38,7 +45,10 @@ import { RequirePermission } from '../../auth/decorator/require-permission.decor
   version: '1',
 })
 export class MissionsController {
-  constructor(private missionsService: MissionsService) {}
+  constructor(
+    private missionsService: MissionsService,
+    private attachmentsService: AttachmentsService,
+  ) {}
 
   @Get()
   @RequirePermission(PermissionModule.MISSIONS, 'read')
@@ -83,13 +93,24 @@ export class MissionsController {
   @ApiOperation({
     summary:
       "Transition a mission's status. For IN_HOUSE missions, entering IN_PROGRESS marks the " +
-      'assigned truck/driver as EN_MISSION; leaving IN_PROGRESS (to FINISHED/CANCELLED) restores them.',
+      'assigned truck/driver as EN_MISSION; leaving IN_PROGRESS (to any other status) restores them.',
   })
   updateMissionStatus(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateMissionStatusDto,
   ) {
     return this.missionsService.updateStatus(id, dto);
+  }
+
+  @RequirePermission(PermissionModule.MISSIONS, 'update')
+  @Patch('admin/:id/approve')
+  @ApiOperation({
+    summary:
+      'Approve a delivery the driver submitted (PENDING_REVIEW → FINISHED)',
+  })
+  @ApiResponse({ status: 409, description: 'Mission is not pending review' })
+  approveMission(@Param('id', ParseIntPipe) id: number) {
+    return this.missionsService.approveReview(id);
   }
 
   @RequirePermission(PermissionModule.MISSIONS, 'delete')
@@ -122,5 +143,51 @@ export class MissionsController {
   @ApiOperation({ summary: 'Restore multiple missions' })
   bulkRestoreMissions(@Body() body: { missionIds: number[] }) {
     return this.missionsService.bulkRestore(body.missionIds);
+  }
+
+  // === Attachments (CMR, odometer photo, any other mission document) ===
+
+  @RequirePermission(PermissionModule.MISSIONS, 'read')
+  @Get(':id/attachments')
+  @ApiOperation({ summary: "List a mission's attachments" })
+  listAttachments(@Param('id', ParseIntPipe) id: number) {
+    return this.attachmentsService.findForMission(id);
+  }
+
+  @RequirePermission(PermissionModule.MISSIONS, 'update')
+  @Post('admin/:id/attachments')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload an attachment for a mission' })
+  async uploadAttachment(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('label') label?: string,
+    @Body('category') category?: AttachmentCategory,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+    if (!label?.trim()) {
+      throw new BadRequestException('label is required');
+    }
+    if (category && !Object.values(AttachmentCategory).includes(category)) {
+      throw new BadRequestException('Invalid category');
+    }
+    await this.missionsService.findOne(id);
+    return this.attachmentsService.uploadForMission(
+      id,
+      label.trim(),
+      file,
+      category,
+    );
+  }
+
+  @RequirePermission(PermissionModule.MISSIONS, 'update')
+  @Delete('admin/attachments/:attachmentId')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Delete a mission attachment' })
+  deleteAttachment(@Param('attachmentId', ParseIntPipe) attachmentId: number) {
+    return this.attachmentsService.remove(attachmentId);
   }
 }

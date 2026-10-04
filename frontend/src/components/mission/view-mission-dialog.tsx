@@ -16,18 +16,14 @@ import { useTrucksStore } from "@/stores/trucks-store";
 import { useDriversStore } from "@/stores/drivers-store";
 import { useSubcontractorsStore } from "@/stores/subcontractors-store";
 import { useContractorTrucksStore } from "@/stores/contractor-trucks-store";
+import { MissionStatusBadge } from "@/components/mission/mission-status-badge";
+import { MissionDriverReport } from "@/components/mission/mission-driver-report";
 
 interface ViewMissionDialogProps {
   missionId: number;
   trigger: React.ReactNode;
 }
 
-const STATUS_VARIANT: Record<MissionStatus, "default" | "secondary" | "destructive" | "outline"> = {
-  PLANNED: "outline",
-  IN_PROGRESS: "secondary",
-  FINISHED: "default",
-  CANCELLED: "destructive",
-};
 
 // Shared with any row-level "View Mission" trigger (client invoices,
 // subcontractor bills) so the link itself hints at the mission's status
@@ -35,6 +31,7 @@ const STATUS_VARIANT: Record<MissionStatus, "default" | "secondary" | "destructi
 export const MISSION_LINK_COLOR: Record<MissionStatus, string> = {
   PLANNED: "text-primary",
   IN_PROGRESS: "text-yellow-500",
+  PENDING_REVIEW: "text-amber-600",
   FINISHED: "text-green-600",
   CANCELLED: "text-destructive",
 };
@@ -112,7 +109,7 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {mission ? `Mission ${mission.reference}` : "Mission"}
@@ -141,7 +138,7 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
           <div className="divide-y">
             <DetailRow
               label="Status"
-              value={<Badge variant={STATUS_VARIANT[mission.status]}>{mission.status.replace("_", " ")}</Badge>}
+              value={<MissionStatusBadge status={mission.status} />}
             />
             <DetailRow
               label="Type"
@@ -197,8 +194,29 @@ export function ViewMissionDialog({ missionId, trigger }: ViewMissionDialogProps
                 />
               </>
             )}
-            <DetailRow label="Mission Date" value={new Date(mission.missionDate).toLocaleDateString()} />
+            <DetailRow
+              label="Loading"
+              value={new Date(mission.missionDate).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+            />
+            {mission.expectedDeliveryDate && (
+              <DetailRow
+                label="Expected Delivery"
+                value={new Date(mission.expectedDeliveryDate).toLocaleDateString()}
+              />
+            )}
+            {mission.goods && <DetailRow label="Goods" value={mission.goods} />}
+            {mission.weightKg !== null && (
+              <DetailRow label="Weight" value={`${mission.weightKg.toLocaleString()} kg`} />
+            )}
+            {mission.clientReference && <DetailRow label="Client Reference" value={mission.clientReference} />}
           </div>
+        )}
+
+        {mission && mission.executionMode === "IN_HOUSE" && !mission.deletedAt && (
+          <MissionDriverReport
+            mission={mission}
+            onApproved={() => fetchMissionById(missionId).then(setMission)}
+          />
         )}
       </DialogContent>
     </Dialog>

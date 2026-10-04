@@ -1,4 +1,4 @@
-import { AttachmentOwnerType } from '@prisma/client';
+import { AttachmentCategory, AttachmentOwnerType } from '@prisma/client';
 
 export interface AttachmentResponse {
   id: number;
@@ -9,6 +9,9 @@ export interface AttachmentResponse {
   subcontractorId: number | null;
   clientInvoiceId: number | null;
   subcontractorBillId: number | null;
+  missionId: number | null;
+  fuelEntryId: number | null;
+  category: AttachmentCategory | null;
   label: string;
   fileName: string;
   filePath: string;

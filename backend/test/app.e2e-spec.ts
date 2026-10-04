@@ -25,6 +25,7 @@ describe('MFAH API (e2e)', () => {
   let prisma: PrismaMock;
   let adminToken: string;
   let officeToken: string;
+  let driverToken: string;
 
   const validMission = {
     clientId: 1,
@@ -54,6 +55,8 @@ describe('MFAH API (e2e)', () => {
     const jwt = new JwtService({ secret: process.env.JWT_ACCESS_SECRET });
     adminToken = jwt.sign({ sub: 1, email: 'admin@mfah.ma' });
     officeToken = jwt.sign({ sub: 2, email: 'office@mfah.ma' });
+    // Driver.id 1 — deliberately the same number as the admin's Users.id.
+    driverToken = jwt.sign({ sub: 1, kind: 'driver', tokenVersion: 0 });
   });
 
   afterAll(async () => {
@@ -76,6 +79,16 @@ describe('MFAH API (e2e)', () => {
     prisma.mission.create.mockImplementation(({ data }) =>
       Promise.resolve({ id: 1, ...data }),
     );
+    prisma.driverCredential.findUnique.mockResolvedValue({
+      driverId: 1,
+      tokenVersion: 0,
+      driver: {
+        id: 1,
+        fullName: 'Ahmed',
+        phone: '0612345678',
+        deletedAt: null,
+      },
+    });
   });
 
   const api = () => request(app.getHttpServer());
@@ -210,6 +223,99 @@ describe('MFAH API (e2e)', () => {
           total_ttc_mad: '12023.00 DH',
         })
         .expect(404);
+    });
+  });
+
+  describe('driver portal', () => {
+    const asDriver = (req: request.Test) =>
+      req.set('Authorization', `Bearer ${driverToken}`);
+
+    it('rejects a driver token on staff routes, even with a matching user id', () => {
+      return asDriver(api().get('/api/v1/missions')).expect(403);
+    });
+
+    it('rejects a staff token on driver routes', () => {
+      return api()
+        .get('/api/v1/driver/missions/overview')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(403);
+    });
+
+    it('rejects driver routes without a token', () => {
+      return api().get('/api/v1/driver/missions/overview').expect(401);
+    });
+
+    it('rejects a token issued before the PIN was reset', () => {
+      prisma.driverCredential.findUnique.mockResolvedValue({
+        driverId: 1,
+        tokenVersion: 1,
+        driver: { id: 1, deletedAt: null },
+      });
+      return asDriver(api().get('/api/v1/driver/missions/overview')).expect(
+        401,
+      );
+    });
+
+    it('validates the PIN format on login', () => {
+      return api()
+        .post('/api/v1/driver/auth/login')
+        .send({ phone: '0612345678', pin: '12' })
+        .expect(400);
+    });
+
+    it('never sends prices or the client to the driver', async () => {
+      prisma.mission.count.mockResolvedValue(1);
+      prisma.mission.findMany.mockResolvedValue([
+        {
+          id: 1,
+          reference: 'MIS-2026-000001',
+          status: 'PLANNED',
+          clientId: 1,
+          clientPrice: new Prisma.Decimal(2500),
+          subcontractorCost: null,
+          truck: { id: 10, plateNumber: '12345-A-6' },
+        },
+      ]);
+
+      const res = await asDriver(
+        api().get('/api/v1/driver/missions/overview'),
+      ).expect(200);
+
+      const body = JSON.stringify(res.body);
+      expect(body).toContain('MIS-2026-000001');
+      expect(body).not.toContain('clientPrice');
+      expect(body).not.toContain('clientId');
+    });
+
+    it('accepts the multipart fields the Add fuel screen sends', async () => {
+      // 404 (not this driver's mission) proves the body passed validation.
+      prisma.mission.findFirst.mockResolvedValue(null);
+
+      await asDriver(api().post('/api/v1/driver/missions/1/fuel-entries'))
+        .field('litres', '320')
+        .field('unitPrice', '1.12')
+        .field('currency', 'EUR')
+        .field('odometerKm', '125430')
+        .expect(404);
+    });
+
+    it("accepts the browser's PushSubscription.toJSON() as-is", async () => {
+      prisma.pushSubscription.upsert.mockResolvedValue({});
+      await asDriver(api().post('/api/v1/driver/push/subscriptions'))
+        .send({
+          endpoint: 'https://fcm.googleapis.com/fcm/send/abc',
+          expirationTime: null,
+          keys: { p256dh: 'p256dh-key', auth: 'auth-key' },
+        })
+        .expect(200);
+    });
+
+    it('lets staff approve only through the review endpoint permission', () => {
+      prisma.permission.findUnique.mockResolvedValue({ canRead: true });
+      return api()
+        .patch('/api/v1/missions/admin/1/approve')
+        .set('Authorization', `Bearer ${officeToken}`)
+        .expect(403);
     });
   });
 });

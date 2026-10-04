@@ -33,6 +33,13 @@ import {
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
 import { useRemoteComboboxOptions } from "@/hooks/use-remote-combobox-options";
+import {
+  cargoToPayload,
+  EMPTY_CARGO,
+  MissionCargoFields,
+  MissionCargoValues,
+  validateCargo,
+} from "@/components/mission/mission-cargo-fields";
 import { Plus, Route } from "lucide-react";
 import {
   useMissionsStore,
@@ -96,6 +103,7 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
   const [contractorTruckId, setContractorTruckId] = useState("");
   const [contractorTruckLabel, setContractorTruckLabel] = useState("");
   const [missionDate, setMissionDate] = useState("");
+  const [cargo, setCargo] = useState<MissionCargoValues>(EMPTY_CARGO);
   const [autoInvoice, setAutoInvoice] = useState(true);
   const [confirmNoInvoiceOpen, setConfirmNoInvoiceOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -140,6 +148,7 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
     setContractorTruckId("");
     setContractorTruckLabel("");
     setMissionDate("");
+    setCargo(EMPTY_CARGO);
     setAutoInvoice(true);
     setErrors({});
   };
@@ -150,7 +159,8 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
     if (!loadingLocation.trim()) newErrors.loadingLocation = "Loading location is required";
     if (!deliveryLocation.trim()) newErrors.deliveryLocation = "Delivery location is required";
     if (!clientPrice || Number(clientPrice) <= 0) newErrors.clientPrice = "Client price must be positive";
-    if (!missionDate) newErrors.missionDate = "Mission date is required";
+    if (!missionDate) newErrors.missionDate = "Loading date is required";
+    Object.assign(newErrors, validateCargo(cargo, missionDate));
     if (currency === "EUR" && exchangeRate && Number(exchangeRate) <= 0)
       newErrors.exchangeRate = "Exchange rate must be positive";
 
@@ -182,6 +192,7 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
         currency,
         exchangeRate: currency === "EUR" && exchangeRate ? Number(exchangeRate) : null,
         missionDate: new Date(missionDate).toISOString(),
+        ...cargoToPayload(cargo),
         autoInvoice,
         ...(executionMode === "IN_HOUSE"
           ? { truckId: Number(truckId), driverId: Number(driverId) }
@@ -317,10 +328,10 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
               </Select>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="missionDate">Mission Date *</Label>
+              <Label htmlFor="missionDate">Loading Date & Time *</Label>
               <Input
                 id="missionDate"
-                type="date"
+                type="datetime-local"
                 value={missionDate}
                 onChange={(e) => setMissionDate(e.target.value)}
                 className={errors.missionDate ? "border-destructive" : ""}
@@ -345,6 +356,8 @@ export function CreateMissionDialog({ trigger }: CreateMissionDialogProps) {
               {errors.exchangeRate && <p className="text-sm text-destructive">{errors.exchangeRate}</p>}
             </div>
           )}
+
+          <MissionCargoFields values={cargo} onChange={setCargo} errors={errors} />
 
           <div className="grid gap-2">
             <Label htmlFor="executionMode">Execution Mode</Label>

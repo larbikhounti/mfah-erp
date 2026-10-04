@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { axiosInstance } from "@/lib/utils";
 
-export type MissionStatus = "PLANNED" | "IN_PROGRESS" | "FINISHED" | "CANCELLED";
+export type MissionStatus = "PLANNED" | "IN_PROGRESS" | "PENDING_REVIEW" | "FINISHED" | "CANCELLED";
 export type TruckStatus = "DISPO" | "EN_MISSION" | "MAINTENANCE" | "INDISPONIBLE";
 export type DriverStatus = "ACTIF" | "EN_CONGE" | "EN_MISSION" | "INDISPONIBLE";
 
