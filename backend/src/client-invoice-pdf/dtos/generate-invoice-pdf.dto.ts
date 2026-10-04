@@ -10,10 +10,11 @@ import { IsOptional, IsString } from 'class-validator';
  * (dates, numbers, etc.) — this endpoint just fills whatever it's given and
  * leaves every other cell blank on the PDF.
  *
- * `gazoil` maps to the template's 4th surcharge column, labeled
- * "Transitair" on FACTURE model.xlsx (the old PDF template called it
- * Gazoil) — kept as `gazoil` here since that's what the frontend already
- * sends; only the printed template label differs.
+ * `transitaire` maps to the template's 4th surcharge column (labeled
+ * "Transitaire" on the template).
+ *
+ * `tva` is optional like everything else: when the dialog's TVA switch is
+ * off it isn't sent, and the TVA header/value block is blanked out.
  *
  * `invoice_number` is deliberately NOT here — it always comes from the
  * invoice's own `invoiceNumber` in the DB (see ClientInvoicePdfService),
@@ -36,7 +37,7 @@ export class GenerateInvoicePdfDto {
   @ApiProperty({ required: false }) @IsOptional() @IsString() tmsa?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() immobilisation?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() double_equipage?: string;
-  @ApiProperty({ required: false }) @IsOptional() @IsString() gazoil?: string;
+  @ApiProperty({ required: false }) @IsOptional() @IsString() transitaire?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() extras_total?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() designation?: string;
   @ApiProperty({ required: false }) @IsOptional() @IsString() quantity?: string;

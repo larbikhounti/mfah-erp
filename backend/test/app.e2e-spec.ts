@@ -203,7 +203,7 @@ describe('MFAH API (e2e)', () => {
           tmsa: '10',
           immobilisation: '10',
           double_equipage: '10',
-          gazoil: '10',
+          transitaire: '10',
           extras_total: '40.00 EUR',
           exchange_rate_line:
             'Taux de change EUR/MAD au 22/09/2026 : 1 EUR = 10,93 MAD',

@@ -31,7 +31,7 @@ interface GenerateInvoicePdfDialogProps {
 
 // The fields the template has no backing data for — off by default, a
 // blank input appears once switched on. TMSA/immobilisation/double
-// équipage/gazoil are handled separately below since they also feed the
+// équipage/transitaire are handled separately below since they also feed the
 // live "extras total".
 type ToggleKey =
   | "loading_date"
@@ -43,7 +43,7 @@ type ToggleKey =
   | "tmsa"
   | "immobilisation"
   | "double_equipage"
-  | "gazoil";
+  | "transitaire";
 
 interface ToggleFieldState {
   enabled: boolean;
@@ -63,7 +63,7 @@ const SURCHARGE_TOGGLES: { key: ToggleKey; label: string }[] = [
   { key: "tmsa", label: "TMSA (Taxation)" },
   { key: "immobilisation", label: "Immobilisation" },
   { key: "double_equipage", label: "Double Équipage" },
-  { key: "gazoil", label: "Gazoil" },
+  { key: "transitaire", label: "Transitaire" },
 ];
 
 const EMPTY_TOGGLES: Record<ToggleKey, ToggleFieldState> = {
@@ -76,7 +76,7 @@ const EMPTY_TOGGLES: Record<ToggleKey, ToggleFieldState> = {
   tmsa: { enabled: false, value: "" },
   immobilisation: { enabled: false, value: "" },
   double_equipage: { enabled: false, value: "" },
-  gazoil: { enabled: false, value: "" },
+  transitaire: { enabled: false, value: "" },
 };
 
 function ToggleField({
@@ -133,6 +133,8 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
   const [quantity, setQuantity] = useState("1");
   const [unitPrice, setUnitPrice] = useState("");
   const [tva, setTva] = useState("");
+  // TVA off → not printed and not added to Total TTC.
+  const [tvaEnabled, setTvaEnabled] = useState(true);
   const [totalHt, setTotalHt] = useState("");
   const [totalHtTouched, setTotalHtTouched] = useState(false);
   const [amountInWords, setAmountInWords] = useState("");
@@ -164,6 +166,7 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
         setQuantity(prefill.quantity);
         setUnitPrice(prefill.unit_price);
         setTva(prefill.tva);
+        setTvaEnabled(true);
         setTotalHt(prefill.total_ht);
         setTotalHtTouched(false);
         setAmountInWords(prefill.amount_in_words);
@@ -192,7 +195,7 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lineTotal, extrasTotal, totalHtTouched, currency]);
 
-  const totalTtc = (parseFloat(totalHt) || 0) + (parseFloat(tva) || 0);
+  const totalTtc = (parseFloat(totalHt) || 0) + (tvaEnabled ? parseFloat(tva) || 0 : 0);
 
   useEffect(() => {
     if (!amountInWordsTouched) setAmountInWords(amountToFrenchWords(totalTtc, currency));
@@ -221,10 +224,10 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
         unit_price: unitPrice,
         line_total: formatMoney(lineTotal),
         total_ht: totalHt,
-        tva,
         total_ttc: formatMoney(totalTtc),
         amount_in_words: amountInWords,
       };
+      if (tvaEnabled) fields.tva = tva;
       if (extrasTotal > 0) fields.extras_total = formatMoney(extrasTotal);
       if (rate > 0) {
         fields.exchange_rate_line = `Taux de change EUR/MAD au ${exchangeRateDate} : 1 EUR = ${exchangeRate.trim().replace(".", ",")} MAD`;
@@ -402,8 +405,17 @@ export function GenerateInvoicePdfDialog({ invoice }: GenerateInvoicePdfDialogPr
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="tva">TVA (manual)</Label>
-                  <Input id="tva" value={tva} onChange={(e) => setTva(e.target.value)} />
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="tva">TVA (manual)</Label>
+                    <Switch checked={tvaEnabled} onCheckedChange={setTvaEnabled} />
+                  </div>
+                  {tvaEnabled ? (
+                    <Input id="tva" value={tva} onChange={(e) => setTva(e.target.value)} />
+                  ) : (
+                    <div className="rounded-md border bg-muted px-3 py-2 text-sm text-muted-foreground">
+                      Not applied
+                    </div>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label>Total TTC</Label>

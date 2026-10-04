@@ -21,7 +21,7 @@ export const INVOICE_TEMPLATE_CELLS: Record<string, string> = {
   tmsa: 'B20',
   immobilisation: 'D20',
   double_equipage: 'F20',
-  gazoil: 'I20',
+  transitaire: 'I20',
   extras_total: 'K20',
   designation: 'B23',
   quantity: 'F23',
@@ -35,14 +35,20 @@ export const INVOICE_TEMPLATE_CELLS: Record<string, string> = {
   total_ttc_mad: 'I38',
 };
 
-/** TMSA/Immobilisation/Double Équipage/Transitair header row + its values
+/** TMSA/Immobilisation/Double Équipage/Transitaire header row + its values
  *  row — hidden together when no surcharge applies (see
  *  ClientInvoicePdfService), the same way the old PDF template whited out
  *  that section. The footer logo below is anchored "move with cells", so
  *  hiding these closes the gap instead of leaving it blank. */
 export const SURCHARGE_ROWS = [19, 20];
 
-export const SURCHARGE_FIELD_NAMES = ['tmsa', 'immobilisation', 'double_equipage', 'gazoil'] as const;
+export const SURCHARGE_FIELD_NAMES = ['tmsa', 'immobilisation', 'double_equipage', 'transitaire'] as const;
+
+/** The "TVA (10%)" header (I29:J30) + its value (I31:J31). It shares rows
+ *  with Total HT, so it can't be hidden by row like the sections above —
+ *  when no TVA is sent these cells are blanked instead (label, dark fill
+ *  and borders cleared to the plain white of the surrounding cells). */
+export const TVA_BLOCK_CELLS = ['I29', 'J29', 'I30', 'J30', 'I31', 'J31'];
 
 /** "Taux de change EUR/MAD ..." line + the Total TTC converted to MAD —
  *  hidden when the invoice has no exchange rate (MAD invoices, or EUR

@@ -50,7 +50,7 @@ export interface ClientInvoicesResponse {
 // Suggested defaults for the "Generate Invoice" dialog, computed server-side
 // from the invoice/mission/client/truck. Fields with no source of truth in
 // our schema (remorque, cmr, commande, tmsa, immobilisation,
-// double_equipage, gazoil) aren't included here — the dialog
+// double_equipage, transitaire) aren't included here — the dialog
 // starts those blank/off.
 export interface InvoicePdfPrefill {
   client_name: string;
@@ -96,7 +96,7 @@ export interface InvoicePdfFields {
   tmsa?: string;
   immobilisation?: string;
   double_equipage?: string;
-  gazoil?: string;
+  transitaire?: string;
   extras_total?: string;
   designation?: string;
   quantity?: string;

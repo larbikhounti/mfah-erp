@@ -11,6 +11,7 @@ import {
   INVOICE_TEMPLATE_CELLS,
   SURCHARGE_FIELD_NAMES,
   SURCHARGE_ROWS,
+  TVA_BLOCK_CELLS,
 } from '../config/invoice-template-cells';
 
 function formatDateFr(date: Date): string {
@@ -112,7 +113,7 @@ export class ClientInvoicePdfService {
       sheet.getCell(cellRef).value = allFields[name] ?? '';
     }
 
-    // The TMSA/Immobilisation/Double Équipage/Transitair row only makes
+    // The TMSA/Immobilisation/Double Équipage/Transitaire row only makes
     // sense when at least one of those was actually filled in — hide both
     // its header and value rows entirely when none apply, same intent as
     // the old PDF template's manual whiteout of that section.
@@ -120,6 +121,17 @@ export class ClientInvoicePdfService {
     if (!hasAnySurcharge) {
       for (const rowNumber of SURCHARGE_ROWS) {
         sheet.getRow(rowNumber).hidden = true;
+      }
+    }
+
+    // TVA switched off in the dialog: blank the whole TVA block (Total TTC
+    // already equals Total HT, computed by the frontend).
+    if (!allFields.tva) {
+      for (const cellRef of TVA_BLOCK_CELLS) {
+        const cell = sheet.getCell(cellRef);
+        cell.value = null;
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { theme: 0 } };
+        cell.border = {};
       }
     }
 

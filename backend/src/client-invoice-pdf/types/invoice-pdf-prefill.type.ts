@@ -1,7 +1,7 @@
 /**
  * Suggested default values for the "Generate PDF" dialog's fields that we
  * actually have a source of truth for. Everything else on the template
- * (remorque, cmr, commande, tmsa, immobilisation, double_equipage, gazoil)
+ * (remorque, cmr, commande, tmsa, immobilisation, double_equipage, transitaire)
  * has no backing data in our schema — the dialog starts those
  * blank/off and the frontend fills them in only if the user turns them on.
  */

@@ -66,7 +66,7 @@ const worstCase = (unit: 'DH' | 'EUR') => ({
   tmsa: '3000.00',
   immobilisation: '4500.00',
   double_equipage: '2500.00',
-  gazoil: '1500.00',
+  transitaire: '1500.00',
   extras_total: `11500.00 ${unit}`,
 });
 

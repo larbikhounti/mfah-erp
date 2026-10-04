@@ -11,6 +11,7 @@ import {
   EXCHANGE_RATE_ROWS,
   INVOICE_TEMPLATE_CELLS,
   SURCHARGE_ROWS,
+  TVA_BLOCK_CELLS,
 } from '../config/invoice-template-cells';
 import {
   createPrismaMock,
@@ -216,8 +217,24 @@ describe('ClientInvoicePdfService', () => {
     });
 
     it('shows the surcharge rows when any surcharge is filled in', async () => {
-      await service.generate(1, { gazoil: '1500.00' });
+      await service.generate(1, { transitaire: '1500.00' });
       for (const row of SURCHARGE_ROWS) expect(rowHidden(row)).toBeFalsy();
+    });
+
+    it('blanks the TVA header and value when no TVA is sent', async () => {
+      await service.generate(1, { total_ht: '18000.00 DH' });
+      const sheet = rendered.worksheets[0];
+      for (const ref of TVA_BLOCK_CELLS) {
+        expect(sheet.getCell(ref).value).toBeNull();
+        expect(sheet.getCell(ref).border).toEqual({});
+      }
+      expect(cell('total_ht')).toBe('18000.00 DH');
+    });
+
+    it('keeps the TVA header and writes the value when TVA is sent', async () => {
+      await service.generate(1, { tva: '1800.00 DH' });
+      expect(cell('tva')).toBe('1800.00 DH');
+      expect(JSON.stringify(rendered.worksheets[0].getCell('I29').value)).toContain('TVA');
     });
 
     it('hides the exchange-rate row when there is no rate', async () => {

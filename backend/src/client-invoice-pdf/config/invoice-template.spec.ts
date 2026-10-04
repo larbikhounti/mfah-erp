@@ -37,6 +37,10 @@ describe('invoice template (templates/invoice-template-default.xlsx)', () => {
     expect(sheet.pageSetup.printArea).toBeTruthy();
   });
 
+  it('labels the 4th surcharge column "Transitaire"', () => {
+    expect(sheet.getCell('I19').value).toBe('Transitaire');
+  });
+
   it.each(Object.entries(INVOICE_TEMPLATE_CELLS))(
     'maps %s to %s, the top-left cell of a merged range (or a plain cell)',
     (_field, ref) => {
